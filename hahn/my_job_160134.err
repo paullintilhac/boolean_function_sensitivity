@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/dartfs-hpc/rc/home/q/d28979q/hahn/losses_linear_spectrum.py", line 35, in <module>
-    os.mkdir(folder_string)
-FileExistsError: [Errno 17] File exists: 'd_8-f_8-l_2-h_2'

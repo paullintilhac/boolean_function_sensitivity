@@ -1,5 +1,0 @@
-hidden_dim: 8
-ff_dim: 8
-layers: 2
-heads: 2
-d_8-f_8-l_2-h_
