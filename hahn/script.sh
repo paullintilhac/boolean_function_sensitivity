@@ -13,7 +13,9 @@ echo before sbatch opts
 
 #SBATCH --partition=gpuq  # Specify the partition to submit to
 #SBATCH --gres=gpu:1
-
+echo $(hostname -s)
+nvcc --version
+source activate gpuq
 echo before parse args in script file
 while getopts d:f:l:h: flag
 do
@@ -30,7 +32,7 @@ echo "ff_dim: $ff_dim";
 echo "layers: $layers";
 echo "heads: $layers";
 
-
+echo filename in script
 echo "d_$hidden_dim-f_$ff_dim-l_$layers-h_$heads"
 
 python ../losses_linear_spectrum.py --d $hidden_dim --f $ff_dim --l $layers --h $heads > log_1

@@ -69,7 +69,7 @@ import math
 import torch
 import random
 
-hidden_size = 16
+hidden_size = args.d
 batch_size = 2
 
 def makeBitTensor(x, N):
@@ -82,7 +82,7 @@ def makeBitTensor(x, N):
 def fitNetwork(function, N):
    embeddings = torch.nn.Embedding(2, hidden_size//2).cuda()
    positional_embeddings = torch.nn.Embedding(N, hidden_size//2).cuda()
-   qrnn = torch.nn.TransformerEncoder(encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size, nhead=2, dim_feedforward=16, dropout=0.0, activation='relu'), num_layers=2).cuda()
+   qrnn = torch.nn.TransformerEncoder(encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size, nhead=args.h, dim_feedforward=args.f, dropout=0.0, activation='relu'), num_layers=args.l).cuda()
    
    output = torch.nn.Linear(hidden_size, 1, bias=False).cuda()
    

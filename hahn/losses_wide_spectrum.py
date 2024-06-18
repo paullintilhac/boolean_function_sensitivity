@@ -28,8 +28,8 @@ def parse_args():
 
 args = parse_args()
 folder_string = "d_"+str(args.d)+"-f_"+str(args.d)+"-l_"+str(args.l) + "-h_"+str(args.h)
-if not os.path.exists(folder_string):
-    os.mkdir(folder_string)
+#if not os.path.exists(folder_string):
+#    os.mkdir(folder_string)
 print ("Hello {}. How are you?".format(name))
 TEMPERATURE = 1
 
@@ -69,7 +69,7 @@ import math
 import torch
 import random
 
-hidden_size = 16
+hidden_size = args.h
 batch_size = 2
 
 def makeBitTensor(x, N):
@@ -82,7 +82,7 @@ def makeBitTensor(x, N):
 def fitNetwork(function, N):
    embeddings = torch.nn.Embedding(2, hidden_size//2).cuda()
    positional_embeddings = torch.nn.Embedding(N, hidden_size//2).cuda()
-   qrnn = torch.nn.TransformerEncoder(encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size, nhead=2, dim_feedforward=16, dropout=0.0, activation='relu'), num_layers=2).cuda()
+   qrnn = torch.nn.TransformerEncoder(encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size, nhead=args.h, dim_feedforward=args.f, dropout=0.0, activation='relu'), num_layers=args.l).cuda()
 
    output = torch.nn.Linear(hidden_size, 1, bias=False).cuda()
 
@@ -140,8 +140,8 @@ def fitNetwork(function, N):
 
 import random
 myID = random.randint(1000,10000000)
-with open(f"{folder_string}/losses_{__file__}_{myID}.tsv", "w") as outFile:
-  print("\t".join(["AverageDegree", "Iterations", "Weights1", "Weights2", "PerturbedLoss", "Acc100", "Acc1000", "Acc10000", "Acc100000"]), file=outFile)
+with open(f"{folder_string}/losses_{__file__}_{myID}.csv", "w") as outFile:
+  print(",".join(["AverageDegree", "Iterations", "Weights1", "Weights2", "PerturbedLoss", "Acc100", "Acc1000", "Acc10000", "Acc100000"]), file=outFile)
   for _ in range(10000):
    N = 30 #random.randint(2,30)
    averageDegree = N
@@ -158,6 +158,6 @@ with open(f"{folder_string}/losses_{__file__}_{myID}.tsv", "w") as outFile:
        return r
    loss = fitNetwork(function, N)
    print(loss, averageDegree, loss)
-   print("\t".join([str(x) for x in (loss)]), file=outFile)
+   print(",".join([str(x) for x in (loss)]), file=outFile)
    outFile.flush()
 
