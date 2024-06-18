@@ -35,4 +35,4 @@ echo "heads: $layers";
 echo filename in script
 echo "d_$hidden_dim-f_$ff_dim-l_$layers-h_$heads"
 
-python ../losses_linear_spectrum.py --d $hidden_dim --f $ff_dim --l $layers --h $heads > log_1
+python ../losses_wide_spectrum.py --d $hidden_dim --f $ff_dim --l $layers --h $heads > log_1

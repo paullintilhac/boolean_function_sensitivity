@@ -9,6 +9,7 @@ import random
 from math import log
 import math
 import sys
+import argparse
 print("done loading")
 __file__ = "wide_spectrum_small"
 
@@ -27,10 +28,9 @@ def parse_args():
     return parser.parse_args()
 
 args = parse_args()
-folder_string = "d_"+str(args.d)+"-f_"+str(args.d)+"-l_"+str(args.l) + "-h_"+str(args.h)
+folder_string = "d_"+str(args.d)+"-f_"+str(args.f)+"-l_"+str(args.l) + "-h_"+str(args.h)
 #if not os.path.exists(folder_string):
 #    os.mkdir(folder_string)
-print ("Hello {}. How are you?".format(name))
 TEMPERATURE = 1
 
 #print(weights)
@@ -140,7 +140,7 @@ def fitNetwork(function, N):
 
 import random
 myID = random.randint(1000,10000000)
-with open(f"{folder_string}/losses_{__file__}_{myID}.csv", "w") as outFile:
+with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
   print(",".join(["AverageDegree", "Iterations", "Weights1", "Weights2", "PerturbedLoss", "Acc100", "Acc1000", "Acc10000", "Acc100000"]), file=outFile)
   for _ in range(10000):
    N = 30 #random.randint(2,30)

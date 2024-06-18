@@ -34,7 +34,7 @@ print("before args partse")
 args = parse_args()
 print("after args parse")
 print("args: " + str(args))
-folder_string = "d_"+str(args.d)+"-f_"+str(args.d)+"-l_"+str(args.l) + "-h_"+str(args.h)
+folder_string = "d_"+str(args.d)+"-f_"+str(args.f)+"-l_"+str(args.l) + "-h_"+str(args.h)
 #if not os.path.exists(folder_string):
 #    os.mkdir(folder_string)
 print("folder_string: " + folder_string)
