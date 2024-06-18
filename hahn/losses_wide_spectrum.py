@@ -1,0 +1,163 @@
+# Using ../sensitivity/36test.py
+
+
+# Functions whose Fourier degree is concentrated on higher weights are harder to learn for LSTMs with SGD
+
+import numpy as np
+import torch
+import random
+from math import log
+import math
+import sys
+print("done loading")
+__file__ = "wide_spectrum_small"
+
+print("cuda is available? "+ str(torch.cuda.is_available()))
+
+print ('argument list', sys.argv)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='wide spectrum non boolean test.')
+    parser.add_argument('--d', type=int, default=8)
+    parser.add_argument('--f', type=int, default=8)
+    parser.add_argument('--l', type=int, default=2)
+    parser.add_argument('--h', type=int, default=2)
+
+    return parser.parse_args()
+
+args = parse_args()
+folder_string = "d_"+str(args.d)+"-f_"+str(args.d)+"-l_"+str(args.l) + "-h_"+str(args.h)
+if not os.path.exists(folder_string):
+    os.mkdir(folder_string)
+print ("Hello {}. How are you?".format(name))
+TEMPERATURE = 1
+
+#print(weights)
+
+
+# https://wiki.python.org/moin/BitManipulation
+def parityOf(int_type):
+        # now print the int in binary
+#        print(int_type, "{0:b}".format(int_type))
+  #      parity__ = (degree(int_type) % 2)
+ #       parity_ = len([y for y in "{0:b}".format(int_type) if y == "1"]) % 2
+        parity = 0
+        while (int_type):
+            parity = ~parity
+            int_type = int_type & (int_type - 1)
+#        print(parity, parity_, parity__)
+        assert parity in [-1, 0]
+        parity = 2*parity + 1
+        return(parity)
+
+
+
+def product(x,y):
+    return (weights * x * y).sum()
+
+def degree(subset):
+   return len([y for y in "{0:b}".format(subset) if y == "1"])
+
+
+
+import math
+# randomize the function using the orthonormal basis
+
+
+
+import torch
+import random
+
+hidden_size = 16
+batch_size = 2
+
+def makeBitTensor(x, N):
+  y = format(x, "b")
+  y = ("0"*(N-len(y))) + y
+  return [int(z) for z in list(y)]
+
+
+
+def fitNetwork(function, N):
+   embeddings = torch.nn.Embedding(2, hidden_size//2).cuda()
+   positional_embeddings = torch.nn.Embedding(N, hidden_size//2).cuda()
+   qrnn = torch.nn.TransformerEncoder(encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size, nhead=2, dim_feedforward=16, dropout=0.0, activation='relu'), num_layers=2).cuda()
+
+   output = torch.nn.Linear(hidden_size, 1, bias=False).cuda()
+
+   tanh = torch.nn.Tanh()
+
+   def parameters():
+     for x in [embeddings, qrnn, output, positional_embeddings]:
+       for y in x.parameters():
+          yield y
+
+   optimizer = torch.optim.AdamW(parameters(), lr=0.00003, weight_decay=0.1)
+
+
+
+   movAvg = 0
+   lossesAfterIterations = []
+   for iteration in range(600000):
+     optimizer.zero_grad()
+     inputs = [random.randint(0, 2**N-1) for _ in range(batch_size)]
+     targets = torch.FloatTensor([float(function(x)) for x in inputs]).cuda()
+ #    print(targets.mean())
+#     quit()
+     inputNum = torch.LongTensor([makeBitTensor(x,N) for x in inputs]).cuda().t()
+     positional = torch.LongTensor(list(range(0, N))).unsqueeze(1).expand(-1, batch_size).cuda()
+     inputTensorEmbed = torch.cat([embeddings(inputNum), positional_embeddings(positional)], dim=2)
+     hidden = qrnn(inputTensorEmbed)[0]
+     result = (output(hidden)).view(-1)
+#     print(result.size())
+     result = result.view(batch_size)
+     loss = (result - targets).pow(2).mean()
+     movAvg = 0.99 * movAvg + (1-0.99) * (float(loss))
+     if iteration % 10 == 0 and True:
+       print(iteration, movAvg / (1-0.99**(iteration+1)), N, sum([float(x.data.pow(2).sum()) for x in parameters() if x.grad is not None]))
+     (loss).backward()
+     optimizer.step()
+#     print(iteration, abs(log(iteration+1)/log(10) % 1))
+#     print(iteration, movAvg)
+     if movAvg < 0.003 and False:
+        lossesAfterIterations.append(movAvg)
+        lossesAfterIterations.append(movAvg)
+        lossesAfterIterations.append(movAvg)
+        lossesAfterIterations.append(movAvg)
+        lossesAfterIterations.append(movAvg)
+        lossesAfterIterations.append(movAvg)
+        lossesAfterIterations.append(movAvg)
+        break
+     if (iteration-1) % 10000 == 0:
+        print("finished step!")
+        print("iteration, movavg")
+        lossesAfterIterations.append(movAvg)
+        print(iteration, movAvg)
+   return lossesAfterIterations
+
+
+
+import random
+myID = random.randint(1000,10000000)
+with open(f"{folder_string}/losses_{__file__}_{myID}.tsv", "w") as outFile:
+  print("\t".join(["AverageDegree", "Iterations", "Weights1", "Weights2", "PerturbedLoss", "Acc100", "Acc1000", "Acc10000", "Acc100000"]), file=outFile)
+  for _ in range(10000):
+   N = 30 #random.randint(2,30)
+   averageDegree = N
+   coefficients = torch.randn(N,N).cuda()
+   coefficients = coefficients / coefficients.pow(2).sum().sqrt()
+   def function(x):
+       binary = formatted_binary = f"{x:0{N}b}"
+       c = torch.zeros(N,N)
+       r = 0
+       for i in range(N):
+           for j in range(N):
+               c[i,j] = 1 if binary[i] == binary[j] else -1
+       r = (coefficients*c.cuda()).sum()
+       return r
+   loss = fitNetwork(function, N)
+   print(loss, averageDegree, loss)
+   print("\t".join([str(x) for x in (loss)]), file=outFile)
+   outFile.flush()
+

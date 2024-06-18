@@ -1,0 +1,8 @@
+done loading
+cuda is available? False
+argument list ['../losses_linear_spectrum.py', '--d', '4', '--f', '2', '--l', '1', '--h', '3']
+after argument list
+before args partse
+after args parse
+args: Namespace(d=4, f=2, l=1, h=3)
+folder_string: d_4-f_4-l_1-h_3
