@@ -12,7 +12,7 @@ echo "hidden_dim: $hidden_dim";
 echo "ff_dim: $ff_dim";
 echo "layers: $layers";
 echo "heads: $heads";
-
+echo $(conda info --env)
 echo after printing args
 echo "d_$hidden_dim-f_$ff_dim-l_$layers-h_$heads"
 fn="d_$hidden_dim-f_$ff_dim-l_$layers-h_$heads"
@@ -25,5 +25,6 @@ cd $fn
 echo should be in folder now
 ls
 pwd
-sbatch ../script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads
+sbatch ../linear_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads
+#sbatch ../wide_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads
 cd ..

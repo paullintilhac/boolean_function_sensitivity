@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--f', type=int, default=8)
     parser.add_argument('--l', type=int, default=2)
     parser.add_argument('--h', type=int, default=2)
-
+    parser,add_argument('--i', type=int,default=300000)
     return parser.parse_args()
 
 args = parse_args()
@@ -99,7 +99,7 @@ def fitNetwork(function, N):
 
    movAvg = 0
    lossesAfterIterations = []
-   for iteration in range(600000):
+   for iteration in range(args.i):
      optimizer.zero_grad()
      inputs = [random.randint(0, 2**N-1) for _ in range(batch_size)]
      targets = torch.FloatTensor([float(function(x)) for x in inputs]).cuda()
@@ -114,8 +114,8 @@ def fitNetwork(function, N):
      result = result.view(batch_size)
      loss = (result - targets).pow(2).mean()
      movAvg = 0.99 * movAvg + (1-0.99) * (float(loss))
-     if iteration % 10 == 0 and True:
-       print(iteration, movAvg / (1-0.99**(iteration+1)), N, sum([float(x.data.pow(2).sum()) for x in parameters() if x.grad is not None]))
+     #if iteration % 10 == 0 and True:
+     #  print(iteration, movAvg / (1-0.99**(iteration+1)), N, sum([float(x.data.pow(2).sum()) for x in parameters() if x.grad is not None]))
      (loss).backward()
      optimizer.step()
 #     print(iteration, abs(log(iteration+1)/log(10) % 1))

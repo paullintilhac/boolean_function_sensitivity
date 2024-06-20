@@ -1,0 +1,20 @@
+before sbatch opts
+s08
+/var/spool/slurmd/job162151/slurm_script: line 17: nvcc: command not found
+conda env: n
+# conda environments: # base /dartfs/rc/lab/C/CybenkoG/Miniconda3 gpuq log_1 losses_linear_spectrum_small_1709750.csv losses_linear_spectrum_small_7324258.csv losses_wide_spectrum_small_6940121.csv losses_wide_spectrum_small_739492.csv slurm-160454.out slurm-162146.out slurm-162148.out slurm-162151.out /dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/gpuq privacy /dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/privacy
+n
+before parse args in script file
+after parse args
+hidden_dim: 32
+ff_dim: 8
+layers: 2
+heads: 2
+filename in script
+d_32-f_8-l_2-h_2
+Traceback (most recent call last):
+  File "/dartfs-hpc/rc/home/q/d28979q/boolean_function_sensitivity/hahn/d_32-f_8-l_2-h_2/../losses_linear_spectrum.py", line 149, in <module>
+    coefficients = torch.randn(N,N).cuda()
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/gpuq/lib/python3.10/site-packages/torch/cuda/__init__.py", line 293, in _lazy_init
+    torch._C._cuda_init()
+RuntimeError: Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx

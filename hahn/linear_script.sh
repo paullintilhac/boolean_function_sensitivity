@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo before sbatch opts 
-
 #SBATCH --account=temfom0  # Specify the account to charge
 
 #SBATCH --job-name=my_job  # Job name
@@ -16,7 +14,9 @@ echo before sbatch opts
 echo $(hostname -s)
 nvcc --version
 source activate gpuq
-echo before parse args in script file
+echo conda env:
+conda info --env
+
 while getopts d:f:l:h: flag
 do
     case "${flag}" in
@@ -26,7 +26,6 @@ do
         h) heads=${OPTARG};;
     esac
 done
-echo after parse args
 echo "hidden_dim: $hidden_dim";
 echo "ff_dim: $ff_dim";
 echo "layers: $layers";
@@ -35,4 +34,4 @@ echo "heads: $layers";
 echo filename in script
 echo "d_$hidden_dim-f_$ff_dim-l_$layers-h_$heads"
 
-python ../losses_wide_spectrum.py --d $hidden_dim --f $ff_dim --l $layers --h $heads > log_1
+python ../losses_linear_spectrum.py --d $hidden_dim --f $ff_dim --l $layers --h $heads > log_1
