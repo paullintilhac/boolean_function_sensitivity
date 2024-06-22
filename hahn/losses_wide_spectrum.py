@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--f', type=int, default=8)
     parser.add_argument('--l', type=int, default=2)
     parser.add_argument('--h', type=int, default=2)
-    parser,add_argument('--i', type=int,default=300000)
+    parser.add_argument('--i', type=int,default=300000)
     return parser.parse_args()
 
 args = parse_args()

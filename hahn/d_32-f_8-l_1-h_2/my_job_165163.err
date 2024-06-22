@@ -1,0 +1,2 @@
+usage: losses_linear_spectrum.py [-h] [--d D] [--f F] [--l L] [--h H] [--i I]
+losses_linear_spectrum.py: error: argument --i: expected one argument

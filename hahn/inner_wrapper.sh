@@ -25,6 +25,6 @@ cd $fn
 echo should be in folder now
 ls
 pwd
-sbatch ../linear_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads
-#sbatch ../wide_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads
+sbatch ../linear_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads -i 2000000
+sbatch ../wide_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads -i 1000000
 cd ..

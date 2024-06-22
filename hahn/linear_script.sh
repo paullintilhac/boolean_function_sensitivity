@@ -17,21 +17,22 @@ source activate gpuq
 echo conda env:
 conda info --env
 
-while getopts d:f:l:h: flag
+while getopts d:f:l:h:i: flag
 do
     case "${flag}" in
         d) hidden_dim=${OPTARG};;
         f) ff_dim=${OPTARG};;
         l) layers=${OPTARG};;
         h) heads=${OPTARG};;
+        i) iters=${OPTARG};;
     esac
 done
 echo "hidden_dim: $hidden_dim";
 echo "ff_dim: $ff_dim";
 echo "layers: $layers";
-echo "heads: $layers";
-
+echo "heads: $heads";
+echo "iterations: $iters"
 echo filename in script
 echo "d_$hidden_dim-f_$ff_dim-l_$layers-h_$heads"
 
-python ../losses_linear_spectrum.py --d $hidden_dim --f $ff_dim --l $layers --h $heads > log_1
+python ../losses_linear_spectrum.py --d $hidden_dim --f $ff_dim --l $layers --h $heads --i $iters > log_linear
