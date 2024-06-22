@@ -141,7 +141,7 @@ def fitNetwork(function, N):
 import random
 myID = random.randint(1000,10000000)
 with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
-  print(",".join(["AverageDegree", "Iterations", "Weights1", "Weights2", "PerturbedLoss", "Acc100", "Acc1000", "Acc10000", "Acc100000"]), file=outFile)
+  #print(",".join(["AverageDegree", "Iterations", "Weights1", "Weights2", "PerturbedLoss", "Acc100", "Acc1000", "Acc10000", "Acc100000"]), file=outFile)
   for _ in range(10000):
    
    N = 30 #random.randint(2,30)
