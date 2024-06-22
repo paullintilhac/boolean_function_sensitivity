@@ -169,7 +169,7 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
    cols = newCols
    print("num rows after dedup: " + str(len(rows)))
    print("num cols after dedup: " + str(len(cols)))
-
+   N = len(rows)
    # Set selected indices to one
    mask[rows, cols] = 1
    coefficients = (coefficients * mask)
