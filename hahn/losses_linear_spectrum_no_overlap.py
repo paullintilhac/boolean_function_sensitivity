@@ -154,7 +154,8 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
    cols = indices % N   # Convert to 2D column indices
    print("num rows before dedup: " + str(len(rows)))
    print("num cols before dedup: " + str(len(cols)))
-   rowColSet = set(rows.extend(cols))
+   rowColSet = set(torch.cat(rows,cols))
+   print("len comb set: " + str(len(rowColSet)))
    newRows = []
    newCols = []
 
