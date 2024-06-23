@@ -11,7 +11,7 @@ import math
 import sys
 import os
 import argparse
-__file__ = "linear_spectrum_small"
+__file__ = "linear_spectrum_small_no_overlap"
 
 print("done loading")
 
