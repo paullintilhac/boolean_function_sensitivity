@@ -35,4 +35,4 @@ echo "iterations: $iters"
 echo filename in script
 echo "d_$hidden_dim-f_$ff_dim-l_$layers-h_$heads"
 
-python ../losses_wide_spectrum_no_overlap.py --d $hidden_dim --f $ff_dim --l $layers --h $heads --i $iters > log_wide
+python ../losses_linear_spectrum_no_overlap.py --d $hidden_dim --f $ff_dim --l $layers --h $heads --i $iters > log_dedup
