@@ -69,7 +69,7 @@ import math
 import torch
 import random
 
-hidden_size = args.h
+hidden_size = args.d
 batch_size = 2
 
 def makeBitTensor(x, N):
