@@ -27,5 +27,5 @@ ls
 pwd
 #sbatch ../linear_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads -i 500000
 sbatch ../wide_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads -i 1500000
-sbatch ../dedup_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads -i 3000000
+#sbatch ../dedup_script.sh -d $hidden_dim -f $ff_dim -l $layers -h $heads -i 3000000
 cd ..
