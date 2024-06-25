@@ -93,7 +93,7 @@ def fitNetwork(function, N):
        for y in x.parameters():
           yield y
 
-   optimizer = torch.optim.AdamW(parameters(), lr=0.00003, weight_decay=0.1)
+   optimizer = torch.optim.AdamW(parameters(), lr=0.0001, weight_decay=0.1)
 
 
 
