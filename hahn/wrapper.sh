@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./inner_wrapper.sh -d 64 -f 8 -l 1 -h 2
+./inner_wrapper.sh -d 64 -f 4 -l 1 -h 2
