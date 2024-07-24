@@ -7,7 +7,7 @@
 #SBATCH --output=my_job_%j.out  # Standard output and error log
 
 #SBATCH --error=my_job_%j.err  
-#SBATCH --time=12:00:00  # Time limit hrs:min:sec
+#SBATCH --time=24:00:00  # Time limit hrs:min:sec
 
 #SBATCH --partition=gpuq  # Specify the partition to submit to
 #SBATCH --gres=gpu:1
