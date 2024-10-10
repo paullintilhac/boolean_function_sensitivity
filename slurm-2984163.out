@@ -1,0 +1,14 @@
+Degree: 3, Func: 1/5
+Traceback (most recent call last):
+  File "/dartfs/rc/lab/C/CybenkoG/bool_sens/exp_new.py", line 142, in <module>
+    main(args)   
+    ^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/bool_sens/exp_new.py", line 112, in main
+    func = rboolf(args.N, deg)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/bool_sens/exp_new.py", line 85, in rboolf
+    coefficients = torch.randn(N).to(device)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/lib/python3.12/site-packages/torch/cuda/__init__.py", line 293, in _lazy_init
+    torch._C._cuda_init()
+RuntimeError: Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx
