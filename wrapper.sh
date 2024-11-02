@@ -10,18 +10,20 @@
 #SBATCH --time=24:00:00  # Time limit hrs:min:sec
 
 #SBATCH --partition=gpuq  # Specify the partition to submit to
-echo $(hostname -s)
-nvcc --version
-source activate gpuq
-echo conda env:
-conda info --env
+# echo $(hostname -s)
+# nvcc --version
+# source activate gpuq
+# echo conda env:
+# conda info --env
 
 python exp_new.py \
         --N 30 \
+        --width 1 \
         --dim 120 \
-        --l 2 \
-        --h 2 \
+        --l 1 \
+        --h 1 \
         --f 128 \
-        --bs 1028 \
-        --i 2000000 \
+        --bs 64 \
+        --epochs 400 \
+        --num_samples 100000 \
         --repeat 5
