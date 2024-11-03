@@ -148,7 +148,7 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
    averageDegree = N
    coefficients = torch.randn(N,N).cuda()
    mask = torch.zeros(N, N, dtype=torch.uint8).cuda()
-    
+   
    indices = torch.randperm(N*N)[:N]  # Shuffle flattened indices and pick first N
    rows = indices // N  # Convert to 2D row indices
    cols = indices % N   # Convert to 2D column indices

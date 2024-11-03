@@ -11,7 +11,7 @@ import math
 import sys
 import os
 import argparse
-__file__ = "linear_spectrum_small_no_overlap"
+__file__ = "linear_spectrum_small"
 
 print("done loading")
 
@@ -145,55 +145,45 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
   for _ in range(10000):
    
    N = 30 #random.randint(2,30)
-   
-   indices = torch.randperm(N*N)[:N]  # Shuffle flattened indices and pick first N
-   rows = indices // N  # Convert to 2D row indices
-   cols = indices % N  # Convert to 2D column indices
-   #print("num rows before dedup: " + str(len(rows)))
-   #print("num cols before dedup: " + str(len(cols)))
-   rowColSet = list(set(torch.cat((rows,cols)).numpy()))
-   #print("len comb set: " + str(len(rowColSet)))
-   newRows = []
-   newCols = []
-   #print("length of rows: "+ str(len(rows)))
-   #print("rowColSet: " + str(rowColSet))
-   for i in range(len(rows)):
-      #print("rows[i]: " + str(rows[i]) + ", cols[i] " + str(cols[i]))
-      #print("rows[i] in set? " + str(rows[i] in rowColSet))
-      #print("same for intrs: " + str(int(rows[i]) in rowColSet))
-      #print("same for ints " + str(rows[i].item() in rowColSet ))
-      if rows[i] in rowColSet and cols[i] in rowColSet:
-         #print("doubly unique unique pair found")
-         newRows.append(rows[i])
-         newCols.append(cols[i])
-         rowColSet.remove(rows[i])
-         if cols[i]!=rows[i]:
-            rowColSet.remove(cols[i])
-         #print("new length of rowColSet: " + str(len(rowColSet)))
-   rows = newRows
-   cols = newCols
-   #N = len(rows)
    averageDegree = N
    coefficients = torch.randn(N,N).cuda()
    mask = torch.zeros(N, N, dtype=torch.uint8).cuda()
-   #print("num rows after dedup: " + str(len(rows)))
-   #print("num cols after dedup: " + str(len(cols)))
-   #N = len(rows)
+    
+   indices = torch.randperm(N*N)[:N]  # Shuffle flattened indices and pick first N
+   rows = indices // N  # Convert to 2D row indices
+   cols = indices % N   # Convert to 2D column indices
+   print("num rows before dedup: " + str(len(rows)))
+   print("num cols before dedup: " + str(len(cols)))
+   rowColSet = set(torch.cat((rows,cols)))
+   print("len comb set: " + str(len(rowColSet)))
+   newRows = []
+   newCols = []
+
+   for i in range(len(rows)):
+      if (rows[i] in rowColSet) and (cols[i] in rowColSet):
+         print("doubly unique unique pair found")
+         newRows.append(rows[i])
+         newCols.append(cols[i])
+         rowColSet.remove(rows[i])
+         rowColSet.remove(cols[i])
+   rows = newRows
+   cols = newCols
+   print("num rows after dedup: " + str(len(rows)))
+   print("num cols after dedup: " + str(len(cols)))
+   N = len(rows)
    # Set selected indices to one
    mask[rows, cols] = 1
-   
    coefficients = (coefficients * mask)
    coefficients = coefficients / coefficients.pow(2).sum().sqrt()
    def function(x):
        binary = formatted_binary = f"{x:0{N}b}"
        c = torch.zeros(N,N)
        r = 0
-       for w in range(len(rows)):
+       for w in range(N):
            i, j = rows[w], cols[w]
 #       for i in range(N):
  #          for j in range(N):
            c[i,j] = 1 if binary[i] == binary[j] else -1
-       #print("coefficients size: " + str(coefficients.shape) + ", c shape: " + str(c.shape))
        r = (coefficients*c.cuda()).sum()
        return r
    loss = fitNetwork(function, N)
