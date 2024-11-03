@@ -18,8 +18,6 @@ if torch.cuda.is_available():
 else:
     print("GPU is not available")
 
-
-
 def fitNetwork(function, loader, N, epochs, dir_name):
     model = Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.0000006, weight_decay=0.1)
@@ -36,7 +34,7 @@ def fitNetwork(function, loader, N, epochs, dir_name):
           result = model(inputs)
           
           loss = (result - targets).pow(2).mean()
-          movAvg = 0.99 * movAvg + (1-0.99) * (float(loss))
+          movAvg = 0.99 * movAvg + (1-0.99) * (float(loss.detach()))
           
           iteration = epoch*len(loader)+idx+1
           if (iteration) % 10 == 0:
@@ -45,7 +43,7 @@ def fitNetwork(function, loader, N, epochs, dir_name):
 
           if (iteration) % 1000 == 0:
             val_loss = validate(model, function, num_samples=10000)
-            print(f"Iteration: {iteration}, Loss: {loss:.3f}, Validation Loss: {val_loss:.3f}")
+            print(f"Iteration: {iteration}, Loss: {loss.detach():.3f}, Validation Loss: {val_loss:.3f}")
             path = os.path.join(dir_name, f"model_{iteration}.pt")
             torch.save(model.state_dict(), path)  
           
@@ -80,7 +78,7 @@ def validate(model, func, num_samples=1000):
       targets = torch.FloatTensor([float(func(x)) for x in inputs]).to(device)
       result = model(inputs).to(device)
       loss = (result - targets).pow(2).mean()
-      return loss
+      return loss.detach()
 
 def generate_dataset(num_samples, N, batch_size):
     num_samples = 10000
@@ -105,52 +103,54 @@ def parse_args():
     return parser.parse_args()
 
 def main(args):
-    summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
+    # summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
     losses = {}
     test_batch = 10000
     func_per_deg = args.repeat
     main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
 
-
-    
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
   
-    for deg in [1,2,3,4,5]:
+    for deg in [2,3,4,5]:
         losses[deg] = []
-        for i in range(func_per_deg):
-              for width in range(1, args.N, 3):
-                  # Create new directory to save results for the particular function
-                  dir_name = os.path.join(main_dir, f"func{i}_deg{deg}_width{width}")
-                  os.makedirs(dir_name, exist_ok=True)
-          
-                  # Generate function and save its coefficients
-                  func, (coeffs, combs) = rboolf(args.N, width, deg)
-                  torch.save(coeffs, f"{dir_name}/func_coeffs.pt")
-                  torch.save(combs, f"{dir_name}/func_combs.pt")
-            
-                  # Generate the training dataset
-                  train_loader = generate_dataset(args.num_samples, args.N, args.bs)
-            
-                  # Fit the model
-                  model, func_summary   = fitNetwork(func, train_loader, epochs=args.epochs, N=args.N, dir_name=dir_name)
-                  func_summary["deg"]   = deg
-                  func_summary["width"] = width
-                  func_summary["func"]  = i
-                  func_summary = func_summary[summary.columns.tolist()]
+        for width in range(1, args.N, 3):
+            for i in range(func_per_deg):
+              print(f"Currently fitting: func {i}, deg {deg}, width {width}")
+              # Create new directory to save results for the particular function
+              dir_name = os.path.join(main_dir, f"func{i}_deg{deg}_width{width}")
+              os.makedirs(dir_name, exist_ok=True)
+      
+              # Generate function and save its coefficients
+              func, (coeffs, combs) = rboolf(args.N, width, deg)
+              torch.save(coeffs, f"{dir_name}/func_coeffs.pt")
+              torch.save(combs, f"{dir_name}/func_combs.pt")
         
-                  summary = pd.concat([summary, func_summary])
-                  summary.to_csv(f"{dir_name}/test.csv")
-            
-                  # Get Test Loss
-                  model.eval()
-                  loss = validate(model=model, func=func, num_samples=1000)
-                  losses[deg].append(loss.item())
-                  # print(f"\nReported Loss: {loss.item()}\n")
-            
-                  # # Write to Logs
-                  # with open("logs_width.txt", "a") as f:
-                  #     f.write(f"\nReported Loss: {loss.item()}\n")
+              # Generate the training dataset
+              train_loader = generate_dataset(args.num_samples, args.N, args.bs)
+              torch.save(train_loader,dir_name+"/train_dataloader.pt")
+
+              # Fit the model
+              model, func_summary   = fitNetwork(func, train_loader, epochs=args.epochs, N=args.N, dir_name=dir_name)
+              func_summary["deg"]   = deg
+              func_summary["width"] = width
+              func_summary["func"]  = i
+              # func_summary = func_summary[summary.columns.tolist()]
+              # summary = pd.concat([summary, func_summary])
+              # summary.to_csv(f"{main_dir}/test.csv")
+              summary_csv = f"{main_dir}/summary.csv"
+              func_summary.to_csv(summary_csv, mode='a', header=not os.path.exists(summary_csv), index=False)
+
+        
+              # Get Test Loss
+              model.eval()
+              loss = validate(model=model, func=func, num_samples=10000)
+              losses[deg].append(loss.item())
+              # print(f"\nReported Loss: {loss.item()}\n")
+        
+              # # Write to Logs
+              # with open("logs_width.txt", "a") as f:
+              #     f.write(f"\nReported Loss: {loss.item()}\n")
     print(losses)
   
     # Save to File
