@@ -62,11 +62,9 @@ def fitNetwork(function, loader, N, epochs, dir_name):
 def rboolf(N, width, deg):
     coefficients = torch.randn(width).to(device)
     coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
-    print("before calculating combs")
-    combs = itertools.combinations(torch.arange(N+1), deg)
-    print("after calculating all combs but before suffle and filter")
-    combs = combs[torch.randperm(combs.size()[0])][:width].to(device) # Shuffled
-    print("after shuffle and filter combs")
+    
+    combs = torch.tensor(list(itertools.combinations(torch.arange(N+1), deg))).to(device)
+    combs = combs[torch.randperm(len(combs))][:width] # Shuffled
 
     def func(x):
         binary = f"{x:0{N}b}"+"0"
