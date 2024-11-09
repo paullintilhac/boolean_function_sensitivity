@@ -10,7 +10,6 @@ import argparse
 from transformer import Transformer
 import os
 
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 if torch.cuda.is_available():
     print("GPU is available")
@@ -19,8 +18,11 @@ else:
     print("GPU is not available")
 
 def fitNetwork(function, loader, N, epochs, dir_name):
+    lr = 0.000006
+    weight_decay = 1
     model = Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.0000006, weight_decay=0.1)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    model.train()
     
     movAvg = 0
     summary = pd.DataFrame(columns=["iter", "loss"])
@@ -28,14 +30,18 @@ def fitNetwork(function, loader, N, epochs, dir_name):
 
     for epoch in range(epochs):    
         for idx, inputs in enumerate(loader):
-          
+          model.train()
           targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
     
           result = model(inputs)
           
           loss = (result - targets).pow(2).mean()
           movAvg = 0.99 * movAvg + (1-0.99) * (float(loss.detach()))
-          
+
+          (loss).backward()
+          optimizer.step()
+          optimizer.zero_grad()
+        
           iteration = epoch*len(loader)+idx+1
           if (iteration) % 10 == 0:
             summary.loc[len(summary)] = {"iter":iteration, "loss":movAvg}
@@ -43,14 +49,10 @@ def fitNetwork(function, loader, N, epochs, dir_name):
 
           if (iteration) % 1000 == 0:
             val_loss = validate(model, function, num_samples=10000)
-            print(f"Iteration: {iteration}, Loss: {loss.detach():.3f}, Validation Loss: {val_loss:.3f}")
+            print(f"Iteration: {iteration}, AvgLoss: {movAvg:.3f}, Loss: {loss.detach():.3f}, Validation Loss: {val_loss:.3f}")
             path = os.path.join(dir_name, f"model_{iteration}.pt")
             torch.save(model.state_dict(), path)  
           
-          (loss).backward()
-          optimizer.step()
-          optimizer.zero_grad()
-    
           if movAvg < 0.01:
             break
     return model, summary
@@ -74,6 +76,7 @@ def rboolf(N, width, deg):
     return func, (coefficients, combs)
 
 def validate(model, func, num_samples=1000):
+      model.eval()
       inputs = torch.tensor([random.randint(0, 2**args.N-1) for _ in range(num_samples)]).to(device)
       targets = torch.FloatTensor([float(func(x)) for x in inputs]).to(device)
       result = model(inputs).to(device)
@@ -107,18 +110,18 @@ def main(args):
     losses = {}
     test_batch = 10000
     func_per_deg = args.repeat
-    main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
+    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_new"
 
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
-  
-    for deg in [2,3,4,5]:
-        losses[deg] = []
-        for width in range(1, args.N, 3):
-            for i in range(func_per_deg):
+
+    for i in range(func_per_deg):
+        for deg in [1]:
+            losses[deg] = []
+            for width in range(1, args.N, 3):
               print(f"Currently fitting: func {i}, deg {deg}, width {width}")
               # Create new directory to save results for the particular function
-              dir_name = os.path.join(main_dir, f"func{i}_deg{deg}_width{width}")
+              dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
               os.makedirs(dir_name, exist_ok=True)
       
               # Generate function and save its coefficients
@@ -156,7 +159,7 @@ def main(args):
     # Save to File
     df = pd.DataFrame.from_dict(losses)
     os.makedirs(dir_name, exist_ok=True)
-    df.to_csv(f"{dir_name}/results_layernorm.csv")
+    df.to_csv(f"{main_dir}/results_layernorm.csv")
 
 if __name__ == "__main__":
     args = parse_args()
