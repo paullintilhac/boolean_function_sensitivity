@@ -9,6 +9,7 @@ import random
 import argparse
 from transformer import Transformer
 import os
+import itertools
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 if torch.cuda.is_available():
@@ -18,9 +19,9 @@ else:
     print("GPU is not available")
 
 def fitNetwork(function, loader, N, epochs, dir_name):
-    lr = 0.000006
-    weight_decay = 1
-    model = Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device)
+    lr = 6e-7
+    weight_decay = .0001
+    model = Transformer(N, args.dim, args.h, args.l, args.f, 1e-8).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     model.train()
     
@@ -30,6 +31,7 @@ def fitNetwork(function, loader, N, epochs, dir_name):
 
     for epoch in range(epochs):    
         for idx, inputs in enumerate(loader):
+          #print("idx: " + str(idx))
           model.train()
           targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
     
@@ -60,8 +62,11 @@ def fitNetwork(function, loader, N, epochs, dir_name):
 def rboolf(N, width, deg):
     coefficients = torch.randn(width).to(device)
     coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
-    combs = torch.combinations(torch.arange(N+1), r=deg, with_replacement=True)
+    print("before calculating combs")
+    combs = itertools.combinations(torch.arange(N+1), deg)
+    print("after calculating all combs but before suffle and filter")
     combs = combs[torch.randperm(combs.size()[0])][:width].to(device) # Shuffled
+    print("after shuffle and filter combs")
 
     def func(x):
         binary = f"{x:0{N}b}"+"0"
@@ -116,9 +121,11 @@ def main(args):
   #   f.write("------------------------------------------\n")
 
     for i in range(func_per_deg):
-        for deg in [1]:
+        for deg in [7]:
             losses[deg] = []
-            for width in range(1, args.N, 3):
+            #for width in range(1, args.N, 3):
+            for width in range(1,2):
+
               print(f"Currently fitting: func {i}, deg {deg}, width {width}")
               # Create new directory to save results for the particular function
               dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
@@ -128,7 +135,7 @@ def main(args):
               func, (coeffs, combs) = rboolf(args.N, width, deg)
               torch.save(coeffs, f"{dir_name}/func_coeffs.pt")
               torch.save(combs, f"{dir_name}/func_combs.pt")
-        
+              print("done generating function")
               # Generate the training dataset
               train_loader = generate_dataset(args.num_samples, args.N, args.bs)
               torch.save(train_loader,dir_name+"/train_dataloader.pt")
