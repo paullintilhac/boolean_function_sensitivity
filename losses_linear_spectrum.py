@@ -12,8 +12,15 @@ import argparse
 __file__ = "linear_spectrum_small"
 
 print("done loading")
+mps_avail = torch.backends.mps.is_available()
+cuda_avail = torch.cuda.is_available()
 
-print("cuda is available?" + str(torch.cuda.is_available()))
+
+if mps_avail:
+  device = torch.device("mps")
+elif cuda_avail:
+   device = torch.device("cuda")
+print("cuda is available?" + str(cuda_avail) + ", mps available? " + str(mps_avail))
 TEMPERATURE = 1
 
 print ('argument list', sys.argv)
@@ -74,11 +81,11 @@ def makeBitTensor(x, N):
 
 
 def fitNetwork(function, N):
-   embeddings = torch.nn.Embedding(2, hidden_size//2).cuda()
-   positional_embeddings = torch.nn.Embedding(N, hidden_size//2).cuda()
-   qrnn = torch.nn.TransformerEncoder(encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size, nhead=args.h, dim_feedforward=args.f, dropout=0.0, activation='relu'), num_layers=args.l).cuda()
+   embeddings = torch.nn.Embedding(2, hidden_size//2).to(device)
+   positional_embeddings = torch.nn.Embedding(N, hidden_size//2).to(device)
+   qrnn = torch.nn.TransformerEncoder(encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size, nhead=args.h, dim_feedforward=args.f, dropout=0.0, activation='relu'), num_layers=args.l).to(device)
    
-   output = torch.nn.Linear(hidden_size, 1, bias=False).cuda()
+   output = torch.nn.Linear(hidden_size, 1, bias=False).to(device)
   # Flatten and dot
    
    tanh = torch.nn.Tanh()
@@ -95,11 +102,11 @@ def fitNetwork(function, N):
    for iteration in range(args.i):
      optimizer.zero_grad()
      inputs = [random.randint(0, 2**N-1) for _ in range(batch_size)]
-     targets = torch.FloatTensor([float(function(x)) for x in inputs]).cuda()
+     targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
  #   print(targets.mean())
  #   quit()
-     inputNum = torch.LongTensor([makeBitTensor(x,N) for x in inputs]).cuda().t()
-     positional = torch.LongTensor(list(range(0, N))).unsqueeze(1).expand(-1, batch_size).cuda()
+     inputNum = torch.LongTensor([makeBitTensor(x,N) for x in inputs]).to(device).t()
+     positional = torch.LongTensor(list(range(0, N))).unsqueeze(1).expand(-1, batch_size).to(device)
      inputTensorEmbed = torch.cat([embeddings(inputNum), positional_embeddings(positional)], dim=2)
      hidden = qrnn(inputTensorEmbed)[0]
      result = (output(hidden)).view(-1)
@@ -138,8 +145,8 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
    
    N = 30 #random.randint(2,30)
    averageDegree = N
-   coefficients = torch.randn(N,N).cuda()
-   mask = torch.zeros(N, N, dtype=torch.uint8).cuda()
+   coefficients = torch.randn(N,N).to(device)
+   mask = torch.zeros(N, N, dtype=torch.uint8).to(device)
     
    indices = torch.randperm(N*N)[:N]  # Shuffle flattened indices and pick first N
    rows = indices // N  # Convert to 2D row indices
@@ -158,7 +165,7 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
  #       for i in range(N):
  #          for j in range(N):
            c[i,j] = 1 if binary[i] == binary[j] else -1
-       r = (coefficients*c.cuda()).sum()
+       r = (coefficients*c.to(device)).sum()
        return r
    loss = fitNetwork(function, N)
    print(loss, averageDegree, loss)
