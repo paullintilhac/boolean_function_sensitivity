@@ -10,13 +10,16 @@ import argparse
 from transformer import Transformer
 import os
 import itertools
+mps_avail = torch.backends.mps.is_available()
+cuda_avail = torch.cuda.is_available()
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-if torch.cuda.is_available():
-    print("GPU is available")
-    print("device count: " + str(torch.cuda.device_count()))
+
+if mps_avail:
+  device = torch.device("mps")
+elif cuda_avail:
+  device = torch.device("cuda")
 else:
-    print("GPU is not available")
+  device = torch.device("cpu")
 
 def fitNetwork(function, loader, N, epochs, dir_name):
     lr = 6e-7
