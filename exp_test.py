@@ -19,25 +19,25 @@ if torch.cuda.is_available():
 else:
     print("GPU is not available")
 
-def fitNetwork(function, loader, N, epochs, dir_name):
+def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
     lr = 3e-5
     weight_decay = .0001
-    model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-8).to(device),device_ids=[0,1,2,3,4,5,6,7])
+    model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-8).to(device),device_ids=range(n_devices))
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     model.train()
-    
+    outer_break = False
     movAvg = 0
     summary = pd.DataFrame(columns=["iter", "loss"])
     # dir_name = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
-
+    
     for epoch in range(epochs):   
         epoch_loss = 0
         total_records = 0
-        #print("length of loader: " + str(len(loader)))
         #print("loader[0]: " + str(loader[0]))
         for idx, inputs in enumerate(loader):
           #print("inputs shape: "  + str(inputs.shape))
           #print("idx: " + str(idx))
+          
           model.train()
           targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
           result = model(inputs)
@@ -45,7 +45,6 @@ def fitNetwork(function, loader, N, epochs, dir_name):
           loss =  (result-targets).pow(2).mean()
           epoch_loss+=loss.detach().cpu()*len(inputs)
           total_records+=len(inputs)
-          movAvg = 0.99 * movAvg + (1-0.99) * (float(loss.detach()))
 
           (loss).backward()
           optimizer.step()
@@ -54,9 +53,9 @@ def fitNetwork(function, loader, N, epochs, dir_name):
           iteration = epoch*len(loader)+idx+1
           # epoch_loss = epoch_loss.detach().cpu()
                     
-          if movAvg < 0.01:
-            break
         epoch_loss/=total_records
+        if epoch_loss < 0.01:
+          break	
         if (epoch) % 5 == 0:
             #print("iter: " + str(iteration) + ", loss: " +str(movAvg))
             print("iterations: " + str(iteration) + ", total records: " + str(total_records) + ", epoch: " + str(epoch) + ", epoch_loss: " + str(epoch_loss))
@@ -134,6 +133,7 @@ def generate_dataset(num_samples, N, batch_size):
 def parse_args():
     parser = argparse.ArgumentParser(description='linear spectrum non boolean test.')
     parser.add_argument('--N', type=int, default=10)
+    parser.add_argument('--n_devices', type=int, default=1)
     parser.add_argument('--width', type=int, default=10)
     parser.add_argument('--dim', type=int, default=20)
     parser.add_argument('--f', type=int, default=64)
@@ -180,7 +180,7 @@ def main(args):
               print(f"fitting function: func {i}, deg {deg}, width {width}")
 
               # Fit the model
-              model, func_summary   = fitNetwork(func, train_loader, epochs=args.epochs, N=args.N, dir_name=dir_name)
+              model, func_summary   = fitNetwork(func, train_loader, epochs=args.epochs, N=args.N, dir_name=dir_name,n_devices=args.n_devices)
               func_summary["deg"]   = deg
               func_summary["width"] = width
               func_summary["func"]  = i
