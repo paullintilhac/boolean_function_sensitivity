@@ -60,14 +60,15 @@ class Transformer(torch.nn.Module):
 
         # self.positional_embeddings = torch.nn.Embedding(N, hidden_dim//2)
         # self.positional_embeddings = torch.eye(N, N)
-        self.transformer = torch.nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N) for _ in range(num_layers)])        
+        self.transformer = nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N) for _ in range(num_layers)])        
         # Layers/Networks
         # self.mlp_head = torch.nn.Sequential(
         #     torch.nn.Linear(hidden_dim, ff_dim), 
         #     torch.nn.ReLU(),
         #     torch.nn.Linear(ff_dim, hidden_dim)
         # )
-        self.output_proj = torch.randn((N, hidden_dim), requires_grad=True).to(device)
+        # self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True).to(device)
+        self.output_proj = nn.Linear(N*hidden_dim, 1, bias=False)
     
         
     def makeBitTensor(self, x, N):
@@ -86,7 +87,7 @@ class Transformer(torch.nn.Module):
         x = torch.cat([pos, dat], dim=2)
         x = self.transformer(x)
         # x = self.mlp_head(x)
-        x = torch.tensordot(x , self.output_proj)
+        x = self.output_proj(x.view(x.shape[0], -1))
 
         return x
     

@@ -24,6 +24,6 @@ python exp_new.py \
         --h 1 \
         --f 128 \
         --bs 64 \
-        --epochs 400 \
-        --num_samples 100000 \
+        --epochs 2000 \
+        --num_samples 20000 \
         --repeat 5
