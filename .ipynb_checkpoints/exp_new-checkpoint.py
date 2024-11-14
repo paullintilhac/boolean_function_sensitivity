@@ -229,17 +229,17 @@ def main(args):
     losses = {}
     test_batch = 10000
     func_per_deg = args.repeat
-    main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
+    main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}_oldcommit"
 
 
     
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
   
-    for deg in [1,2,3,4,5]:
+    for deg in [4]:
         losses[deg] = []
         for i in range(func_per_deg):
-              for width in range(1, args.N, 3):
+              for width in range(16, args.N, 3):
                   # Create new directory to save results for the particular function
                   dir_name = os.path.join(main_dir, f"func{i}_deg{deg}_width{width}")
                   os.makedirs(dir_name, exist_ok=True)
