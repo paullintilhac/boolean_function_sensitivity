@@ -13,7 +13,7 @@ import os
 
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
-suffix = "b64_lr1e5_dr0_s10000"
+suffix = "b64_lr1e5_dr0_s100000"
 print("mps avail: " + str(mps_avail) + ", cuda avail: " + str(cuda_avail))
 
 if mps_avail:
