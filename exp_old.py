@@ -13,7 +13,7 @@ import os
 
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
-
+suffix = "b64_lr1e5_dr0_s10000"
 print("mps avail: " + str(mps_avail) + ", cuda avail: " + str(cuda_avail))
 
 if mps_avail:
@@ -25,8 +25,8 @@ else:
 
 
 def fitNetwork(function, loader, N, epochs, dir_name):
-    model = Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.000006, weight_decay=0.1)
+    model = Transformer(N, args.dim, args.h, args.l, args.f, 1e-5,dropout = 0).to(device)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.00001, weight_decay=0.1)
     
     movAvg = 0
     summary = pd.DataFrame(columns=["iter", "loss"])
@@ -87,7 +87,7 @@ def validate(model, func, num_samples=1000):
       return loss
 
 def generate_dataset(num_samples, N, batch_size):
-    num_samples = 10000
+    num_samples = int(num_samples)
     inputs = torch.tensor([random.randint(0, 2**N-1) for _ in range(num_samples)]).to(device)
     train_loader = DataLoader(inputs, shuffle=True, batch_size=batch_size)
     return train_loader 
@@ -233,17 +233,17 @@ def main(args):
     losses = {}
     test_batch = 10000
     func_per_deg = args.repeat
-    main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}_oldtransformer11"
+    main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}_old"+suffix
 
 
     
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
   
-    for deg in [2,3,4,5]:
+    for deg in [4]:
         losses[deg] = []
         for i in range(func_per_deg):
-              for width in range(1, args.N, 6):
+              for width in [16]:
                   # Create new directory to save results for the particular function
                   dir_name = os.path.join(main_dir, f"func{i}_deg{deg}_width{width}")
                   os.makedirs(dir_name, exist_ok=True)
