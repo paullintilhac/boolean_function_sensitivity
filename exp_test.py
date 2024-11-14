@@ -25,46 +25,48 @@ def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
     model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-8).to(device),device_ids=range(n_devices))
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     model.train()
-    outer_break = False
     movAvg = 0
-    summary = pd.DataFrame(columns=["iter", "loss"])
+    summary = pd.DataFrame(columns=["epoch","iter", "loss"])
     # dir_name = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
     
     for epoch in range(epochs):   
         epoch_loss = 0
         total_records = 0
         #print("loader[0]: " + str(loader[0]))
+        batch_losses = []
         for idx, inputs in enumerate(loader):
           #print("inputs shape: "  + str(inputs.shape))
           #print("idx: " + str(idx))
           
-          model.train()
           targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
           result = model(inputs)
           #loss = -(result*targets).mean()
           loss =  (result-targets).pow(2).mean()
-          epoch_loss+=loss.detach().cpu()*len(inputs)
+          batch_losses.append(loss.detach().cpu())
+          epoch_loss+=loss.detach().cpu()*float(len(inputs))
           total_records+=len(inputs)
-
           (loss).backward()
           optimizer.step()
           optimizer.zero_grad()
         
           iteration = epoch*len(loader)+idx+1
           # epoch_loss = epoch_loss.detach().cpu()
-                    
-        epoch_loss/=total_records
+        #print("batch losses head: " +str(batch_losses[:5]))
+        #print("mean of batch losses: " + str(np.mean(np.array(batch_losses))))
+        epoch_loss/=float(total_records)
         if epoch_loss < 0.01:
           break	
         if (epoch) % 5 == 0:
             #print("iter: " + str(iteration) + ", loss: " +str(movAvg))
             print("iterations: " + str(iteration) + ", total records: " + str(total_records) + ", epoch: " + str(epoch) + ", epoch_loss: " + str(epoch_loss))
 
-            summary.loc[len(summary)] = {"epoch":epoch,"iterations":iteration, "epoch_loss":epoch_loss}
+            summary.loc[len(summary)] = {"epoch":epoch,"iter":iteration, "loss":epoch_loss}
             summary.to_csv(f"{dir_name}/curr_func.csv")
 
         if (epoch) % 20 == 0:
             val_loss = validate(model, function, num_samples=1000)
+            val_loss2 = validate(model, function, num_samples=1000)
+            print("val loss2: " + str(val_loss2))
             print(f"Iterations: {iteration}, Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}, TotalRecords: {total_records:.3f}")
             path = os.path.join(dir_name, f"model_{epoch}.pt")
             torch.save(model.state_dict(), path)  
@@ -151,7 +153,7 @@ def main(args):
     # summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
     losses = {}
     func_per_deg = args.repeat
-    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr3e5_s1000"
+    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr3e5_s1000_smallbatch"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
