@@ -67,8 +67,8 @@ class Transformer(torch.nn.Module):
         #     torch.nn.ReLU(),
         #     torch.nn.Linear(ff_dim, hidden_dim)
         # )
-        # self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True).to(device)
-        self.output_proj = nn.Linear(N*hidden_dim, 1, bias=False)
+        self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True).to(device)
+        #self.output_proj = nn.Linear(N*hidden_dim, 1, bias=False)
     
         
     def makeBitTensor(self, x, N):
@@ -87,8 +87,8 @@ class Transformer(torch.nn.Module):
         x = torch.cat([pos, dat], dim=2)
         x = self.transformer(x)
         # x = self.mlp_head(x)
-        x = self.output_proj(x.view(x.shape[0], -1))
-
+        #x = self.output_proj(x.view(x.shape[0], -1))
+        x = torch.tensordot(x , self.output_proj)
         return x
     
 class CustomMHA(torch.nn.MultiheadAttention):

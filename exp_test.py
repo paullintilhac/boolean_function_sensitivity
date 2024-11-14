@@ -14,15 +14,19 @@ import time
 
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-if torch.cuda.is_available():
-    print("GPU is available")
-    print("device count: " + str(torch.cuda.device_count()))
+mps_avail = torch.backends.mps.is_available()
+cuda_avail = torch.cuda.is_available()
+
+if mps_avail:
+  device = torch.device("mps")
+elif cuda_avail:
+  device = torch.device("cuda")
 else:
-    print("GPU is not available")
+  device = torch.device("cpu")
+
 
 def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
-    lr = 6e-7 
+    lr = 6e-6 
     weight_decay = .1
     model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device),device_ids=range(n_devices))
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -63,7 +67,7 @@ def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
         end_time = time.time()
         
         elapsed_time = end_time - start_time
-        time_per_record_ms = float(elapsed_time)/float(total_records*1000000)
+        time_per_record_ms = float(elapsed_time*100)/float(total_records)
         print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (microsec): {time_per_record_ms: .3f}")
         if epoch_loss < 0.01:
           break	
@@ -164,7 +168,7 @@ def main(args):
     # summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
     losses = {}
     func_per_deg = args.repeat
-    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e7_s100k_b64"
+    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e6_s10k_b64"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
