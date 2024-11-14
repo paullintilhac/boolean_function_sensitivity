@@ -10,6 +10,8 @@ import argparse
 from transformer import Transformer
 import os
 import itertools
+import time
+
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -20,9 +22,9 @@ else:
     print("GPU is not available")
 
 def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
-    lr = 3e-5
-    weight_decay = .0001
-    model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-8).to(device),device_ids=range(n_devices))
+    lr = 6e-7 
+    weight_decay = .1
+    model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device),device_ids=range(n_devices))
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     model.train()
     movAvg = 0
@@ -34,6 +36,9 @@ def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
         total_records = 0
         #print("loader[0]: " + str(loader[0]))
         batch_losses = []
+
+        start_time = time.time()
+
         for idx, inputs in enumerate(loader):
           #print("inputs shape: "  + str(inputs.shape))
           #print("idx: " + str(idx))
@@ -54,6 +59,12 @@ def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
         #print("batch losses head: " +str(batch_losses[:5]))
         #print("mean of batch losses: " + str(np.mean(np.array(batch_losses))))
         epoch_loss/=float(total_records)
+        # Your code here
+        end_time = time.time()
+        
+        elapsed_time = end_time - start_time
+        time_per_record_ms = float(elapsed_time)/float(total_records*1000000)
+        print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (microsec): {time_per_record_ms: .3f}")
         if epoch_loss < 0.01:
           break	
         if (epoch) % 5 == 0:
@@ -153,7 +164,7 @@ def main(args):
     # summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
     losses = {}
     func_per_deg = args.repeat
-    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr3e5_s1000_smallbatch"
+    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e7_s100k_b64"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
@@ -161,10 +172,10 @@ def main(args):
     train_loader = generate_dataset(args.num_samples, args.N, args.bs)
     torch.save(train_loader,main_dir+"/train_dataloader.pt")
     for i in range(func_per_deg):
-        for deg in [1,2,3,4,5]:
+        for deg in [2,3,4,5]:
             losses[deg] = []
             #for width in range(1, args.N, 3):
-            for width in [1,4,10]:
+            for width in [4,10,16]:
               print(f"Generating: func {i}, deg {deg}, width {width}")
 
               # Create new directory to save results for the particular function
