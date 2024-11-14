@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 import random
 import argparse
-from transformer import Transformer
+from transformer_old import Transformer
 import os
 
 
@@ -26,7 +26,7 @@ else:
 
 def fitNetwork(function, loader, N, epochs, dir_name):
     model = Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.0000006, weight_decay=0.1)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.000006, weight_decay=0.1)
     
     movAvg = 0
     summary = pd.DataFrame(columns=["iter", "loss"])
@@ -233,17 +233,17 @@ def main(args):
     losses = {}
     test_batch = 10000
     func_per_deg = args.repeat
-    main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
+    main_dir = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}_oldtransformer11"
 
 
     
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
   
-    for deg in [1,2,3,4,5]:
+    for deg in [2,3,4,5]:
         losses[deg] = []
         for i in range(func_per_deg):
-              for width in range(1, args.N, 3):
+              for width in range(1, args.N, 6):
                   # Create new directory to save results for the particular function
                   dir_name = os.path.join(main_dir, f"func{i}_deg{deg}_width{width}")
                   os.makedirs(dir_name, exist_ok=True)
