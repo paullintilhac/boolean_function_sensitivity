@@ -26,7 +26,7 @@ else:
 
 
 def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
-    lr = 6e-6 
+    lr = 6e-5 
     weight_decay = .1
     model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device),device_ids=range(n_devices))
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -168,7 +168,7 @@ def main(args):
     # summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
     losses = {}
     func_per_deg = args.repeat
-    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e6_s10k_b64"
+    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e5_s100k_b512"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
