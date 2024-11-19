@@ -16,14 +16,13 @@
 # echo conda env:
 # conda info --env
 
-python exp_new.py \
+python exp_old.py \
         --N 30 \
-        --width 1 \
         --dim 120 \
         --l 1 \
         --h 1 \
         --f 128 \
         --bs 64 \
         --epochs 400 \
-        --num_samples 100000 \
+        --num_samples 10000 \
         --repeat 5

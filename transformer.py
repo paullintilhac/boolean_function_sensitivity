@@ -4,7 +4,18 @@ import torch.nn.functional as F
 import math
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+
+mps_avail = torch.backends.mps.is_available()
+cuda_avail = torch.cuda.is_available()
+
+if mps_avail:
+  device = torch.device("mps")
+elif cuda_avail:
+  device = torch.device("cuda")
+else:
+  device = torch.device("cpu")
+
+
 class AttentionBlock(nn.Module):
     
     def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N):
@@ -67,9 +78,16 @@ class Transformer(torch.nn.Module):
         #     torch.nn.ReLU(),
         #     torch.nn.Linear(ff_dim, hidden_dim)
         # )
-        self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True).to(device)
+
+        self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True)
+        if not cuda_avail:
+            self.output_proj.to(device)
+        else:    
+            self.output_proj.cuda()
+        
         #self.output_proj = nn.Linear(N*hidden_dim, 1, bias=False)
-    
+        #print("output proj: " + str(self.output_proj))
+
         
     def makeBitTensor(self, x, N):
         y = format(x, "b")
@@ -86,6 +104,10 @@ class Transformer(torch.nn.Module):
         pos, dat = torch.eye(self.N, self.N).to(device).unsqueeze(0).repeat(batch_size, 1, 1), self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
         x = self.transformer(x)
+        if not cuda_avail:
+            x.to(device)
+        else:    
+            x.cuda()        
         # x = self.mlp_head(x)
         #x = self.output_proj(x.view(x.shape[0], -1))
         x = torch.tensordot(x , self.output_proj)

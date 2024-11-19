@@ -25,68 +25,6 @@ else:
   device = torch.device("cpu")
 
 
-def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
-    lr = 6e-6 
-    weight_decay = .1
-    model = torch.nn.DataParallel(Transformer(N, args.dim, args.h, args.l, args.f, 1e-5).to(device),device_ids=range(n_devices))
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
-    model.train()
-    movAvg = 0
-    summary = pd.DataFrame(columns=["epoch","iter", "loss"])
-    # dir_name = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
-    
-    for epoch in range(epochs):   
-        epoch_loss = 0
-        total_records = 0
-        #print("loader[0]: " + str(loader[0]))
-        batch_losses = []
-
-        start_time = time.time()
-
-        for idx, inputs in enumerate(loader):
-          #print("inputs shape: "  + str(inputs.shape))
-          #print("idx: " + str(idx))
-          
-          targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
-          result = model(inputs)
-          #loss = -(result*targets).mean()
-          loss =  (result-targets).pow(2).mean()
-          batch_losses.append(loss.detach().cpu())
-          epoch_loss+=loss.detach().cpu()*float(len(inputs))
-          total_records+=len(inputs)
-          (loss).backward()
-          optimizer.step()
-          optimizer.zero_grad()
-        
-          iteration = epoch*len(loader)+idx+1
-          # epoch_loss = epoch_loss.detach().cpu()
-        #print("batch losses head: " +str(batch_losses[:5]))
-        #print("mean of batch losses: " + str(np.mean(np.array(batch_losses))))
-        epoch_loss/=float(total_records)
-        # Your code here
-        end_time = time.time()
-        
-        elapsed_time = end_time - start_time
-        time_per_record_ms = float(elapsed_time*100)/float(total_records)
-        print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (microsec): {time_per_record_ms: .3f}")
-        if epoch_loss < 0.01:
-          break	
-        if (epoch) % 5 == 0:
-            #print("iter: " + str(iteration) + ", loss: " +str(movAvg))
-            print("iterations: " + str(iteration) + ", total records: " + str(total_records) + ", epoch: " + str(epoch) + ", epoch_loss: " + str(epoch_loss))
-
-            summary.loc[len(summary)] = {"epoch":epoch,"iter":iteration, "loss":epoch_loss}
-            summary.to_csv(f"{dir_name}/curr_func.csv")
-
-        if (epoch) % 20 == 0:
-            val_loss = validate(model, function, num_samples=1000)
-            val_loss2 = validate(model, function, num_samples=1000)
-            print("val loss2: " + str(val_loss2))
-            print(f"Iterations: {iteration}, Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}, TotalRecords: {total_records:.3f}")
-            path = os.path.join(dir_name, f"model_{epoch}.pt")
-            torch.save(model.state_dict(), path)  
-
-    return model, summary
 
 def rboolf_old(N, deg=2):
    coefficients = torch.randn(N,N).cuda()
@@ -134,18 +72,115 @@ def rboolf(N, width, deg):
         return torch.dot(coefficients, torch.tensor(comps, dtype=torch.float32).to(device))
     return func, (coefficients, combs)
 
-def validate(model, func, num_samples=1000):
+
+
+class Trainer:
+    def __init__(
+            self,
+            model:torch.nn.Module,
+            train_data: DataLoader,
+            optimizer: torch.optim.optimizer,
+            gpu_id: int,
+            save_every: int,
+            dir_name: str,
+            width: int,
+            deg: int,
+            N: int,
+
+    ) -> None:
+        self.gpu_id = gpu_id
+        self.model = model.to(gpu_id)
+        self.train_data=train_data
+        self.optimizer = optimizer
+        self.save_every=save_every
+        self.dir_name = dir_name    
+        self.summary = pd.DataFrame(columns=["epoch","train_loss","val_loss"])
+        self.epoch_loss = 0
+        
+        func, (coeffs, combs) = rboolf(N, width, deg)
+        self.func = func
+
+    def _run_batch(self,inputs, targets):
+        self.optimizer.zero_grad()
+
+        if not cuda_avail:
+            inputs.to(device)
+        else:    
+            inputs.cuda()
+
+        result = self.model(inputs)
+        #loss = -(result*targets).mean()
+        loss =  (result-targets).pow(2).mean()
+        (loss).backward()
+        self.optimizer.step()
+        return loss.detach().cpu()
+    
+    def _run_epoch(self,epoch):
+        b_sz = len(next(iter(self.train_data))[0])
+        print(f"[GPU{self.gpu_id}] Epoch {epoch} | Batchsize: {b_sz} | Steps: {len(self.train_data)}")
+        epoch_loss = 0
+        total_records = 0
+        #print("loader[0]: " + str(loader[0]))
+        start_time = time.time()
+        for idx, inputs in enumerate(self.train_data):
+          #print("inputs shape: "  + str(inputs.shape))
+          #print("idx: " + str(idx))
+          if not cuda_avail:
+              inputs.to(device)
+          else:    
+              inputs.cuda()
+          
+          targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
+          batch_loss = self._run_batch(inputs, targets)
+          epoch_loss+=batch_loss*float(len(inputs))
+          total_records+=len(inputs)
+          iteration = epoch*len(self.train_data)+idx+1
+        epoch_loss/=float(total_records)
+        # Your code here
+        end_time = time.time()
+        
+        elapsed_time = end_time - start_time
+        print(f"Epoch time: {elapsed_time:.3f} seconds.")
+        #time_per_record_ms = float(elapsed_time*100)/float(total_records)
+        #print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (ms): {time_per_record_ms: .3f}")
+        return epoch_loss
+
+    def save_checkpoint(self,epoch):
+        ckp = self.model.state_dict()
+        torch.save(ckp,os.path.join(self.dir_name, f"model_{epoch}.pt"))
+        print(f"Epoch {epoch} | Training checkpoint saved at model_{epoch}.pt")
+
+    def train(self,epochs: int):
+        self.model.train()
+        for epoch in range(epochs):
+            epoch_loss = self._run_epoch(epoch)
+            if epoch & self.save_every==0:
+                self.save_checkpoint(epoch)
+                val_loss = self.validate(self.model, function, num_samples=1000)
+                self.summary.loc[len(self.gpu_idsummary)] = {"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
+                self.summary.to_csv(f"{self.dir_name}/curr_func.csv")
+
+       
+            print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
+            
+    
+
+    def validate(model, func, num_samples=1000):
       model.eval()
       inputs = torch.tensor([random.randint(0, 2**args.N-1) for _ in range(num_samples)]).to(device)
       targets = torch.FloatTensor([float(func(x)) for x in inputs]).to(device)
       result = model(inputs).to(device)
       loss = (result - targets).pow(2).mean()
       return loss.detach()
+    
+def load_train_objs(num_samples, N, dim,h,l,f):
+        train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(device)
+        lr = 6e-6 
+        weight_decay = .1
+        model = Transformer(N, dim, h, l, f, 1e-5)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+        return train_set, model, optimizer                
 
-def generate_dataset(num_samples, N, batch_size):
-    inputs = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(device)
-    train_loader = DataLoader(inputs, shuffle=True, batch_size=batch_size)
-    return train_loader
 
 def parse_args():
     parser = argparse.ArgumentParser(description='linear spectrum non boolean test.')
@@ -172,14 +207,14 @@ def main(args):
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
-    print("generating dataset with " + str(args.num_samples)+" records. ")
-    train_loader = generate_dataset(args.num_samples, args.N, args.bs)
+    
+    
     torch.save(train_loader,main_dir+"/train_dataloader.pt")
     for i in range(func_per_deg):
-        for deg in [2,3,4,5]:
+        for deg in [5]:
             losses[deg] = []
             #for width in range(1, args.N, 3):
-            for width in [4,10,16]:
+            for width in [16]:
               print(f"Generating: func {i}, deg {deg}, width {width}")
 
               # Create new directory to save results for the particular function
@@ -189,40 +224,43 @@ def main(args):
               # Generate function and save its coefficients
               #func = rboolf_old(args.N,  deg)
 
-              func, (coeffs, combs) = rboolf(args.N, width, deg)
-              torch.save(coeffs, f"{dir_name}/func_coeffs.pt")
-              torch.save(combs, f"{dir_name}/func_combs.pt")
+              print("generating dataset with " + str(args.num_samples)+" records. ")
+              train_set,model,optimizer = load_train_objs(args.num_samples,args.N,args.dim,args.h,args.l,args.f)
+              train_loader = DataLoader(train_set, shuffle=True, batch_size=args.bs)
+            #   torch.save(coeffs, f"{dir_name}/func_coeffs.pt")
+            #   torch.save(combs, f"{dir_name}/func_combs.pt")
               # Generate the training dataset
-              
-              print(f"fitting function: func {i}, deg {deg}, width {width}")
-
+              trainer = Trainer(model, train_loader,optimizer,0,10, dir_name,args.N,width,deg)
+              trainer.train()
+            #   model.train()
+           
+              # dir_name = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
               # Fit the model
-              model, func_summary   = fitNetwork(func, train_loader, epochs=args.epochs, N=args.N, dir_name=dir_name,n_devices=args.n_devices)
-              func_summary["deg"]   = deg
-              func_summary["width"] = width
-              func_summary["func"]  = i
+            #   func_summary["deg"]   = deg
+            #   func_summary["width"] = width
+            #   func_summary["func"]  = i
               # func_summary = func_summary[summary.columns.tolist()]
               # summary = pd.concat([summary, func_summary])
               # summary.to_csv(f"{main_dir}/test.csv")
-              summary_csv = f"{main_dir}/summary.csv"
-              func_summary.to_csv(summary_csv, mode='a', header=not os.path.exists(summary_csv), index=False)
+            #   summary_csv = f"{main_dir}/summary.csv"
+            #   func_summary.to_csv(summary_csv, mode='a', header=not os.path.exists(summary_csv), index=False)
 
         
-              # Get Test Loss
-              model.eval()
-              loss = validate(model=model, func=func, num_samples=1000)
-              losses[deg].append(loss.item())
+            #   # Get Test Loss
+            #   model.eval()
+            #   loss = validate(model=model, func=func, num_samples=1000)
+            #   losses[deg].append(loss.item())
               # print(f"\nReported Loss: {loss.item()}\n")
         
               # # Write to Logs
               # with open("logs_width.txt", "a") as f:
               #     f.write(f"\nReported Loss: {loss.item()}\n")
-    print(losses)
+    # print(losses)
   
-    # Save to File
-    df = pd.DataFrame.from_dict(losses)
-    os.makedirs(dir_name, exist_ok=True)
-    df.to_csv(f"{main_dir}/results_layernorm_test.csv")
+    # # Save to File
+    # df = pd.DataFrame.from_dict(losses)
+    # os.makedirs(dir_name, exist_ok=True)
+    # df.to_csv(f"{main_dir}/results_layernorm_test.csv")
 
 if __name__ == "__main__":
     args = parse_args()
