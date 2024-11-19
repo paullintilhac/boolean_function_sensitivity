@@ -53,6 +53,7 @@ def rboolf_old(N, deg=2):
 
 def rboolf(N, width, deg):
     coefficients = torch.randn(width).to(device)
+    #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
     coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
     
     combs = torch.tensor(list(itertools.combinations(torch.arange(N+1), deg))).to(device)
@@ -67,6 +68,7 @@ def rboolf(N, width, deg):
                 bit = 1 if int(binary[e]) else -1
                 res *= bit
             comps.append(res)
+        #print("coeffiients: " + str(coefficients) + ", comps shape: " + str(comps))
         return torch.dot(coefficients, torch.tensor(comps, dtype=torch.float32).to(device))
     return func, (coefficients, combs)
 
@@ -94,7 +96,7 @@ class Trainer:
         self.dir_name = dir_name    
         self.summary = pd.DataFrame(columns=["epoch","train_loss","val_loss"])
         self.epoch_loss = 0
-        
+        print("width in constructor: "  + str(width))
         func, (coeffs, combs) = rboolf(N, width, deg)
         self.func = func
 
@@ -114,7 +116,9 @@ class Trainer:
         return loss.detach().cpu()
     
     def _run_epoch(self,epoch):
-        b_sz = len(next(iter(self.train_data))[0])
+        print("steps: " + str((next(iter(self.train_data)))))
+        #b_sz = len(next(iter(self.train_data))[0])
+        b_sz = len(next(iter(self.train_data)))
         print(f"[GPU{self.gpu_id}] Epoch {epoch} | Batchsize: {b_sz} | Steps: {len(self.train_data)}")
         epoch_loss = 0
         total_records = 0
@@ -128,7 +132,7 @@ class Trainer:
           else:    
               inputs.cuda()
           
-          targets = torch.FloatTensor([float(function(x)) for x in inputs]).to(device)
+          targets = torch.FloatTensor([float(self.func(x)) for x in inputs]).to(device)
           batch_loss = self._run_batch(inputs, targets)
           epoch_loss+=batch_loss*float(len(inputs))
           total_records+=len(inputs)
@@ -152,24 +156,25 @@ class Trainer:
         self.model.train()
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
-            if epoch & self.save_every==0:
+            if epoch % self.save_every==0:
                 self.save_checkpoint(epoch)
-                val_loss = self.validate(self.model, function, num_samples=1000)
-                self.summary.loc[len(self.gpu_idsummary)] = {"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
+                #print("self.func: " + str(self.func))
+                val_loss = self.validate(1000)
+                self.summary.loc[len(self.summary)] = {"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
                 self.summary.to_csv(f"{self.dir_name}/curr_func.csv")
 
        
-            print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
+                print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
             
     
 
-    def validate(model, func, num_samples=1000):
-      model.eval()
+    def validate(self, num_samples):
+      self.model.eval()
       inputs = torch.tensor([random.randint(0, 2**args.N-1) for _ in range(num_samples)]).to(device)
-      targets = torch.FloatTensor([float(func(x)) for x in inputs]).to(device)
-      result = model(inputs).to(device)
+      targets = torch.FloatTensor([float(self.func(x)) for x in inputs]).to(device)
+      result = self.model(inputs).to(device)
       loss = (result - targets).pow(2).mean()
-      return loss.detach()
+      return loss.detach().cpu()
     
 def load_train_objs(num_samples, N, dim,h,l,f):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(device)
@@ -201,7 +206,7 @@ def main(args):
     # summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
     losses = {}
     func_per_deg = args.repeat
-    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e5_s100k_b512"
+    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_refactor"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
@@ -223,14 +228,24 @@ def main(args):
 
               print("generating dataset with " + str(args.num_samples)+" records. ")
               train_set,model,optimizer = load_train_objs(args.num_samples,args.N,args.dim,args.h,args.l,args.f)
+              print("epochs: " + str(args.epochs) + ", bs: " + str(args.bs))
               train_loader = DataLoader(train_set, shuffle=True, batch_size=args.bs)
               #torch.save(train_loader,main_dir+"/train_dataloader.pt")
 
             #   torch.save(coeffs, f"{dir_name}/func_coeffs.pt")
             #   torch.save(combs, f"{dir_name}/func_combs.pt")
               # Generate the training dataset
-              trainer = Trainer(model, train_loader,optimizer,0,10, dir_name,args.N,width,deg)
-              trainer.train()
+                # model:torch.nn.Module,
+                # train_data: DataLoader,
+                # optimizer: torch.optim.Optimizer,
+                # gpu_id: int,
+                # save_every: int,
+                # dir_name: str,
+                # width: int,
+                # deg: int,
+                # N: int,
+              trainer = Trainer(model, train_loader,optimizer,gpu_id=0,save_every=10,dir_name= dir_name,width=width,deg=deg,N=args.N)
+              trainer.train(args.epochs)
             #   model.train()
            
               # dir_name = f"{args.N}_{args.dim}_{args.l}_{args.h}_{args.f}"
