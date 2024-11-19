@@ -24,8 +24,6 @@ elif cuda_avail:
 else:
   device = torch.device("cpu")
 
-
-
 def rboolf_old(N, deg=2):
    coefficients = torch.randn(N,N).cuda()
    mask = torch.zeros(N, N, dtype=torch.uint8).cuda()
@@ -203,7 +201,7 @@ def main(args):
     # summary = pd.DataFrame(columns=["deg", "width", "func", "iter", "loss"])
     losses = {}
     func_per_deg = args.repeat
-    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e6_s10k_b64"
+    main_dir = f"N{args.N}_HidDim{args.dim}_L{args.l}_H{args.h}_FFDim{args.f}_lr6e5_s100k_b512"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
