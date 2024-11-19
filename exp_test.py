@@ -77,7 +77,7 @@ class Trainer:
             self,
             model:torch.nn.Module,
             train_data: DataLoader,
-            optimizer: torch.optim.optimizer,
+            optimizer: torch.optim.Optimizer,
             gpu_id: int,
             save_every: int,
             dir_name: str,
@@ -207,7 +207,6 @@ def main(args):
   #   f.write("------------------------------------------\n")
     
     
-    torch.save(train_loader,main_dir+"/train_dataloader.pt")
     for i in range(func_per_deg):
         for deg in [5]:
             losses[deg] = []
@@ -225,6 +224,8 @@ def main(args):
               print("generating dataset with " + str(args.num_samples)+" records. ")
               train_set,model,optimizer = load_train_objs(args.num_samples,args.N,args.dim,args.h,args.l,args.f)
               train_loader = DataLoader(train_set, shuffle=True, batch_size=args.bs)
+              #torch.save(train_loader,main_dir+"/train_dataloader.pt")
+
             #   torch.save(coeffs, f"{dir_name}/func_coeffs.pt")
             #   torch.save(combs, f"{dir_name}/func_combs.pt")
               # Generate the training dataset
