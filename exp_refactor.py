@@ -171,6 +171,7 @@ def parse_args():
     parser.add_argument('--h', type=int, default=1)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--bs', type=int, default=32)
+    parser.add_argument('--save_every', type=int, default=20)
     parser.add_argument('--num_samples', type=int, default=100000)
     parser.add_argument('--lr', type=str,default = "6e-6")
     parser.add_argument('--repeat', type=int, default=100)
@@ -198,7 +199,15 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           sampler = DistributedSampler(train_set)
       )
              
-      trainer = Trainer(coefs,combs, model, train_loader,optimizer,gpu_id=rank,save_every=1,dir_name= dir_name,width=width,deg=deg,N=args.N)
+      trainer = Trainer(coefs,combs, model,
+                        train_loader,
+                        optimizer,
+                        gpu_id=rank,
+                        save_every=args.save_every,
+                        dir_name= dir_name,
+                        width=width,
+                        deg=deg,
+                        N=args.N)
       trainer.train(args.epochs)
       destroy_process_group()
 

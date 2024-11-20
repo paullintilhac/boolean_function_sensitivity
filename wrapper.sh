@@ -32,7 +32,7 @@
 python exp_refactor.py  
     --N 30      \
        --width 1  \
-              --dim 120      \
+              --dim 120  \
                  --l 2     \
                      --h 1     \
                          --f 128     \
