@@ -24,7 +24,6 @@ elif cuda_avail:
   device = torch.device("cuda")
 else:
   device = torch.device("cpu")
-class Trainer:
     
 def fitNetwork(function, loader, N, epochs, dir_name,n_devices):
     #dist.init_process_group(backend='nccl', init_method='env://', rank=n_devices, world_size=n_devices)

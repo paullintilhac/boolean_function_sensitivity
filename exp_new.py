@@ -122,7 +122,7 @@ def main(args):
   #   f.write("------------------------------------------\n")
 
     for i in range(func_per_deg):
-        for deg in [7]:
+        for deg in [4]:
             losses[deg] = []
             #for width in range(1, args.N, 3):
             for width in range(1,2):

@@ -26,56 +26,25 @@ elif cuda_avail:
 else:
   device = torch.device("cpu")
 
-
-def rboolf_full(seed,N, width, deg,x):
-    torch.manual_seed(seed)
-    coefficients = torch.randn(width).to(device)
-    #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
-    coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
-    combs = torch.tensor(list(itertools.combinations(torch.arange(N+1), deg))).to(device)
-    combs = combs[torch.randperm(len(combs))][:width] # Shuffled
-    binary = f"{x:0{N}b}"+"0"
-    comps = []
-    for elem in combs:
-        res = 1
-        for e in elem:
-            bit = 1 if int(binary[e]) else -1
-            res *= bit
-        comps.append(res)
-        #print("coeffiients: " + str(coefficients) + ", comps shape: " + str(comps))
-    return torch.dot(coefficients, torch.tensor(comps, dtype=torch.float32).to(device))
-    
 def rboolf(N, width, deg):
     coefficients = torch.randn(width).to(device)
     #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
     coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
     
-    combs = torch.tensor(list(itertools.combinations(torch.arange(N+1), deg))).to(device)
+    combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
-
-    def func(x):
-        binary = f"{x:0{N}b}"+"0"
-        comps = []
-        for elem in combs:
-            res = 1
-            for e in elem:
-                bit = 1 if int(binary[e]) else -1
-                res *= bit
-            comps.append(res)
-        #print("coeffiients: " + str(coefficients) + ", comps shape: " + str(comps))
-        return torch.dot(coefficients, torch.tensor(comps, dtype=torch.float32).to(device))
-    return func, (coefficients, combs)
+    return (coefficients, combs)
 
 def ddp_setup(rank, world_size):
     os.environ["MASTER_ADDR"]="localhost"
     os.environ["MASTER_PORT"]= "12355"
     init_process_group(backend="nccl",rank=rank, world_size=world_size)
-    
 
 class Trainer:
     def __init__(
             self,
-            func,
+            coeffs: torch.FloatTensor,
+            combs: torch.FloatTensor,
             model:torch.nn.Module,
             train_data: DataLoader,
             optimizer: torch.optim.Optimizer,
@@ -96,9 +65,28 @@ class Trainer:
         self.summary = pd.DataFrame(columns=["epoch","train_loss","val_loss"])
         self.epoch_loss = 0
         self.N = N
-        self.func = func
+        self.coeffs = coeffs.to(gpu_id)
+        self.combs = combs.to(gpu_id)
         #self.func.to(gpu_id)
-
+    
+    def makeBitTensor(self, x, N):
+        y = format(x, "b")
+        y = ("0"*(N-len(y))) + y
+        return [int(z) for z in list(y)]
+        
+    def func_batch(self,x):
+        binaryTensor = ((torch.tensor([self.makeBitTensor(y,self.N) for y in x])-.5)*2)
+        comps = []
+        #print("self.combs length: " + str(len(self.combs)))
+        for elem in self.combs:
+            res = torch.tensor([1]*len(x))
+            for e in elem:
+                bitCol = binaryTensor[:,e]
+                res = torch.mul(res, bitCol)
+            comps.append(res)
+        comps = torch.transpose(torch.tensor(np.array(comps),dtype=torch.float32),1,0).to(self.gpu_id)
+        return torch.matmul(comps, self.coeffs).to(self.gpu_id)
+        
     def _run_batch(self,inputs, targets):
         self.optimizer.zero_grad()
         inputs.to(self.gpu_id)
@@ -119,18 +107,8 @@ class Trainer:
         start_time = time.time()
         
         for idx, inputs in enumerate(self.train_data):
-          #print("idx: " + str(idx))
-          inputs.to(self.gpu_id)    
-          print("gpu id: " + str(self.gpu_id))
-          print("func: " + str(self.func))
-          #print("func: " + str(self.func))
-          #print("func value at 256: " + str(self.func(256)))
-          print("before targets")
-          print("first target: " + str(self.func(inputs[0])))
-          print("num inputs: " + str(len(inputs)))
-          targets =torch.FloatTensor([self.func(x) for x in inputs],device = self.gpu_id)
-          
-          print("targets shape: " + str(targets.shape))
+          #inputs.to(self.gpu_id)    
+          targets =self.func_batch(inputs).to(self.gpu_id)
           batch_loss = self._run_batch(inputs, targets)
           epoch_loss+=batch_loss*float(len(inputs))
           total_records+=len(inputs)
@@ -140,9 +118,9 @@ class Trainer:
         end_time = time.time()
         
         elapsed_time = end_time - start_time
-        print(f"Epoch time: {elapsed_time:.3f} seconds.")
+        #print(f"Epoch time: {elapsed_time:.3f} seconds.")
         time_per_record_ms = float(elapsed_time*100)/float(total_records)
-        print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (ms): {time_per_record_ms: .3f}")
+        #print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (ms): {time_per_record_ms: .3f}")
         return epoch_loss
 
     def save_checkpoint(self,epoch):
@@ -169,7 +147,7 @@ class Trainer:
     def validate(self, num_samples):
       self.model.eval()
       inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
-      targets = torch.FloatTensor([float(self.func(x)) for x in inputs]).to(self.gpu_id)
+      targets = self.func_batch(inputs).to(self.gpu_id)
       result = self.model(inputs).to(self.gpu_id)
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
@@ -200,9 +178,8 @@ def parse_args():
 
     return parser.parse_args()
 
-def main(rank, args,world_size,func,main_dir,deg,width,i):
+def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #print("func in main: " + str(func))
-      print(func(256))
       ddp_setup(rank,world_size)
       # Create new directory to save results for the particular function
       dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
@@ -221,11 +198,10 @@ def main(rank, args,world_size,func,main_dir,deg,width,i):
           sampler = DistributedSampler(train_set)
       )
              
-      trainer = Trainer(func, model, train_loader,optimizer,gpu_id=rank,save_every=1,dir_name= dir_name,width=width,deg=deg,N=args.N)
+      trainer = Trainer(coefs,combs, model, train_loader,optimizer,gpu_id=rank,save_every=1,dir_name= dir_name,width=width,deg=deg,N=args.N)
       trainer.train(args.epochs)
       destroy_process_group()
 
-global func     
 from functools import partial
 
 if __name__ == "__main__":
@@ -246,8 +222,7 @@ if __name__ == "__main__":
             for width in [16]:
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size
-                seed=4
                 print(f"Generating: func {i}, deg {deg}, width {width}")
-                partial_func = partial(rboolf_full,seed,arguments.N, width, deg)
-                mp.spawn(main,args=(arguments,arguments.world_size,partial_func,main_dir,deg,width,i,),nprocs=arguments.world_size)
+                (coefs, combs) = rboolf(arguments.N, width, deg)
+                mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size)
     
