@@ -101,7 +101,7 @@ class Trainer:
         
         #b_sz = len(next(iter(self.train_data))[0])
         b_sz = len(next(iter(self.train_data)))
-        print(f"[GPU{self.gpu_id}] Epoch {epoch} | Batchsize: {b_sz} | Steps: {len(self.train_data)}")
+        #print(f"[GPU{self.gpu_id}] Epoch {epoch} | Batchsize: {b_sz} | Steps: {len(self.train_data)}")
         epoch_loss = 0
         total_records = 0
         start_time = time.time()
@@ -152,12 +152,11 @@ class Trainer:
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
     
-def load_train_objs(num_samples, N, dim,h,l,f,rank):
+def load_train_objs(lr,num_samples, N, dim,h,l,f,rank):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        lr = 6e-6 
         weight_decay = .1
         model = Transformer(N, dim, h, l, f, 1e-5,rank)
-        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=weight_decay)
         return train_set, model, optimizer                
 
 
@@ -172,7 +171,8 @@ def parse_args():
     parser.add_argument('--h', type=int, default=1)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--bs', type=int, default=32)
-    parser.add_argument('--num_samples', type=float, default=100000)
+    parser.add_argument('--num_samples', type=int, default=100000)
+    parser.add_argument('--lr', type=str,default = "6e-6")
     parser.add_argument('--repeat', type=int, default=100)
 
 
@@ -188,7 +188,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       # Generate function and save its coefficients
       #func = rboolf_old(args.N,  deg)
       #print("generating dataset with " + str(args.num_samples)+" records. ")
-      train_set,model,optimizer = load_train_objs(args.num_samples,args.N,args.dim,args.h,args.l,args.f,rank)
+      train_set,model,optimizer = load_train_objs(args.lr,args.num_samples,args.N,args.dim,args.h,args.l,args.f,rank)
       model.to(rank)
       #print("epochs: " + str(args.epochs) + ", bs: " + str(args.bs))
       train_loader = DataLoader(

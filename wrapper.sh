@@ -16,14 +16,28 @@
 # echo conda env:
 # conda info --env
 
-python exp_test.py \
-        --N 30 \
-        --width 1 \
-        --dim 120 \
-        --l 2 \
-        --h 1 \
-        --f 128 \
-        --bs 2 \
-        --epochs 2000 \
-        --num_samples 1000 \
-        --repeat 5
+# python exp_test.py \
+#         --N 30 \
+#         --width 1 \
+#         --dim 120 \
+#         --l 2 \
+#         --h 1 \
+#         --f 128 \
+#         --bs 2 \
+#         --epochs 2000 \
+#         --num_samples 1000 \
+#         --repeat 5
+
+
+python exp_refactor.py  
+    --N 30      \
+       --width 1  \
+              --dim 120      \
+                 --l 2     \
+                     --h 1     \
+                         --f 128     \
+                             --bs 2048      \
+                                --epochs 2000      \
+                                   --num_samples 65536    \
+                                        --repeat 1 \
+                                        --lr "5e-5"
