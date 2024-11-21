@@ -45,18 +45,8 @@ class AttentionBlock(nn.Module):
 
 class Transformer(torch.nn.Module):
     
-    def __init__(self, N, hidden_dim, num_heads, num_layers, ff_dim, LNeps):
-        """
-        Inputs:
-            embed_dim - Dimensionality of the input feature vectors to the Transformer
-            hidden_dim - Dimensionality of the hidden layer in the feed-forward networks
-                         within the Transformer
-            num_heads - Number of heads to use in the Multi-Head Attention block
-            num_layers - Number of layers to use in the Transformer
-            patch_size - Number of pixels that the patches have per dimension
-            dropout - Amount of dropout to apply in the feed-forward network and 
-                      on the input encoding
-        """
+    def __init__(self,dropout, N, hidden_dim, num_heads, num_layers, ff_dim, LNeps,rank):
+
         super().__init__()
         self.N = N
         self.hidden_dim = hidden_dim
@@ -64,7 +54,8 @@ class Transformer(torch.nn.Module):
         self.l = num_layers
         self.ff_dim = ff_dim
         self.LNeps = LNeps
-
+        self.rank = rank
+        self.dropout = dropout
         # Layers
         self.embeddings = torch.nn.Embedding(2, hidden_dim//2)
         hidden_dim = N + hidden_dim//2
@@ -80,10 +71,9 @@ class Transformer(torch.nn.Module):
         # )
 
         self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True)
-        if not cuda_avail:
-            self.output_proj.to(device)
-        else:    
-            self.output_proj.cuda()
+        
+        self.output_proj.to(rank)
+       
         
         #self.output_proj = nn.Linear(N*hidden_dim, 1, bias=False)
         #print("output proj: " + str(self.output_proj))
@@ -98,16 +88,14 @@ class Transformer(torch.nn.Module):
     def forward(self, x):    
 
         batch_size = x.shape[0]
-        inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(device)
+        inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
         # positional = torch.LongTensor(list(range(0, self.N))).unsqueeze(1).expand(-1, batch_size).T.to(device)
         # pos, dat = self.positional_embeddings(positional), self.embeddings(inputNum)
-        pos, dat = torch.eye(self.N, self.N).to(device).unsqueeze(0).repeat(batch_size, 1, 1), self.embeddings(inputNum)
+        pos= torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
+        dat =self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
         x = self.transformer(x)
-        if not cuda_avail:
-            x.to(device)
-        else:    
-            x.cuda()        
+        x.to(self.rank)
         # x = self.mlp_head(x)
         #x = self.output_proj(x.view(x.shape[0], -1))
         x = torch.tensordot(x , self.output_proj)
