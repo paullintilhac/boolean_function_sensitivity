@@ -26,7 +26,8 @@ elif cuda_avail:
 else:
   device = torch.device("cpu")
 
-def rboolf(N, width, deg):
+def rboolf(N, width, deg,seed=None):
+    torch.manual_seed(seed)
     coefficients = torch.randn(width).to(device)
     #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
     coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
@@ -62,7 +63,7 @@ class Trainer:
         self.optimizer = optimizer
         self.save_every=save_every
         self.dir_name = dir_name    
-        self.summary = pd.DataFrame(columns=["epoch","train_loss","val_loss"])
+        self.summary = pd.DataFrame(columns=["deg","width","func","epoch","train_loss","val_loss"])
         self.epoch_loss = 0
         self.N = N
         self.coeffs = coeffs.to(gpu_id)
@@ -135,11 +136,11 @@ class Trainer:
             #print("remainder: " + str(epoch % self.save_every))
             if (epoch % self.save_every)==0 and self.gpu_id==0:
                 #print("inside conditional")
-                self.save_checkpoint(epoch)
+                #self.save_checkpoint(epoch)
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000)
-                self.summary.loc[len(self.summary)] = {"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
-                self.summary.to_csv(f"{self.dir_name}/curr_func.csv")
+                self.summary.loc[len(self.summary)] = {"deg":self.deg,"width":self.width,"func":func,"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
+                self.summary.to_csv(f"{self.dir_name}/summary.csv")
                 print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
             
     
@@ -152,11 +153,11 @@ class Trainer:
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
     
-def load_train_objs(lr,num_samples, N, dim,h,l,f,rank):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        weight_decay = .1
-        model = Transformer(N, dim, h, l, f, 1e-5,rank)
-        optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=weight_decay)
+
+        model = Transformer(dropout,N, dim, h, l, f, 1e-5,rank)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
 
 
@@ -174,6 +175,8 @@ def parse_args():
     parser.add_argument('--save_every', type=int, default=20)
     parser.add_argument('--num_samples', type=int, default=100000)
     parser.add_argument('--lr', type=str,default = "6e-6")
+    parser.add_argument('--wd', type=float,default = .1)
+    parser.add_argument('--dropout', type=float,default = .2)
     parser.add_argument('--repeat', type=int, default=100)
 
 
@@ -183,13 +186,13 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #print("func in main: " + str(func))
       ddp_setup(rank,world_size)
       # Create new directory to save results for the particular function
-      dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
-      os.makedirs(dir_name, exist_ok=True)
+      #dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
+      #os.makedirs(dir_name, exist_ok=True)
         
       # Generate function and save its coefficients
       #func = rboolf_old(args.N,  deg)
       #print("generating dataset with " + str(args.num_samples)+" records. ")
-      train_set,model,optimizer = load_train_objs(args.lr,args.num_samples,args.N,args.dim,args.h,args.l,args.f,rank)
+      train_set,model,optimizer = load_train_objs(args.dropout, args.wd,args.lr,args.num_samples,args.N,args.dim,args.h,args.l,args.f,rank)
       model.to(rank)
       #print("epochs: " + str(args.epochs) + ", bs: " + str(args.bs))
       train_loader = DataLoader(
@@ -204,7 +207,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         optimizer,
                         gpu_id=rank,
                         save_every=args.save_every,
-                        dir_name= dir_name,
+                        dir_name= main_dir,
                         width=width,
                         deg=deg,
                         N=args.N)
@@ -232,6 +235,6 @@ if __name__ == "__main__":
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size
                 print(f"Generating: func {i}, deg {deg}, width {width}")
-                (coefs, combs) = rboolf(arguments.N, width, deg)
+                (coefs, combs) = rboolf(arguments.N, width, deg,seed = 4)
                 mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size)
     
