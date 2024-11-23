@@ -54,6 +54,7 @@ class Trainer:
             dir_name: str,
             width: int,
             deg: int,
+            func: int,
             N: int,
     ) -> None:
         self.gpu_id = gpu_id
@@ -66,8 +67,11 @@ class Trainer:
         self.summary = pd.DataFrame(columns=["deg","width","func","epoch","train_loss","val_loss"])
         self.epoch_loss = 0
         self.N = N
+        self.func = func
         self.coeffs = coeffs.to(gpu_id)
         self.combs = combs.to(gpu_id)
+        self.width=width
+        self.deg = deg
         #self.func.to(gpu_id)
     
     def makeBitTensor(self, x, N):
@@ -116,6 +120,7 @@ class Trainer:
           iteration = epoch*len(self.train_data)+idx+1
             
         epoch_loss/=float(total_records)
+        
         end_time = time.time()
         
         elapsed_time = end_time - start_time
@@ -133,14 +138,16 @@ class Trainer:
         self.model.train()
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
+            if epoch_loss < 0.02:
+                break	
             #print("remainder: " + str(epoch % self.save_every))
             if (epoch % self.save_every)==0 and self.gpu_id==0:
                 #print("inside conditional")
                 #self.save_checkpoint(epoch)
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000)
-                self.summary.loc[len(self.summary)] = {"deg":self.deg,"width":self.width,"func":func,"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
-                self.summary.to_csv(f"{self.dir_name}/summary.csv")
+                self.summary.loc[len(self.summary)] = {"deg":self.deg,"width":self.width,"func":self.func,"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
+                self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
             
     
@@ -193,6 +200,8 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #func = rboolf_old(args.N,  deg)
       #print("generating dataset with " + str(args.num_samples)+" records. ")
       train_set,model,optimizer = load_train_objs(args.dropout, args.wd,args.lr,args.num_samples,args.N,args.dim,args.h,args.l,args.f,rank)
+      total_params = sum(p.numel() for p in model.parameters())
+      print("Model Parameter Count: " + str(total_params))
       model.to(rank)
       #print("epochs: " + str(args.epochs) + ", bs: " + str(args.bs))
       train_loader = DataLoader(
@@ -210,7 +219,9 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         dir_name= main_dir,
                         width=width,
                         deg=deg,
+                        func=i,
                         N=args.N)
+      print("trainer.func_batch([2]): " + str(trainer.func_batch([2])))
       trainer.train(args.epochs)
       destroy_process_group()
 
@@ -232,9 +243,14 @@ if __name__ == "__main__":
             losses[deg] = []
             #for width in range(1, args.N, 3):
             for width in [16]:
+                start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size
                 print(f"Generating: func {i}, deg {deg}, width {width}")
                 (coefs, combs) = rboolf(arguments.N, width, deg,seed = 4)
                 mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size)
+                end_time = time.time()
+        
+                elapsed_time = round((end_time - start_time)/60,3)
+                print("elapsed time for whole training process: " + str(elapsed_time))
     
