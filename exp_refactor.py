@@ -39,7 +39,7 @@ def rboolf(N, width, deg,seed=None):
 def ddp_setup(rank, world_size):
     os.environ["MASTER_ADDR"]="localhost"
     os.environ["MASTER_PORT"]= "12355"
-    init_process_group(backend="nccl",rank=rank, world_size=world_size)
+    init_process_group(backend="nccl",rank=rank, world_size=world_size,timeout=datetime.timedelta(seconds=5400))
 
 class Trainer:
     def __init__(
@@ -138,8 +138,8 @@ class Trainer:
         self.model.train()
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
-            if epoch_loss < 0.02:
-                break	
+            if epoch_loss < 0.01:
+                return	
             #print("remainder: " + str(epoch % self.save_every))
             if (epoch % self.save_every)==0 and self.gpu_id==0:
                 #print("inside conditional")
@@ -147,10 +147,10 @@ class Trainer:
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000)
                 self.summary.loc[len(self.summary)] = {"deg":self.deg,"width":self.width,"func":self.func,"epoch":epoch, "train_loss":epoch_loss,"val_loss":val_loss}
+                print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
-            
-    
+        return
 
     def validate(self, num_samples):
       self.model.eval()
@@ -233,16 +233,16 @@ if __name__ == "__main__":
     
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_refactor"
+    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_4k"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
     
     for i in range(func_per_deg):
-        for deg in [5]:
+        for deg in range(6):
             losses[deg] = []
-            #for width in range(1, args.N, 3):
-            for width in [16]:
+            for width in range(1, arguments.N, 5):
+            #for width in [16]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size
