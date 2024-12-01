@@ -41,7 +41,7 @@ def rboolf(N, width, deg,seed=None):
 def ddp_setup(rank, world_size):
     os.environ["MASTER_ADDR"]="localhost"
     os.environ["MASTER_PORT"]= "12355"
-    init_process_group(backend="nccl",rank=rank, world_size=world_size,timeout=datetime.timedelta(seconds=60))
+    init_process_group(backend="nccl",rank=rank, world_size=world_size,timeout=datetime.timedelta(seconds=5400))
 
 class Trainer:
     def __init__(
@@ -66,7 +66,7 @@ class Trainer:
         self.optimizer = optimizer
         self.save_every=save_every
         self.dir_name = dir_name    
-        self.summary = pd.DataFrame(columns=["deg","width","func","epoch","train_loss","val_loss","batch_size","lr"])
+        self.summary = pd.DataFrame(columns=["deg","width","func","epoch","train_loss","val_loss","batch_size","lr","func_val_test"])
         self.epoch_loss = 0
         self.N = N
         self.func = func
@@ -151,19 +151,21 @@ class Trainer:
                 #self.save_checkpoint(epoch)
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000)
-                self.summary.loc[len(self.summary)] = {"deg":self.deg,
+                #print("self.summary: "  + str(self.summary))
+                self.summary.loc[0] = {"deg":self.deg,
                                                        "width":self.width,
                                                        "func":self.func,
                                                        "epoch":epoch,
-                                                       "train_loss":epoch_loss,
-                                                       "val_loss":val_loss,
+                                                       "train_loss":epoch_loss.cpu(),
+                                                       "val_loss":val_loss.cpu(),
                                                       "batch_size": self.batch_size,
                                                       "lr":self.lr,
-                                                      "func_val_test":self.func_batch([2])}
+                                                      "func_val_test":self.func_batch([2]).cpu()}
                 print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
-                return
+                if epoch_loss < 0.02:
+                    return
         return
 
     def validate(self, num_samples):
@@ -249,19 +251,19 @@ if __name__ == "__main__":
     
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_4k_11"
+    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_4k_21"
     os.makedirs(main_dir, exist_ok=True)
   # with open("logs_width.txt", "a") as f:
   #   f.write("------------------------------------------\n")
     for i in [0,1]:
     #for i in range(func_per_deg):
-        for deg in [2]:
-        #for deg in range(1,6):
+        #for deg in [2]:
+        for deg in range(3,6):
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            #for width in [1,7,14,20]:
+            for width in [14]:
 
-            for width in [1]:
+            #for width in [1]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size
