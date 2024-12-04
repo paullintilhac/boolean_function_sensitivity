@@ -41,7 +41,12 @@ def rboolf(N, width, deg,seed=None):
 def ddp_setup(rank, world_size):
     os.environ["MASTER_ADDR"]="localhost"
     os.environ["MASTER_PORT"]= "12355"
-    init_process_group(backend="nccl",rank=rank, world_size=world_size,timeout=datetime.timedelta(seconds=5400))
+    init_process_group(backend="gloo",
+                       init_method='tcp://127.0.0.1:23456',
+                       rank=rank,
+                       world_size=world_size,
+                       timeout=datetime.timedelta(seconds=5400)
+                      )
 
 class Trainer:
     def __init__(
@@ -161,7 +166,7 @@ class Trainer:
                                                       "batch_size": self.batch_size,
                                                       "lr":self.lr,
                                                       "func_val_test":self.func_batch([2]).cpu()}
-                print(f"appending to {self.dir_name}/summary.csv")
+                #print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
                 if epoch_loss < 0.02:
@@ -187,7 +192,7 @@ def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank):
 def parse_args():
     parser = argparse.ArgumentParser(description='linear spectrum non boolean test.')
     parser.add_argument('--N', type=int, default=10)
-    parser.add_argument('--world_size', type=int, default=8)
+    parser.add_argument('--world_size', type=int, default=1)
     parser.add_argument('--width', type=int, default=10)
     parser.add_argument('--dim', type=int, default=20)
     parser.add_argument('--f', type=int, default=64)
@@ -251,17 +256,17 @@ if __name__ == "__main__":
     
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_4k_21"
+    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_4k_test2"
     os.makedirs(main_dir, exist_ok=True)
-  # with open("logs_width.txt", "a") as f:
-  #   f.write("------------------------------------------\n")
+    # with open("logs_width.txt", "a") as f:
+    #   f.write("------------------------------------------\n")
     for i in [0,1]:
-    #for i in range(func_per_deg):
+    # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in range(3,6):
+        for deg in range(5,6):
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [14]:
+            for width in [20,14,7,1]:
 
             #for width in [1]:
                 start_time = time.time()
