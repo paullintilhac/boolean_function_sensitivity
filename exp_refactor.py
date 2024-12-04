@@ -357,14 +357,14 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_4k_hessiantest"
+    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_16k_final"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
     for i in [0,1,2]:
     # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in range(2,6):
+        for deg in range(1,6):
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
             for width in [1,7,14,20]:
