@@ -29,15 +29,19 @@
 #         --repeat 5
 
 
-python exp_refactor.py  
-    --N 30      \
+python exp_refactor.py \
+    --N 20      \
        --width 1  \
               --dim 120  \
-                 --l 2     \
+                 --l 1     \
                      --h 1     \
                          --f 128     \
-                             --bs 2048      \
+                             --bs 16      \
                                 --epochs 2000      \
-                                   --num_samples 65536    \
+                                   --num_samples 4096    \
                                         --repeat 1 \
-                                        --lr "5e-5"
+                                            --lr "1e-4" \
+                                                --save_every 20 \
+                                                    --dropout .5 \
+                                                        --wd .1 \
+                                                            --world_size 1
