@@ -194,22 +194,23 @@ class Trainer:
                 # self.save_checkpoint(epoch)
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000) 
-                loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-                top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
+                loss_fn = lambda result, targets: (result.to(self.gpu_id)-targets.to(self.gpu_id)).pow(2).mean()
+                #top_eig = self.calc_hessian(copy.deepcopy(self.model.module.to(self.gpu_id)), loss_fn=loss_fn, num_samples= 1000) 
+                top_eig = 0
                 self.summary.loc[0] = {"deg":self.deg,
-                                                       "width":self.width,
-                                                       "func":self.func,
-                                                       "epoch":epoch,
-                                                       "train_loss":epoch_loss.cpu(),
-                                                       "val_loss":val_loss.cpu(),
-                                                      "batch_size": self.batch_size,
-                                                      "lr":self.lr,
-                                                      "n_samples":self.n_samples,
-                                                      "func_val_test":self.func_batch([2]).cpu(),
-                                                      "time_elapsed":elapsed_time,
-                                                      "l":self.l,
-                                                      "backend":self.backend,
-                                                      "top_eig":top_eig}
+                                       "width":self.width,
+                                       "func":self.func,
+                                       "epoch":epoch,
+                                       "train_loss":epoch_loss.cpu(),
+                                       "val_loss":val_loss.cpu(),
+                                      "batch_size": self.batch_size,
+                                      "lr":self.lr,
+                                      "n_samples":self.n_samples,
+                                      "func_val_test":self.func_batch([2]).cpu(),
+                                      "time_elapsed":elapsed_time,
+                                      "l":self.l,
+                                      "backend":self.backend,
+                                      "top_eig":top_eig}
                 #print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
@@ -337,7 +338,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         n_samples = args.num_samples,
                         l = args.l,
                         backend = args.backend,
-                        N=args.N)
+                        )
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
       #barrier()
