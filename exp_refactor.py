@@ -1,8 +1,6 @@
 # Using ../sensitivity/36test.py
 # Functions whose Fourier degree is concentrated on higher weights are harder to learn for LSTMs with SGD
 
-from pyhessian import hessian
-import copy
 import numpy as np
 import pandas as pd
 import torch
@@ -17,7 +15,7 @@ import datetime
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
-from torch.distributed import init_process_group, destroy_process_group
+from torch.distributed import init_process_group, destroy_process_group, barrier
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
 #from functools import partial
@@ -40,15 +38,22 @@ def rboolf(N, width, deg,seed=None):
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
     return (coefficients, combs)
 
-def ddp_setup(rank, world_size):
+def ddp_setup(rank, world_size,backend):
     os.environ["MASTER_ADDR"]="localhost"
-    os.environ["MASTER_PORT"]= "12355"
-    init_process_group(backend="gloo",
+    os.environ["MASTER_PORT"]= "23456"
+    if backend == "gloo":
+        init_process_group(backend="gloo",
                        init_method='tcp://127.0.0.1:23456',
                        rank=rank,
                        world_size=world_size,
                        timeout=datetime.timedelta(seconds=5400)
                       )
+    else:
+        init_process_group(backend="nccl",
+                       rank=rank,
+                       world_size=world_size,
+                       timeout=datetime.timedelta(seconds=5400)
+                      )        
 
 class Trainer:
     def __init__(
@@ -65,6 +70,9 @@ class Trainer:
             deg: int,
             func: int,
             N: int,
+            n_samples: int,
+            l:int,
+            backend:str
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
@@ -73,7 +81,20 @@ class Trainer:
         self.optimizer = optimizer
         self.save_every=save_every
         self.dir_name = dir_name    
-        self.summary = pd.DataFrame(columns=["deg","width","func","epoch","train_loss","val_loss","batch_size","lr","func_val_test", "top_eig"])
+        self.summary = pd.DataFrame(columns=
+                                ["deg",
+                                 "width",
+                                 "func",
+                                 "epoch",
+                                 "train_loss",
+                                 "val_loss",
+                                 "batch_size",
+                                 "lr",
+                                 "n_samples",
+                                 "func_val_test",
+                                 "time_elapsed",
+                                 "l",
+                                 "backend"])
         self.epoch_loss = 0
         self.N = N
         self.func = func
@@ -81,10 +102,13 @@ class Trainer:
         self.combs = combs.to(gpu_id)
         self.width=width
         self.deg = deg
+        self.n_samples = n_samples
+        self.l = l
         for batch in train_data:
             self.batch_size = len(batch)
             break
         self.lr = optimizer.param_groups[-1]['lr']
+        self.backend = backend
         #self.func.to(gpu_id)
     
     def makeBitTensor(self, x, N):
@@ -102,7 +126,7 @@ class Trainer:
                 bitCol = binaryTensor[:,e]
                 res = torch.mul(res, bitCol)
             comps.append(res)
-        comps = torch.transpose(torch.stack(comps),1,0).to(self.gpu_id)
+        comps = torch.transpose(torch.tensor(np.array(comps),dtype=torch.float32),1,0).to(self.gpu_id)
         return torch.matmul(comps, self.coeffs).to(self.gpu_id)
         
     def _run_batch(self,inputs, targets):
@@ -145,22 +169,25 @@ class Trainer:
     def save_checkpoint(self,epoch):
         ckp = self.model.module.state_dict()
         torch.save(ckp,os.path.join(self.dir_name, f"model_{epoch}.pt"))
-        loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         print(f"Epoch {epoch} | Training checkpoint saved at model_{epoch}.pt")
 
     def train(self,epochs: int):
         self.model.train()
+        
+        start_time = time.time()
+
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
             
             #print("remainder: " + str(epoch % self.save_every))
             if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < 0.02):
                 #print("inside conditional")
-                # self.save_checkpoint(epoch)
-                #print("self.func: " + str(self.func))
-                val_loss = self.validate(1000) 
-                loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-                top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
+                #self.save_checkpoint(epoch)
+                end_time = time.time()
+                elapsed_time = round((end_time - start_time)/60,3) 
+                
+                val_loss = self.validate(1000)
+                #print("self.summary: "  + str(self.summary))
                 self.summary.loc[0] = {"deg":self.deg,
                                                        "width":self.width,
                                                        "func":self.func,
@@ -169,15 +196,16 @@ class Trainer:
                                                        "val_loss":val_loss.cpu(),
                                                       "batch_size": self.batch_size,
                                                       "lr":self.lr,
+                                                       "n_samples":self.n_samples,
                                                       "func_val_test":self.func_batch([2]).cpu(),
-                                                      "top_eig":top_eig}
+                                                      "time_elapsed":elapsed_time,
+                                                      "l":self.l,
+                                                      "backend":self.backend}
                 #print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
-                print(f" Epoch: {epoch}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
+                print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
                 if epoch_loss < 0.02:
                     return
-        # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-        # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
 
     def validate(self, num_samples):
@@ -187,51 +215,6 @@ class Trainer:
       result = self.model(inputs).to(self.gpu_id)
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
-
-    def calc_hessian(self, model, loss_fn, num_samples):
-        model.eval().to(self.gpu_id)
-        inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
-        targets = self.func_batch(inputs).to(self.gpu_id)
-        data = (inputs, targets)        
-
-        # Estimate using PyHessian -- very good
-        hess_mod = hessian(model, loss_fn, data, cuda=True)
-        for param in model.parameters():
-            param.grad = None
-        top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-        top_eig = top_eigs[0] 
-
-
-        # Manual Calculation -- to double-check (does not work -- returns all zeroes, need to validate)
-        # from torch.autograd.functional import hessian as hessian2
-        # def func(params): # Loss function, but in terms of model parameters, for hessian calculation
-
-        #     # Set the parameters in the model (GPT assist)
-        #     idx = 0
-        #     for param in model.parameters():
-        #         param_length = param.numel()
-        #         param.data = params[idx:idx + param_length].view_as(param)
-        #         idx += param_length
-
-        #     output = model(inputs)
-        #     loss = loss_fn(output, targets)
-        #     return loss
-        # params = torch.cat([p.flatten() for p in model.parameters()])
-
-        # hess = hessian2(func, params)
-        # for p in model.parameters():
-        #     print(p)
-        
-        # eigvals = torch.linalg.eigvals(hess).abs()
-        # top_eig2 = torch.topk(eigvals, 1)[0]
-        
-        return top_eig
-
-
-
-
-
-
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
@@ -258,13 +241,14 @@ def parse_args():
     parser.add_argument('--wd', type=float,default = .1)
     parser.add_argument('--dropout', type=float,default = .2)
     parser.add_argument('--repeat', type=int, default=100)
+    parser.add_argument('--backend',type=str, default = "gloo")
 
 
     return parser.parse_args()
 
 def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #print("func in main: " + str(func))
-      ddp_setup(rank,world_size)
+      ddp_setup(rank,world_size,args.backend)
       # Create new directory to save results for the particular function
       #dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
       #os.makedirs(dir_name, exist_ok=True)
@@ -293,9 +277,13 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         width=width,
                         deg=deg,
                         func=i,
-                        N=args.N)
-      print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
+                        N=args.N,
+                        n_samples = args.num_samples,
+                        l = args.l,
+                        backend = args.backend)
+      #print("trainer.func_batch([2]): " + str(trainer.func_batch([2])))
       trainer.train(args.epochs)
+      #barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
       
@@ -308,22 +296,22 @@ if __name__ == "__main__":
     
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_4k_hessiantest"
+    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_16k_11"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
-    for i in [0,1]:
+    for i in [0,1,2]:
     # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in range(5,6):
+        for deg in range(2,6):
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [20,14,7,1]:
+            for width in [1,7,14,20]:
 
             #for width in [1]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
-                #args["world_size"]=world_size
+                #args["world_size"]=world_size 
                 print(f"Generating: func {i}, deg {deg}, width {width}")
                 seedNum = int(str(i)+str(deg)+str(width))
                 (coefs, combs) = rboolf(arguments.N, width, deg,seed=seedNum)
