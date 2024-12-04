@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#SBATCH --account=temfom0  # Specify the account to charge
+
+#SBATCH --job-name=my_job  # Job name
+
+#SBATCH --output=my_job_%j.out  # Standard output and error log
+
+#SBATCH --error=my_job_%j.err  
+#SBATCH --time=24:00:00  # Time limit hrs:min:sec
+
+#SBATCH --partition=gpuq  # Specify the partition to submit to
+# echo $(hostname -s)
+# nvcc --version
+# source activate gpuq
+# echo conda env:
+# conda info --env
+
+python exp_old.py \
+        --N 30 \
+        --dim 120 \
+        --l 1 \
+        --h 1 \
+        --f 128 \
+        --bs 64 \
+        --epochs 400 \
+        --num_samples 10000 \
+        --repeat 5

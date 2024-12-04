@@ -1,0 +1,4 @@
+  File "/dartfs/rc/lab/C/CybenkoG/bool_sens/exp_new.py", line 120
+    losses[deg] = []
+    ^
+IndentationError: expected an indented block after 'for' statement on line 119
