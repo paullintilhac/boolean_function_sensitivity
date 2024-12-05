@@ -1,7 +1,7 @@
 # Using ../sensitivity/36test.py
 # Functions whose Fourier degree is concentrated on higher weights are harder to learn for LSTMs with SGD
 
-from pyhessian import hessian
+from pyhessian.hessian import hessian
 import copy
 import numpy as np
 import pandas as pd
@@ -196,7 +196,7 @@ class Trainer:
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-                top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
+                top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id) 
                 self.summary.loc[0] = {"deg":self.deg,
                                        "width":self.width,
                                        "func":self.func,
@@ -234,14 +234,14 @@ class Trainer:
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
 
-    def calc_hessian(self, model, loss_fn, num_samples):
+    def calc_hessian(self, model, loss_fn, num_samples,device_id):
         model.eval().to(self.gpu_id)
         inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
         targets = self.func_batch(inputs).to(self.gpu_id)
         data = (inputs, targets)        
 
         # Estimate using PyHessian -- very good
-        hess_mod = hessian(model, loss_fn, data, cuda=True)
+        hess_mod = hessian(model, loss_fn, data, device=device_id)
         for param in model.parameters():
             param.grad = None
         top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
@@ -351,7 +351,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
-      
       print("finished cleaning up process group")
       return
 
@@ -367,7 +366,7 @@ if __name__ == "__main__":
     for i in [0,1,2]:
     # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in range(1,6):
+        for deg in range(1,5):
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
             for width in [1,7,14,20]:
