@@ -74,7 +74,8 @@ class Trainer:
             N: int,
             n_samples: int,
             l:int,
-            backend:str
+            backend:str,
+            stop_loss:float
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
@@ -98,8 +99,9 @@ class Trainer:
                                  "l",
                                  "backend",
                                  "top_eig",
-                                 "trace"])
-
+                                 "trace",
+                                 "stop_loss"])
+        self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
         self.func = func
@@ -196,7 +198,11 @@ class Trainer:
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+                start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id) 
+                end_time_hessian = time.time()
+                elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
+                print("elapsed time hessian: " + str(elapsed_time_hessian))
                 self.summary.loc[0] = {"deg":self.deg,
                                        "width":self.width,
                                        "func":self.func,
@@ -211,13 +217,14 @@ class Trainer:
                                       "l":self.l,
                                       "backend":self.backend,
                                       "top_eig":top_eig,
-                                      "trace":trace}
+                                      "trace":trace,
+                                      "stop_loss": self.stop_loss}
                 
                 #print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
             flag = torch.zeros(1).to(self.gpu_id)
-            if epoch_loss<0.02:
+            if epoch_loss<self.stop_loss:
                  flag += 1
             all_reduce(flag, op=ReduceOp.SUM)
             if flag > 0:
@@ -331,7 +338,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           batch_size=args.bs,
           sampler = DistributedSampler(train_set)
       )
-             
+         
       trainer = Trainer(coefs,combs, model,
                         train_loader,
                         optimizer,
@@ -366,10 +373,10 @@ if __name__ == "__main__":
     for i in [0,1,2]:
     # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in range(1,5):
+        for deg in [5,4,3,2,1]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [1,7,14,20]:
+            for width in [20,14,7,1]:
 
             #for width in [1]:
                 start_time = time.time()
