@@ -17,7 +17,7 @@ import datetime
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
-from torch.distributed import init_process_group, destroy_process_group, all_reduce, ReduceOp
+from torch.distributed import init_process_group, destroy_process_group, all_reduce, ReduceOp, barrier
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
 #from functools import partial
@@ -188,7 +188,7 @@ class Trainer:
             epoch_loss = self._run_epoch(epoch)
             
             #print("remainder: " + str(epoch % self.save_every))
-            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < 0.02):
+            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
                 #print("inside conditional")
                 #self.save_checkpoint(epoch)
                 end_time = time.time()
@@ -199,10 +199,12 @@ class Trainer:
                 val_loss = self.validate(1000) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
-                top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id) 
+                #top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
+                top_eig=0
+                trace = 0
                 end_time_hessian = time.time()
                 elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
-                print("elapsed time hessian: " + str(elapsed_time_hessian))
+                #print("elapsed time hessian: " + str(elapsed_time_hessian))
                 self.summary.loc[0] = {"deg":self.deg,
                                        "width":self.width,
                                        "func":self.func,
@@ -229,6 +231,7 @@ class Trainer:
             all_reduce(flag, op=ReduceOp.SUM)
             if flag > 0:
                 break
+            barrier()
         # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
@@ -313,6 +316,7 @@ def parse_args():
     parser.add_argument('--dropout', type=float,default = .2)
     parser.add_argument('--repeat', type=int, default=100)
     parser.add_argument('--backend',type=str, default = "gloo")
+    parser.add_argument('--stop_loss', type=float,default = .02)
 
 
     return parser.parse_args()
@@ -352,10 +356,11 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         n_samples = args.num_samples,
                         l = args.l,
                         backend = args.backend,
+                        stop_loss = args.stop_loss
                         )
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
-      #barrier()
+      barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
       print("finished cleaning up process group")
@@ -366,14 +371,14 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_16k_final"
+    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_16k_final4"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
-    for i in [0,1,2]:
+    for i in [1,2,3,4,5,6,7,8,9]:
     # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in [5,4,3,2,1]:
+        for deg in [5]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
             for width in [20,14,7,1]:
