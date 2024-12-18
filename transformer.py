@@ -60,15 +60,8 @@ class Transformer(torch.nn.Module):
         self.embeddings = torch.nn.Embedding(2, hidden_dim//2)
         hidden_dim = N + hidden_dim//2
 
-        # self.positional_embeddings = torch.nn.Embedding(N, hidden_dim//2)
-        # self.positional_embeddings = torch.eye(N, N)
         self.transformer = nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout) for _ in range(num_layers)])        
-        # Layers/Networks
-        # self.mlp_head = torch.nn.Sequential(
-        #     torch.nn.Linear(hidden_dim, ff_dim), 
-        #     torch.nn.ReLU(),
-        #     torch.nn.Linear(ff_dim, hidden_dim)
-        # )
+      
 
         self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True)
         
