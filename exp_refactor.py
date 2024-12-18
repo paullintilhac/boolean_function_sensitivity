@@ -75,7 +75,8 @@ class Trainer:
             n_samples: int,
             l:int,
             backend:str,
-            stop_loss:float
+            stop_loss:float,
+            ln_eps:float
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
@@ -83,7 +84,8 @@ class Trainer:
         self.train_data=train_data
         self.optimizer = optimizer
         self.save_every=save_every
-        self.dir_name = dir_name    
+        self.ln_eps=ln_eps
+        self.dir_name = dir_name  
         self.summary = pd.DataFrame(columns=
                                 ["deg",
                                  "width",
@@ -100,7 +102,8 @@ class Trainer:
                                  "backend",
                                  "top_eig",
                                  "trace",
-                                 "stop_loss"])
+                                 "stop_loss",
+                                 "ln_eps"])
         self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
@@ -220,7 +223,9 @@ class Trainer:
                                       "backend":self.backend,
                                       "top_eig":top_eig,
                                       "trace":trace,
-                                      "stop_loss": self.stop_loss}
+                                      "stop_loss": self.stop_loss,
+                                      "ln_eps": self.ln_eps
+                                      }
                 
                 #print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
@@ -290,10 +295,10 @@ class Trainer:
 
 
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank,ln_eps):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
 
-        model = Transformer(dropout,N, dim, h, l, f, 1e-5,rank)
+        model = Transformer(dropout,N, dim, h, l, f, ln_eps,rank)
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
 
@@ -317,6 +322,7 @@ def parse_args():
     parser.add_argument('--repeat', type=int, default=100)
     parser.add_argument('--backend',type=str, default = "gloo")
     parser.add_argument('--stop_loss', type=float,default = .02)
+    parser.add_argument('--ln_eps', type=float,default = 1e-5)
 
 
     return parser.parse_args()
@@ -331,7 +337,16 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       # Generate function and save its coefficients
       #func = rboolf_old(args.N,  deg)
       #print("generating dataset with " + str(args.num_samples)+" records. ")
-      train_set,model,optimizer = load_train_objs(args.dropout, args.wd,args.lr,args.num_samples,args.N,args.dim,args.h,args.l,args.f,rank)
+      train_set,model,optimizer = load_train_objs(args.dropout,
+                                                  args.wd,args.lr,
+                                                  args.num_samples,
+                                                  args.N,
+                                                  args.dim,
+                                                  args.h,
+                                                  args.l,
+                                                  args.f,
+                                                  rank,
+                                                  args.ln_eps)
       total_params = sum(p.numel() for p in model.parameters())
       print("Model Parameter Count: " + str(total_params))
       model.to(rank)
@@ -356,7 +371,8 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         n_samples = args.num_samples,
                         l = args.l,
                         backend = args.backend,
-                        stop_loss = args.stop_loss
+                        stop_loss = args.stop_loss,
+                        ln_eps = args.ln_eps
                         )
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
@@ -371,7 +387,7 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_16k_final4"
+    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_16k_final5"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")

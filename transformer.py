@@ -18,7 +18,7 @@ else:
 
 class AttentionBlock(nn.Module):
     
-    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N):
+    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N,dropout):
         """
         Inputs:
             embed_dim - Dimensionality of input and attention feature vectors
@@ -28,7 +28,7 @@ class AttentionBlock(nn.Module):
             dropout - Amount of dropout to apply in the feed-forward network
         """
         super().__init__()
-        self.attn = CustomMHA(hidden_dim, num_heads, bias=False, batch_first=True, N=N)
+        self.attn = CustomMHA(hidden_dim, num_heads, bias=False, batch_first=True, N=N,dropout=dropout)
         # self.attn = nn.MultiheadAttention(hidden_dim, num_heads, bias=False, batch_first=True)
         self.norm1 = nn.LayerNorm(hidden_dim, eps=LNeps)
         self.norm2 = nn.LayerNorm(hidden_dim, eps=LNeps)
@@ -62,7 +62,7 @@ class Transformer(torch.nn.Module):
 
         # self.positional_embeddings = torch.nn.Embedding(N, hidden_dim//2)
         # self.positional_embeddings = torch.eye(N, N)
-        self.transformer = nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N) for _ in range(num_layers)])        
+        self.transformer = nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout) for _ in range(num_layers)])        
         # Layers/Networks
         # self.mlp_head = torch.nn.Sequential(
         #     torch.nn.Linear(hidden_dim, ff_dim), 
@@ -102,8 +102,8 @@ class Transformer(torch.nn.Module):
         return x
     
 class CustomMHA(torch.nn.MultiheadAttention):
-    def __init__(self, embed_dim, num_heads, bias, batch_first, N):
-        super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias, batch_first=batch_first)
+    def __init__(self, embed_dim, num_heads, bias, batch_first, N,dropout):
+        super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias, batch_first=batch_first,dropout=dropout)
         self.N = N
 
     def forward(self, query, key, value):
