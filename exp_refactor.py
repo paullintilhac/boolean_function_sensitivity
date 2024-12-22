@@ -28,7 +28,15 @@ elif cuda_avail:
   device = torch.device("cuda")
 else:
   device = torch.device("cpu")
-
+    
+def get_weight_norm(model):
+       total_norm = 0.0
+       for p in model.parameters():
+           if p.requires_grad:
+               param_norm = p.data.norm(2)
+               total_norm += param_norm.item() ** 2
+       return total_norm ** 0.5
+    
 def rboolf(N, width, deg,seed=None):
     if seed:
         torch.manual_seed(seed)
@@ -76,7 +84,9 @@ class Trainer:
             l:int,
             backend:str,
             stop_loss:float,
-            ln_eps:float
+            ln_eps:float,
+            ln:bool,
+            save_checkpoints: bool
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
@@ -85,7 +95,9 @@ class Trainer:
         self.optimizer = optimizer
         self.save_every=save_every
         self.ln_eps=ln_eps
+        self.ln = ln
         self.dir_name = dir_name  
+        self.save_checkpoints = save_checkpoints
         self.summary = pd.DataFrame(columns=
                                 ["deg",
                                  "width",
@@ -103,7 +115,9 @@ class Trainer:
                                  "top_eig",
                                  "trace",
                                  "stop_loss",
-                                 "ln_eps"])
+                                 "ln_eps",
+                                 "ln",
+                                 "weight_norm"])
         self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
@@ -153,7 +167,6 @@ class Trainer:
         
         #b_sz = len(next(iter(self.train_data))[0])
         b_sz = len(next(iter(self.train_data)))
-        #print(f"[GPU{self.gpu_id}] Epoch {epoch} | Batchsize: {b_sz} | Steps: {len(self.train_data)}")
         epoch_loss = 0
         total_records = 0
         start_time = time.time()
@@ -193,7 +206,8 @@ class Trainer:
             #print("remainder: " + str(epoch % self.save_every))
             if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
                 #print("inside conditional")
-                #self.save_checkpoint(epoch)
+                if self.save_checkpoints:
+                    self.save_checkpoint(epoch)
                 end_time = time.time()
                 elapsed_time = round((end_time - start_time)/60,3) 
 
@@ -203,11 +217,14 @@ class Trainer:
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 #top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
+                weight_norm = 0
+                #weight_norm = get_weight_norm(self.model.module)
+                #weight_norm = torch.linalg.norm(self.model.weight)
                 top_eig=0
                 trace = 0
                 end_time_hessian = time.time()
                 elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
-                #print("elapsed time hessian: " + str(elapsed_time_hessian))
+                print("elapsed time norm: " + str(elapsed_time_hessian))
                 self.summary.loc[0] = {"deg":self.deg,
                                        "width":self.width,
                                        "func":self.func,
@@ -224,9 +241,12 @@ class Trainer:
                                       "top_eig":top_eig,
                                       "trace":trace,
                                       "stop_loss": self.stop_loss,
-                                      "ln_eps": self.ln_eps
+                                      "ln_eps": self.ln_eps,
+                                      "ln": self.ln,
+                                      "weight_norm": weight_norm
                                       }
-                
+               
+
                 #print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
@@ -290,15 +310,11 @@ class Trainer:
         return top_eig, trace
 
 
-
-
-
-
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank,ln_eps):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank,ln_eps,ln):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
 
-        model = Transformer(dropout,N, dim, h, l, f, ln_eps,rank)
+        model = Transformer(dropout,N, dim, h, l, f, ln_eps,rank,ln)
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
 
@@ -307,22 +323,23 @@ def parse_args():
     parser = argparse.ArgumentParser(description='linear spectrum non boolean test.')
     parser.add_argument('--N', type=int, default=10)
     parser.add_argument('--world_size', type=int, default=1)
-    parser.add_argument('--width', type=int, default=10)
     parser.add_argument('--dim', type=int, default=20)
     parser.add_argument('--f', type=int, default=64)
     parser.add_argument('--l', type=int, default=1)
     parser.add_argument('--h', type=int, default=1)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--bs', type=int, default=32)
-    parser.add_argument('--save_every', type=int, default=20)
+    parser.add_argument('--repeat', type=int, default=1)
+    parser.add_argument('--save_every', type=int, default=200)
     parser.add_argument('--num_samples', type=int, default=100000)
     parser.add_argument('--lr', type=str,default = "1e-5")
     parser.add_argument('--wd', type=float,default = .1)
     parser.add_argument('--dropout', type=float,default = .2)
-    parser.add_argument('--repeat', type=int, default=100)
     parser.add_argument('--backend',type=str, default = "gloo")
     parser.add_argument('--stop_loss', type=float,default = .02)
     parser.add_argument('--ln_eps', type=float,default = 1e-5)
+    parser.add_argument('--ln', action='store_true')
+    parser.add_argument('--save_checkpoints', action='store_true')
 
 
     return parser.parse_args()
@@ -346,7 +363,9 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.l,
                                                   args.f,
                                                   rank,
-                                                  args.ln_eps)
+                                                  args.ln_eps,
+                                                  args.ln
+                                                  )
       total_params = sum(p.numel() for p in model.parameters())
       print("Model Parameter Count: " + str(total_params))
       model.to(rank)
@@ -372,7 +391,9 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         l = args.l,
                         backend = args.backend,
                         stop_loss = args.stop_loss,
-                        ln_eps = args.ln_eps
+                        ln_eps = args.ln_eps,
+                        ln = args.ln,
+                        save_checkpoints=args.save_checkpoints
                         )
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
@@ -387,17 +408,17 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"N{arguments.N}_HidDim{arguments.dim}_L{arguments.l}_H{arguments.h}_FFDim{arguments.f}_16k_final5"
+    main_dir = f"HYPERPARAM_TESTS"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
-    for i in [1,2,3,4,5,6,7,8,9]:
+    for i in [1]:
     # for i in range(func_per_deg):
         #for deg in [2]:
         for deg in [5]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [20,14,7,1]:
+            for width in [20]:
 
             #for width in [1]:
                 start_time = time.time()
