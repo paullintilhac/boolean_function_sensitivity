@@ -81,12 +81,15 @@ class Trainer:
             func: int,
             N: int,
             n_samples: int,
-            l:int,
             backend:str,
             stop_loss:float,
             ln_eps:float,
             ln:bool,
-            save_checkpoints: bool
+            save_checkpoints: bool,
+            f: float,
+            d: int,
+            l: int,
+            h: int
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
@@ -110,14 +113,17 @@ class Trainer:
                                  "n_samples",
                                  "func_val_test",
                                  "time_elapsed",
-                                 "l",
                                  "backend",
                                  "top_eig",
                                  "trace",
                                  "stop_loss",
                                  "ln_eps",
                                  "ln",
-                                 "weight_norm"])
+                                 "weight_norm",
+                                  "l",
+                                 "d",
+                                 "f",
+                                 "h"])
         self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
@@ -128,6 +134,9 @@ class Trainer:
         self.deg = deg
         self.n_samples = n_samples
         self.l = l
+        self.d = d
+        self.f = f
+        self.h = h
         for batch in train_data:
             self.batch_size = len(batch)
             break
@@ -236,14 +245,17 @@ class Trainer:
                                       "n_samples":self.n_samples,
                                       "func_val_test":self.func_batch([2]).cpu(),
                                       "time_elapsed":elapsed_time,
-                                      "l":self.l,
                                       "backend":self.backend,
                                       "top_eig":top_eig,
                                       "trace":trace,
                                       "stop_loss": self.stop_loss,
                                       "ln_eps": self.ln_eps,
                                       "ln": self.ln,
-                                      "weight_norm": weight_norm
+                                      "weight_norm": weight_norm,
+                                       "l":self.l,
+                                       "d":self.d,
+                                       "f":self.f,
+                                       "h":self.h
                                       }
                
 
@@ -388,12 +400,15 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         func=i,
                         N=args.N,
                         n_samples = args.num_samples,
-                        l = args.l,
                         backend = args.backend,
                         stop_loss = args.stop_loss,
                         ln_eps = args.ln_eps,
                         ln = args.ln,
-                        save_checkpoints=args.save_checkpoints
+                        save_checkpoints=args.save_checkpoints,
+                        l=args.l,
+                        d=args.dim,
+                        f=args.f,
+                        h=args.h
                         )
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
@@ -408,7 +423,7 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HYPERPARAM_TESTS"
+    main_dir = f"HYPERPARAM_TESTS2"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
