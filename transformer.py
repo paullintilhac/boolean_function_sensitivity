@@ -284,12 +284,13 @@ def multi_head_attention_forward(query, key, value, num_heads, N, embed_dim_to_c
             attn_output_weights = F.dropout(attn_output_weights, p=dropout_p)
 
         attn_output = torch.bmm(attn_output_weights, v)
+        attn_output = attn_output.transpose(0, 1)
+        # attn_output = (
+        #     attn_output.transpose(0, 1).contiguous().view(tgt_len * bsz, embed_dim)
+        # )
 
-        attn_output = (
-            attn_output.transpose(0, 1).contiguous().view(tgt_len * bsz, embed_dim)
-        )
-        attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)
-        attn_output = attn_output.view(tgt_len, bsz, attn_output.size(1))
+        # attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)
+        # attn_output = attn_output.view(tgt_len, bsz, attn_output.size(1))
 
         # optionally average attention weights over heads
         attn_output_weights = attn_output_weights.view(bsz, num_heads, tgt_len, src_len)
