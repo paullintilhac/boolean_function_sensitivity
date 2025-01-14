@@ -89,7 +89,9 @@ class Trainer:
             f: float,
             d: int,
             l: int,
-            h: int
+            h: int,
+            dropout: float,
+            wd: float,
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
@@ -99,8 +101,10 @@ class Trainer:
         self.save_every=save_every
         self.ln_eps=ln_eps
         self.ln = ln
+        self.wd = wd
         self.dir_name = dir_name  
         self.save_checkpoints = save_checkpoints
+        self.dropout = dropout
         self.summary = pd.DataFrame(columns=
                                 ["deg",
                                  "width",
@@ -123,7 +127,9 @@ class Trainer:
                                   "l",
                                  "d",
                                  "f",
-                                 "h"])
+                                 "h",
+                                 "dropout",
+                                 "wd"])
         self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
@@ -225,12 +231,12 @@ class Trainer:
                 val_loss = self.validate(1000) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
-                #top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
-                weight_norm = 0
-                #weight_norm = get_weight_norm(self.model.module)
+                top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
+                #weight_norm = 0
+                weight_norm = get_weight_norm(self.model.module)
                 #weight_norm = torch.linalg.norm(self.model.weight)
-                top_eig=0
-                trace = 0
+                #top_eig=0
+                #trace = 0
                 end_time_hessian = time.time()
                 elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
                 print("elapsed time norm: " + str(elapsed_time_hessian))
@@ -255,7 +261,9 @@ class Trainer:
                                        "l":self.l,
                                        "d":self.d,
                                        "f":self.f,
-                                       "h":self.h
+                                       "h":self.h,
+                                       "dropout":self.dropout,
+                                       "wd":self.wd
                                       }
                
 
@@ -319,7 +327,7 @@ class Trainer:
         # eigvals = torch.linalg.eigvals(hess).abs()
         # top_eig2 = torch.topk(eigvals, 1)[0]
         
-        return top_eig, trace
+        return top_eig, np.mean(trace)
 
 
     
@@ -408,7 +416,9 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         l=args.l,
                         d=args.dim,
                         f=args.f,
-                        h=args.h
+                        h=args.h,
+                        dropout=args.dropout,
+                        wd=args.wd
                         )
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
@@ -423,17 +433,17 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HYPERPARAM_TESTS2"
+    main_dir = f"HYPERPARAM_TESTS_NO_WO"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
-    for i in [1]:
+    for i in [1,2,3,4,5]:
     # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in [5]:
+        for deg in [7,6,5,4]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [20]:
+            for width in [6,5,4,3,2,1]:
 
             #for width in [1]:
                 start_time = time.time()
