@@ -18,7 +18,7 @@ else:
 
 class AttentionBlock(nn.Module):
     
-    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N):
+    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N,dropout,ln):
         """
         Inputs:
             embed_dim - Dimensionality of input and attention feature vectors
@@ -28,24 +28,30 @@ class AttentionBlock(nn.Module):
             dropout - Amount of dropout to apply in the feed-forward network
         """
         super().__init__()
-        self.attn = CustomMHA(hidden_dim, num_heads, bias=False, batch_first=True, N=N)
+        self.attn = CustomMHA(hidden_dim, num_heads, bias=False, batch_first=True, N=N,dropout=dropout)
         # self.attn = nn.MultiheadAttention(hidden_dim, num_heads, bias=False, batch_first=True)
-        self.norm1 = nn.LayerNorm(hidden_dim, eps=LNeps)
-        self.norm2 = nn.LayerNorm(hidden_dim, eps=LNeps)
+        if ln:
+            self.norm1 = nn.LayerNorm(hidden_dim, eps=LNeps)
+            self.norm2 = nn.LayerNorm(hidden_dim, eps=LNeps)
         self.linear = nn.Sequential(
             nn.Linear(hidden_dim, ff_dim),
             nn.ReLU(),
             nn.Linear(ff_dim, hidden_dim)
             )
+        self.ln = ln
         
     def forward(self, x):
-        x = self.norm1(x + self.attn(x, x, x)[0])
-        x = self.norm2(x + self.linear(x))
+        if self.ln:
+            x = self.norm1(x + self.attn(x, x, x)[0])
+            x = self.norm2(x + self.linear(x))
+        else: 
+            x = x + self.attn(x, x, x)[0]
+            x = x + self.linear(x)
         return x
 
 class Transformer(torch.nn.Module):
     
-    def __init__(self,dropout, N, hidden_dim, num_heads, num_layers, ff_dim, LNeps,rank):
+    def __init__(self,dropout, N, hidden_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln):
 
         super().__init__()
         self.N = N
@@ -59,10 +65,10 @@ class Transformer(torch.nn.Module):
         # Layers
         self.embeddings = torch.nn.Embedding(2, hidden_dim//2)
         hidden_dim = N + hidden_dim//2
-
+            
         # self.positional_embeddings = torch.nn.Embedding(N, hidden_dim//2)
         # self.positional_embeddings = torch.eye(N, N)
-        self.transformer = nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N) for _ in range(num_layers)])        
+        self.transformer = nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln) for _ in range(num_layers)])        
         # Layers/Networks
         # self.mlp_head = torch.nn.Sequential(
         #     torch.nn.Linear(hidden_dim, ff_dim), 
@@ -102,8 +108,8 @@ class Transformer(torch.nn.Module):
         return x
     
 class CustomMHA(torch.nn.MultiheadAttention):
-    def __init__(self, embed_dim, num_heads, bias, batch_first, N):
-        super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias, batch_first=batch_first)
+    def __init__(self, embed_dim, num_heads, bias, batch_first, N,dropout):
+        super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias, batch_first=batch_first,dropout=dropout)
         self.N = N
 
     def forward(self, query, key, value):

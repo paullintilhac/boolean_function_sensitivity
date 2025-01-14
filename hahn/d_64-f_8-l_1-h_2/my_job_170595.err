@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/dartfs-hpc/rc/home/q/d28979q/hahn/boolean_function_sensitivity/hahn/d_64-f_8-l_1-h_2/../losses_linear_spectrum_no_overlap.py", line 166, in <module>
+    print("same for intrs: " + str(int(rows[i]) in rowColSet.numpy()))
+AttributeError: 'list' object has no attribute 'numpy'

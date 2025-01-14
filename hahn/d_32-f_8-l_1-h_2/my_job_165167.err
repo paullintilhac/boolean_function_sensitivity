@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/dartfs-hpc/rc/home/q/d28979q/boolean_function_sensitivity/hahn/d_32-f_8-l_1-h_2/../losses_wide_spectrum.py", line 30, in <module>
+    args = parse_args()
+  File "/dartfs-hpc/rc/home/q/d28979q/boolean_function_sensitivity/hahn/d_32-f_8-l_1-h_2/../losses_wide_spectrum.py", line 27, in parse_args
+    parser,add_argument('--i', type=int,default=300000)
+NameError: name 'add_argument' is not defined
