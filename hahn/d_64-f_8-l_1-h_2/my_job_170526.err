@@ -1,0 +1,5 @@
+/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/gpuq/lib/python3.10/site-packages/torch/nn/modules/transformer.py:306: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.batch_first was not True(use batch_first for better inference performance)
+  warnings.warn(f"enable_nested_tensor is True, but self.use_nested_tensor is False because {why_not_sparsity_fast_path}")
+/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/gpuq/lib/python3.10/site-packages/torch/nn/modules/transformer.py:306: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.batch_first was not True(use batch_first for better inference performance)
+  warnings.warn(f"enable_nested_tensor is True, but self.use_nested_tensor is False because {why_not_sparsity_fast_path}")
+slurmstepd: error: *** JOB 170526 ON a01 CANCELLED AT 2024-06-22T23:21:16 ***
