@@ -110,6 +110,7 @@ class Transformer(torch.nn.Module):
 class CustomMHA(torch.nn.MultiheadAttention):
     def __init__(self, embed_dim, num_heads, bias, batch_first, N,dropout):
         super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias, batch_first=batch_first,dropout=dropout)
+        self.out_proj = None
         self.N = N
 
     def forward(self, query, key, value):
@@ -130,7 +131,7 @@ class CustomMHA(torch.nn.MultiheadAttention):
         attn_output, attn_output_weights = multi_head_attention_forward(query, key, value, 
                                                 num_heads=self.num_heads, N=self.N, embed_dim_to_check=self.embed_dim, 
                                                 in_proj_weight=self.in_proj_weight, in_proj_bias=self.in_proj_bias, 
-                                                out_proj_weight=self.out_proj.weight, out_proj_bias=self.out_proj.bias, 
+                                                out_proj_weight=None, out_proj_bias=None, 
                                                 dropout_p=self.dropout, training=self.training, need_weights=True,
                                                 average_attn_weights=True)
 
@@ -168,71 +169,6 @@ def multi_head_attention_forward(query, key, value, num_heads, N, embed_dim_to_c
         - attn_output_weights: :math:`(N, L, S)` where N is the batch size,
           L is the target sequence length, S is the source sequence length.
     """
-
-    # # Target Length, Batch Size, Embed Dim
-    # tgt_len, bsz, embed_dim = query.size()
-    # assert (embed_dim == embed_dim_to_check), f"was expecting embedding dimension of {embed_dim_to_check}, but got {embed_dim}"
-    # # allow MHA to have different sizes for the feature dimension
-    # assert key.size(0) == value.size(0) and key.size(1) == value.size(1)
-
-    # # Divide the embedding into certain number of heads
-    # head_dim = embed_dim // num_heads
-    # assert head_dim * num_heads == embed_dim, "embed_dim must be divisible by num_heads"
-
-    # # Scaling = \sqrt{d_k}. This is where we add our 2log(N)
-    # scaling = 2*math.log(N)*float(head_dim) ** -0.5 
-    # scaling = float(head_dim) ** -0.5 
-
-    # # For self.attention, the projections q, k, v using in_proj are calculated and then split
-    # if (query is key or torch.equal(query, key)) and (key is value or torch.equal(key, value)):
-    #     # self-attention
-    #     q, k, v = F.linear(query, in_proj_weight, in_proj_bias).chunk(3, dim=-1)
-
-    # # Same as scaling qk.T after multiplication
-    # q = q * scaling
-
-    # # Re-arranging to make batch matrix multiplication easier. 
-    # # You end up with shapes of (bsz*num_heads, tgt_len, head_dim) that can be batch matrix-multiplied
-    # q = q.contiguous().view(tgt_len, bsz * num_heads, head_dim).transpose(0, 1)
-    # if k is not None:
-    #     k = k.contiguous().view(-1, bsz * num_heads, head_dim).transpose(0, 1)
-    # if v is not None:
-    #     v = v.contiguous().view(-1, bsz * num_heads, head_dim).transpose(0, 1)
-
-    # # Source Length
-    # src_len = k.size(1)
-
-    # # The batch matrix multiplication
-    # attn_output_weights = torch.bmm(q, k.transpose(1, 2))
-    # assert list(attn_output_weights.size()) == [bsz * num_heads, tgt_len, src_len]
-
-    # # Self-explanatory
-    # attn_output_weights = F.softmax(
-    #     attn_output_weights, dim=-1)
-    # if training and dropout_p > 0:
-    #     attn_output_weights = F.dropout(attn_output_weights, p=dropout_p, training=training)
-
-    # # Each of the bsz*num_heads output_weights is multiplied by V
-    # attn_output = torch.bmm(attn_output_weights, v)
-    # assert list(attn_output.size()) == [bsz * num_heads, tgt_len, head_dim]
-
-    # # Concatenates the different heads together
-    # attn_output = attn_output.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
-    # attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)
-
-    # if need_weights:
-    #     # average attention weights over heads
-    #     attn_output_weights = attn_output_weights.view(bsz, num_heads, tgt_len, src_len)
-    #     if average_attn_weights:
-    #         attn_output_weights = attn_output_weights.mean(dim=1)
-    #     return attn_output, attn_output_weights
-    # else:
-    #     return attn_output, None
-
-    # For unbatched input, we unsqueeze at the expected batch-dim to pretend that the input
-    # is batched, run the computation and before returning squeeze the
-    # batch dimension so that the output doesn't carry this temporary batch dimension.
-
 
     # set up shape vars
     tgt_len, bsz, embed_dim = query.shape
