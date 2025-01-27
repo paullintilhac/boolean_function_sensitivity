@@ -4,4 +4,4 @@ log_*
 *.pt
 *.txt
 *.csv
-*.DS_Store*
+.DS_Store*
