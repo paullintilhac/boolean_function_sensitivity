@@ -14,6 +14,7 @@ __file__ = "linear_spectrum_small"
 print("done loading")
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
+N = 30 #random.randint(2,30)
 
 
 if mps_avail:
@@ -79,6 +80,28 @@ def makeBitTensor(x, N):
   y = ("0"*(N-len(y))) + y
   return [int(z) for z in list(y)]
 
+def validate(model,output, func, num_samples=1000):
+      model.eval()
+      embeddings = torch.nn.Embedding(2, hidden_size//2).to(device)
+      positional_embeddings = torch.nn.Embedding(N, hidden_size//2).to(device)
+
+      inputs = [random.randint(0, 2**N-1) for _ in range(num_samples)]
+      targets = torch.FloatTensor([float(func(x)) for x in inputs]).to(device)
+  #   print(targets.mean())
+  #   quit()
+      inputNum = torch.LongTensor([makeBitTensor(x,N) for x in inputs]).to(device).t()
+      positional = torch.LongTensor(list(range(0, N))).unsqueeze(1).expand(-1, num_samples).to(device)
+
+      num_embeddings = embeddings(inputNum)
+      pos_embed = positional_embeddings(positional)
+      #print("shape num embeddings: " + str(num_embeddings.shape) + ", pos_embed: " + str(pos_embed.shape))
+      inputTensorEmbed = torch.cat([num_embeddings, pos_embed], dim=2)  
+      hidden = model(inputTensorEmbed)[0]
+      result = (output(hidden)).view(-1)
+      # print(result.size())
+      result = result.view(num_samples)
+      loss = (result - targets).pow(2).mean()
+      return loss.detach()
 
 def fitNetwork(function, N):
    embeddings = torch.nn.Embedding(2, hidden_size//2).to(device)
@@ -95,7 +118,7 @@ def fitNetwork(function, N):
        for y in x.parameters():
           yield y
    
-   optimizer = torch.optim.AdamW(parameters(), lr=0.00003, weight_decay=0.1)
+   optimizer = torch.optim.AdamW(parameters(), lr=0.000003, weight_decay=0.1)
 
    movAvg = 0
    lossesAfterIterations = [] 
@@ -107,7 +130,11 @@ def fitNetwork(function, N):
  #   quit()
      inputNum = torch.LongTensor([makeBitTensor(x,N) for x in inputs]).to(device).t()
      positional = torch.LongTensor(list(range(0, N))).unsqueeze(1).expand(-1, batch_size).to(device)
-     inputTensorEmbed = torch.cat([embeddings(inputNum), positional_embeddings(positional)], dim=2)
+     num_embed = embeddings(inputNum)
+     pos_embed =  positional_embeddings(positional)
+     #print("shape num embeddings: " + str(num_embed.shape) + ", pos_embed: " + str(pos_embed.shape))
+
+     inputTensorEmbed = torch.cat([num_embed, pos_embed], dim=2)
      hidden = qrnn(inputTensorEmbed)[0]
      result = (output(hidden)).view(-1)
 #    print(result.size())
@@ -129,12 +156,13 @@ def fitNetwork(function, N):
         lossesAfterIterations.append(movAvg)
         lossesAfterIterations.append(movAvg)
         break 
-     if (iteration-1) % 10000 == 0:
-        print("saving...")
-        lossesAfterIterations.append(movAvg)
-        print("lossesAfterIterations: " + str(lossesAfterIterations))
-        print(iteration, movAvg)
-   return lossesAfterIterations 
+     if (iteration-1) % 1000 == 0:
+        val_loss = validate(qrnn,output, function, num_samples=10000)
+
+        print(f"Iteration: {iteration}, AvgLoss: {movAvg:.3f}, Loss: {loss.detach():.3f}, Validation Loss: {val_loss:.3f}")
+        #print(f"Iteration: {iteration}, AvgLoss: {movAvg:.3f}, Loss: {loss.detach():.3f}")
+
+   return val_loss 
 
 
 import random
@@ -143,7 +171,6 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
   #print(",".join(["AverageDegree", "Iterations", "Weights1", "Weights2", "PerturbedLoss", "Acc100", "Acc1000", "Acc10000", "Acc100000"]), file=outFile)
   for _ in range(10000):
    
-   N = 30 #random.randint(2,30)
    averageDegree = N
    coefficients = torch.randn(N,N).to(device)
    mask = torch.zeros(N, N, dtype=torch.uint8).to(device)
@@ -168,7 +195,7 @@ with open(f"losses_{__file__}_{myID}.csv", "w") as outFile:
        r = (coefficients*c.to(device)).sum()
        return r
    loss = fitNetwork(function, N)
-   print(loss, averageDegree, loss)
+   print(loss)
    print(",".join([str(x) for x in (loss)]), file=outFile)
    outFile.flush()
 
