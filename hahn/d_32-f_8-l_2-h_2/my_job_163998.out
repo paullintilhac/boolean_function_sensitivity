@@ -1,0 +1,19 @@
+a02
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2024 NVIDIA Corporation
+Built on Wed_Apr_17_19:19:55_PDT_2024
+Cuda compilation tools, release 12.5, V12.5.40
+Build cuda_12.5.r12.5/compiler.34177558_0
+conda env:
+# conda environments:
+#
+base                     /dartfs/rc/lab/C/CybenkoG/Miniconda3
+gpuq                  *  /dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/gpuq
+privacy                  /dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/privacy
+
+hidden_dim: 32
+ff_dim: 8
+layers: 2
+heads: 2
+filename in script
+d_32-f_8-l_2-h_2
