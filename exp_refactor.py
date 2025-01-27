@@ -204,9 +204,11 @@ class Trainer:
         #print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (ms): {time_per_record_ms: .3f}")
         return epoch_loss
 
-    def save_checkpoint(self,epoch):
+    def save_checkpoint(self,epoch,model_name):
+        os.makedirs(os.path.join(self.dir_name, model_name), exist_ok=True)
+        full_model_name = model_name+"/epoch-"+str(epoch)+".pt"
         ckp = self.model.module.state_dict()
-        torch.save(ckp,os.path.join(self.dir_name, f"model_{epoch}.pt"))
+        torch.save(ckp,os.path.join(self.dir_name, full_model_name))
         loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         print(f"Epoch {epoch} | Training checkpoint saved at model_{epoch}.pt")
 
@@ -222,11 +224,10 @@ class Trainer:
             if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
                 #print("inside conditional")
                 if self.save_checkpoints:
-                    self.save_checkpoint(epoch)
+                    self.save_checkpoint(epoch,"degree-"+str(self.deg)+"/width-"+str(self.width)+"/func-"+str(self.func))
                 end_time = time.time()
                 elapsed_time = round((end_time - start_time)/60,3) 
 
-                # self.save_checkpoint(epoch)
                 #print("self.func: " + str(self.func))
                 val_loss = self.validate(1000) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
@@ -433,17 +434,17 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HYPERPARAM_TESTS_NO_WO"
+    main_dir = f"HYPERPARAM_TESTS_MECHINTERP"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
     for i in [1,2,3,4,5]:
     # for i in range(func_per_deg):
         #for deg in [2]:
-        for deg in [7,6,5,4]:
+        for deg in [3]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [6,5,4,3,2,1]:
+            for width in [6,4,2]:
 
             #for width in [1]:
                 start_time = time.time()
