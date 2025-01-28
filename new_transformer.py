@@ -70,7 +70,7 @@ class Transformer(torch.nn.Module):
         self.ln2 = torch.nn.LayerNorm(hidden_dim2, eps=LNeps)
 
         # Output layer
-        self.out = torch.nn.Linear(N, 1, bias=False)
+        self.out = torch.nn.Linear(N*hidden_dim2, 1, bias=False)
 
         
     def makeBitTensor(self, x, N):
@@ -89,8 +89,7 @@ class Transformer(torch.nn.Module):
 
         x = self.ln1(self.attention(x))
         x = self.ln2(self.mlp(x))
-        x = x.squeeze(-1)
-        print(x.shape)
+        x = x.view(batch_size, -1)
 
         x = self.out(x)
         return x
@@ -101,7 +100,7 @@ if __name__ == "__main__":
     # Create a model
     print("Creating model")
     N = 10
-    model = Transformer(dropout=0.1, N=N, hidden_dim=15, num_layers=1, ff_dim=32, LNeps=1e-5, rank=device, hidden_dim2=1)
+    model = Transformer(dropout=0.1, N=N, hidden_dim=15, num_layers=1, ff_dim=32, LNeps=1e-5, rank=device, hidden_dim2=2)
     model.to(device)
 
     # Data:
