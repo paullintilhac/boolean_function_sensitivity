@@ -63,8 +63,11 @@ class Transformer(torch.nn.Module):
         self.rank = rank
         self.dropout = dropout
         # Layers
-        self.embeddings = torch.nn.Embedding(2, hidden_dim//2)
-        hidden_dim = N + hidden_dim//2
+        self.embeddings = torch.nn.Embedding(2, hidden_dim)
+        if hidden_dim == 2:
+            self.embedding.weight = nn.Parameter(torch.eye(hidden_dim))
+            self.embedding.weight.requires_grad = False
+        hidden_dim = N + hidden_dim
             
         # self.positional_embeddings = torch.nn.Embedding(N, hidden_dim//2)
         # self.positional_embeddings = torch.eye(N, N)
@@ -241,29 +244,3 @@ def multi_head_attention_forward(query, key, value, num_heads, N, embed_dim_to_c
 
         attn_output_weights = attn_output_weights.squeeze(0)
         return attn_output, attn_output_weights
-    
-    else:
-        # attn_mask can be either (L,S) or (N*num_heads, L, S)
-        # if attn_mask's shape is (1, L, S) we need to unsqueeze to (1, 1, L, S)
-        # in order to match the input for SDPA of (N, num_heads, L, S)
-        if attn_mask is not None:
-            if attn_mask.size(0) == 1 and attn_mask.dim() == 3:
-                attn_mask = attn_mask.unsqueeze(0)
-            else:
-                attn_mask = attn_mask.view(bsz, num_heads, -1, src_len)
-
-        q = q.view(bsz, num_heads, tgt_len, head_dim)
-        k = k.view(bsz, num_heads, src_len, head_dim)
-        v = v.view(bsz, num_heads, src_len, head_dim)
-
-        attn_output = F.scaled_dot_product_attention(
-            q, k, v, attn_mask, dropout_p, False
-        )
-        attn_output = (
-            attn_output.permute(2, 0, 1, 3).contiguous().view(bsz * tgt_len, embed_dim)
-        )
-
-        attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)
-        attn_output = attn_output.view(tgt_len, bsz, attn_output.size(1))
-
-        return attn_output, None
