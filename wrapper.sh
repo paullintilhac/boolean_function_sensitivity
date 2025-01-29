@@ -30,17 +30,18 @@
 
 
 python exp_refactor.py  --N 20 \
- --dim 120 \
+ --dim 2 \
    --l 1 \
      --h 1 \
        --f 32  \
         --bs 256  \
-         --epochs 200000 \
+         --epochs 1500 \
            --num_samples 32768  \
              --repeat 1 \
              --lr "4e-3" \
              --dropout .5 \
              --wd .1 \
-             --world_size 8\
+             --world_size 1 \
               --backend nccl \
-              --stop_loss .02
+              --stop_loss .02 \
+              --save_every 50 \

@@ -221,8 +221,8 @@ class Trainer:
             epoch_loss = self._run_epoch(epoch)
             
             #print("remainder: " + str(epoch % self.save_every))
-            # if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
-            if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
+            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
+            # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
 
                 #print("inside conditional")
                 if self.save_checkpoints:
@@ -272,13 +272,13 @@ class Trainer:
 
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
-            # flag = torch.zeros(1).to(self.gpu_id)
-            # if epoch_loss<self.stop_loss:
-            #      flag += 1
-            # all_reduce(flag, op=ReduceOp.SUM)
-            # if flag > 0:
-            #     break
-            # barrier()
+            flag = torch.zeros(1).to(self.gpu_id)
+            if epoch_loss<self.stop_loss:
+                 flag += 1
+            all_reduce(flag, op=ReduceOp.SUM)
+            if flag > 0:
+                break
+            barrier()
         # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
@@ -310,6 +310,7 @@ class Trainer:
 
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank,ln_eps,ln):
+        print(rank)
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
 
         model = Transformer(dropout,N, dim, h, l, f, ln_eps,rank,ln)

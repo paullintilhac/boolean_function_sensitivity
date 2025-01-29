@@ -65,8 +65,8 @@ class Transformer(torch.nn.Module):
         # Layers
         self.embeddings = torch.nn.Embedding(2, hidden_dim)
         if hidden_dim == 2:
-            self.embedding.weight = nn.Parameter(torch.eye(hidden_dim))
-            self.embedding.weight.requires_grad = False
+            self.embeddings.weight = nn.Parameter(torch.eye(hidden_dim))
+            self.embeddings.weight.requires_grad = False
         hidden_dim = N + hidden_dim
             
         # self.positional_embeddings = torch.nn.Embedding(N, hidden_dim//2)
