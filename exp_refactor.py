@@ -221,7 +221,9 @@ class Trainer:
             epoch_loss = self._run_epoch(epoch)
             
             #print("remainder: " + str(epoch % self.save_every))
-            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
+            # if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
+            if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
+
                 #print("inside conditional")
                 if self.save_checkpoints:
                     self.save_checkpoint(epoch,"degree-"+str(self.deg)+"/width-"+str(self.width)+"/func-"+str(self.func))
@@ -268,16 +270,15 @@ class Trainer:
                                       }
                
 
-                #print(f"appending to {self.dir_name}/summary.csv")
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
-            flag = torch.zeros(1).to(self.gpu_id)
-            if epoch_loss<self.stop_loss:
-                 flag += 1
-            all_reduce(flag, op=ReduceOp.SUM)
-            if flag > 0:
-                break
-            barrier()
+            # flag = torch.zeros(1).to(self.gpu_id)
+            # if epoch_loss<self.stop_loss:
+            #      flag += 1
+            # all_reduce(flag, op=ReduceOp.SUM)
+            # if flag > 0:
+            #     break
+            # barrier()
         # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
@@ -303,30 +304,6 @@ class Trainer:
         top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
         top_eig = top_eigs[0] 
         trace = hess_mod.trace()
-
-
-        # Manual Calculation -- to double-check (does not work -- returns all zeroes, need to validate)
-        # from torch.autograd.functional import hessian as hessian2
-        # def func(params): # Loss function, but in terms of model parameters, for hessian calculation
-
-        #     # Set the parameters in the model (GPT assist)
-        #     idx = 0
-        #     for param in model.parameters():
-        #         param_length = param.numel()
-        #         param.data = params[idx:idx + param_length].view_as(param)
-        #         idx += param_length
-
-        #     output = model(inputs)
-        #     loss = loss_fn(output, targets)
-        #     return loss
-        # params = torch.cat([p.flatten() for p in model.parameters()])
-
-        # hess = hessian2(func, params)
-        # for p in model.parameters():
-        #     print(p)
-        
-        # eigvals = torch.linalg.eigvals(hess).abs()
-        # top_eig2 = torch.topk(eigvals, 1)[0]
         
         return top_eig, np.mean(trace)
 
@@ -372,9 +349,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
       #os.makedirs(dir_name, exist_ok=True)
         
-      # Generate function and save its coefficients
-      #func = rboolf_old(args.N,  deg)
-      #print("generating dataset with " + str(args.num_samples)+" records. ")
       train_set,model,optimizer = load_train_objs(args.dropout,
                                                   args.wd,args.lr,
                                                   args.num_samples,
@@ -390,7 +364,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       total_params = sum(p.numel() for p in model.parameters())
       print("Model Parameter Count: " + str(total_params))
       model.to(rank)
-      #print("epochs: " + str(args.epochs) + ", bs: " + str(args.bs))
       train_loader = DataLoader(
           train_set,
           shuffle=False,
@@ -439,20 +412,19 @@ if __name__ == "__main__":
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
     for i in [1,2,3,4,5]:
-    # for i in range(func_per_deg):
-        #for deg in [2]:
-        for deg in [3]:
+        for deg in [2, 3]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [6,4,2]:
-
-            #for width in [1]:
+            for width in [5,4,3,2]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
                 print(f"Generating: func {i}, deg {deg}, width {width}")
                 seedNum = int(str(i)+str(deg)+str(width))
                 (coefs, combs) = rboolf(arguments.N, width, deg,seed=seedNum)
+                torch.save(coefs,os.path.join(main_dir, f"coefs_func{i}_deg{deg}_width{width}.pt"))
+                torch.save(combs,os.path.join(main_dir, f"combs_func{i}_deg{deg}_width{width}.pt"))
+                
                 mp.set_start_method('spawn',force = True)
 
                 torch.set_num_threads(1)
