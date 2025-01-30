@@ -235,11 +235,8 @@ class Trainer:
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
-                #weight_norm = 0
                 weight_norm = get_weight_norm(self.model.module)
-                #weight_norm = torch.linalg.norm(self.model.weight)
-                #top_eig=0
-                #trace = 0
+
                 end_time_hessian = time.time()
                 elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
                 print("elapsed time norm: " + str(elapsed_time_hessian))
@@ -279,8 +276,7 @@ class Trainer:
             if flag > 0:
                 break
             barrier()
-        # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-        # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
+            
         return
 
     def validate(self, num_samples):
@@ -291,16 +287,43 @@ class Trainer:
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
 
+    # def calc_hessian(self, model, loss_fn, num_samples,device_id):
+    #     model.eval().to(self.gpu_id)
+    #     inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
+    #     targets = self.func_batch(inputs).to(self.gpu_id)
+    #     data = (inputs, targets)        
+
+    #     # Estimate using PyHessian -- very good
+    #     hess_mod = hessian(model, loss_fn, data, device=device_id)
+    #     for param in model.parameters():
+    #         param.grad = None
+    #     top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
+    #     top_eig = top_eigs[0] 
+    #     trace = hess_mod.trace()
+        
+    #     return top_eig, np.mean(trace)
+
+
     def calc_hessian(self, model, loss_fn, num_samples,device_id):
         model.eval().to(self.gpu_id)
         inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
         targets = self.func_batch(inputs).to(self.gpu_id)
-        data = (inputs, targets)        
+        data = (inputs, targets)   
 
+            
+        # weight_gradients = model.weight.grad
+        # weight_norm1 = torch.linalg.norm(weight_gradients)
+        # print("gradient dim: " + str(weight_gradients.shape)+", gradient norm: " + str(weight_norm1)+", squared norm: " + str(weight_norm1**2))
         # Estimate using PyHessian -- very good
         hess_mod = hessian(model, loss_fn, data, device=device_id)
+        total_norm = 0
         for param in model.parameters():
-            param.grad = None
+            if param.requires_grad:
+                param_norm = param.grad.detach().data.norm(2)
+                total_norm += param_norm.item() ** 2        
+                param.grad = None
+        total_norm = total_norm ** 0.5
+        print("alternate grad norms 1: " + str(total_norm))
         top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
         top_eig = top_eigs[0] 
         trace = hess_mod.trace()
