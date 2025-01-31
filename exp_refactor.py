@@ -42,7 +42,7 @@ def rboolf(N, width, deg,seed=None):
         torch.manual_seed(seed)
     coefficients = torch.randn(width).to(device)
     #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
-    coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
+    coefficients = (coefficients)/coefficients.pow(2).sum().sqrt()
     
     combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
@@ -219,9 +219,10 @@ class Trainer:
 
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
-            
+            val_loss = self.validate(1000) 
+
             #print("remainder: " + str(epoch % self.save_every))
-            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
+            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (val_loss < self.stop_loss):
             # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
 
                 #print("inside conditional")
@@ -231,7 +232,6 @@ class Trainer:
                 elapsed_time = round((end_time - start_time)/60,3) 
 
                 #print("self.func: " + str(self.func))
-                val_loss = self.validate(1000) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
@@ -268,9 +268,9 @@ class Trainer:
                
 
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
-                print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
+                print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.5f}, ValidationLoss: {val_loss:.5f}")
             flag = torch.zeros(1).to(self.gpu_id)
-            if epoch_loss<self.stop_loss:
+            if val_loss<self.stop_loss:
                  flag += 1
             all_reduce(flag, op=ReduceOp.SUM)
             if flag > 0:
@@ -431,11 +431,11 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HYPERPARAM_TESTS_MECHINTERP"
+    main_dir = f"HYPERPARAM_TESTS_MECHINTERP_TAKE2"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
-    for i in [1,2,3,4,5]:
+    for i in [1,2]:
         for deg in [2, 3]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
