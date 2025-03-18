@@ -42,7 +42,7 @@ def rboolf(N, width, deg,seed=None):
         torch.manual_seed(seed)
     coefficients = torch.randn(width).to(device)
     #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
-    coefficients = (coefficients)/coefficients.pow(2).sum().sqrt()
+    coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
     
     combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
@@ -219,10 +219,9 @@ class Trainer:
 
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
-            val_loss = self.validate(1000) 
-
+            
             #print("remainder: " + str(epoch % self.save_every))
-            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (val_loss < self.stop_loss):
+            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
             # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
 
                 #print("inside conditional")
@@ -232,11 +231,15 @@ class Trainer:
                 elapsed_time = round((end_time - start_time)/60,3) 
 
                 #print("self.func: " + str(self.func))
+                val_loss = self.validate(1000) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
+                #weight_norm = 0
                 weight_norm = get_weight_norm(self.model.module)
-
+                #weight_norm = torch.linalg.norm(self.model.weight)
+                #top_eig=0
+                #trace = 0
                 end_time_hessian = time.time()
                 elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
                 print("elapsed time norm: " + str(elapsed_time_hessian))
@@ -268,15 +271,16 @@ class Trainer:
                
 
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
-                print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.5f}, ValidationLoss: {val_loss:.5f}")
+                print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
             flag = torch.zeros(1).to(self.gpu_id)
-            if val_loss<self.stop_loss:
+            if epoch_loss<self.stop_loss:
                  flag += 1
             all_reduce(flag, op=ReduceOp.SUM)
             if flag > 0:
                 break
             barrier()
-            
+        # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+        # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
 
     def validate(self, num_samples):
@@ -287,43 +291,16 @@ class Trainer:
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
 
-    # def calc_hessian(self, model, loss_fn, num_samples,device_id):
-    #     model.eval().to(self.gpu_id)
-    #     inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
-    #     targets = self.func_batch(inputs).to(self.gpu_id)
-    #     data = (inputs, targets)        
-
-    #     # Estimate using PyHessian -- very good
-    #     hess_mod = hessian(model, loss_fn, data, device=device_id)
-    #     for param in model.parameters():
-    #         param.grad = None
-    #     top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-    #     top_eig = top_eigs[0] 
-    #     trace = hess_mod.trace()
-        
-    #     return top_eig, np.mean(trace)
-
-
     def calc_hessian(self, model, loss_fn, num_samples,device_id):
         model.eval().to(self.gpu_id)
         inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
         targets = self.func_batch(inputs).to(self.gpu_id)
-        data = (inputs, targets)   
+        data = (inputs, targets)        
 
-            
-        # weight_gradients = model.weight.grad
-        # weight_norm1 = torch.linalg.norm(weight_gradients)
-        # print("gradient dim: " + str(weight_gradients.shape)+", gradient norm: " + str(weight_norm1)+", squared norm: " + str(weight_norm1**2))
         # Estimate using PyHessian -- very good
         hess_mod = hessian(model, loss_fn, data, device=device_id)
-        total_norm = 0
         for param in model.parameters():
-            if param.requires_grad:
-                param_norm = param.grad.detach().data.norm(2)
-                total_norm += param_norm.item() ** 2        
-                param.grad = None
-        total_norm = total_norm ** 0.5
-        print("alternate grad norms 1: " + str(total_norm))
+            param.grad = None
         top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
         top_eig = top_eigs[0] 
         trace = hess_mod.trace()
@@ -333,7 +310,6 @@ class Trainer:
 
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank,ln_eps,ln):
-        print(rank)
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
 
         model = Transformer(dropout,N, dim, h, l, f, ln_eps,rank,ln)
@@ -431,11 +407,11 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HYPERPARAM_TESTS_MECHINTERP_TAKE2"
+    main_dir = f"HYPERPARAM_TESTS_MECHINTERP"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
-    for i in [1,2]:
+    for i in [1,2,3,4,5]:
         for deg in [2, 3]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
@@ -458,4 +434,3 @@ if __name__ == "__main__":
         
                 elapsed_time = round((end_time - start_time)/60,3)
                 print("elapsed time for whole training process: " + str(elapsed_time))
-    

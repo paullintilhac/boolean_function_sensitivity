@@ -41,8 +41,7 @@ python exp_refactor.py  --N 20 \
              --lr "4e-3" \
              --dropout .5 \
              --wd .1 \
-             --world_size 1 \
+             --world_size 8 \
               --backend nccl \
-              --stop_loss .0002 \
+              --stop_loss .02 \
               --save_every 50 \
-              --save_checkpoints 
