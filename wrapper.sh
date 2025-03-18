@@ -35,20 +35,19 @@
 #               --save_checkpoints
 
 python exp_refactor.py  --N 20 \
- --dim 20 \
- --dim2 20 \
+ --dim 2 \
+ --dim2 2 \
    --l 1 \
      --h 1 \
-       --f 512  \
-        --bs 128  \
+       --f 128  \
+        --bs 32  \
          --epochs 1500 \
-           --num_samples 128  \
+           --num_samples 8192  \
              --repeat 1 \
-             --lr "1e-2" \
-             --dropout 0 \
+             --lr "4e-3" \
+             --dropout 0.2 \
              --wd .00001 \
-             --world_size 1 \
+             --world_size 8 \
               --backend nccl \
               --stop_loss .0002 \
               --save_every 10 \
-              --ln

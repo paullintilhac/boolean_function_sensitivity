@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 import random
 import argparse
 from transformer import Transformer
-from new_transformer import Transformer2
+from transformer_old import Transformer as Transformer2
 
 import os
 import itertools
@@ -315,8 +315,8 @@ class Trainer:
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
         print(rank)
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        model = Transformer(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
-        # model = Transformer2(dropout,N, dim,dim+N, l, f, ln_eps,rank, ln)
+        #model = Transformer(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
+        model = Transformer2(dropout,N, dim, h, l, f, ln_eps,rank,ln)
 
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
