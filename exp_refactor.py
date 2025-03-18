@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 import random
 import argparse
 from transformer import Transformer
+from new_transformer import Transformer2
+
 import os
 import itertools
 import time
@@ -172,8 +174,9 @@ class Trainer:
         self.optimizer.zero_grad()
         inputs.to(self.gpu_id)
         result = self.model(inputs)
-        #loss = -(result*targets).mean()
-        loss =  (result-targets).pow(2).mean()
+        criterion = torch.nn.MSELoss()
+        loss =  criterion(result, targets)
+        # loss =(result-targets).pow(2).mean()
         (loss).backward()
         self.optimizer.step()
         return loss.detach().cpu()
@@ -332,11 +335,12 @@ class Trainer:
 
 
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim,h,l,f,rank,ln_eps,ln):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
         print(rank)
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
+        model = Transformer(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
+        # model = Transformer2(dropout,N, dim,dim+N, l, f, ln_eps,rank, ln)
 
-        model = Transformer(dropout,N, dim, h, l, f, ln_eps,rank,ln)
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
 
@@ -346,6 +350,7 @@ def parse_args():
     parser.add_argument('--N', type=int, default=10)
     parser.add_argument('--world_size', type=int, default=1)
     parser.add_argument('--dim', type=int, default=20)
+    parser.add_argument('--dim2', type=int, default=20)
     parser.add_argument('--f', type=int, default=64)
     parser.add_argument('--l', type=int, default=1)
     parser.add_argument('--h', type=int, default=1)
@@ -378,6 +383,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.num_samples,
                                                   args.N,
                                                   args.dim,
+                                                  args.dim2,
                                                   args.h,
                                                   args.l,
                                                   args.f,
@@ -386,6 +392,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.ln
                                                   )
       total_params = sum(p.numel() for p in model.parameters())
+      print(model)
       print("Model Parameter Count: " + str(total_params))
       model.to(rank)
       train_loader = DataLoader(
@@ -428,6 +435,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
 
 if __name__ == "__main__":
     arguments = parse_args()
+    arguments.save_checkpoints = False
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
@@ -435,11 +443,11 @@ if __name__ == "__main__":
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
-    for i in [1,2]:
-        for deg in [2, 3]:
+    for i in [1]:
+        for deg in [2]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [5,4,3,2]:
+            for width in [2]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 

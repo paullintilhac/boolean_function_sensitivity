@@ -28,7 +28,7 @@ class Attention(nn.Module):
         self.w_q = nn.Linear(hidden_dim, hidden_dim, bias=False)
         self.w_k = nn.Linear(hidden_dim, hidden_dim, bias=False)
         self.w_v = nn.Linear(hidden_dim, output_dim, bias=False)
-        self.dp  = nn.Dropout(dropout)
+        self.dp  = nn.Dropout(0)
 
         
     def forward(self, x):
@@ -39,9 +39,9 @@ class Attention(nn.Module):
         y = self.dp(A) @ v
         return y
 
-class Transformer(torch.nn.Module):
-    
-    def __init__(self,dropout, N, hidden_dim, hidden_dim2, num_layers, ff_dim, LNeps, rank):
+class Transformer2(torch.nn.Module):
+
+    def __init__(self,dropout, N, hidden_dim, hidden_dim2, num_layers, ff_dim, LNeps, rank, ln):
 
         super().__init__()
         self.N = N
@@ -52,12 +52,15 @@ class Transformer(torch.nn.Module):
         self.rank = rank
         self.dropout = dropout
         self.hidden_dim2 = hidden_dim2
+        self.ln = ln
         # Layers
+        self.pos_embedding = nn.Embedding(self.N, self.N)
+        self.pos_embedding.weight = nn.Parameter(torch.eye(self.N), requires_grad=False)
         self.embeddings = torch.nn.Embedding(2, hidden_dim)
-        hidden_dim = N + hidden_dim
-            
+        hidden_dim = N + hidden_dim  
 
-        self.attention = nn.Sequential(*[Attention(hidden_dim=hidden_dim, N=N, output_dim=hidden_dim2, dropout=self.dropout) for _ in range(num_layers)])        
+        self.attention = Attention(hidden_dim=hidden_dim, N=N, output_dim=hidden_dim2, dropout=self.dropout)    
+        # self.attention = torch.nn.MultiheadAttention(embed_dim=hidden_dim, num_heads=1, bias=False)
         self.mlp = torch.nn.Sequential(
             torch.nn.Linear(hidden_dim2, ff_dim), 
             # torch.nn.Dropout(self.dropout),
@@ -66,12 +69,11 @@ class Transformer(torch.nn.Module):
             # torch.nn.Dropout(dropout),
         )
         # LayerNorm
-        self.ln1 = torch.nn.LayerNorm(hidden_dim2, eps=LNeps)
-        self.ln2 = torch.nn.LayerNorm(hidden_dim2, eps=LNeps)
-
+        if self.ln:
+            self.ln1 = torch.nn.LayerNorm(hidden_dim2, eps=LNeps)
+            self.ln2 = torch.nn.LayerNorm(hidden_dim2, eps=LNeps)
         # Output layer
         self.out = torch.nn.Linear(N*hidden_dim2, 1, bias=False)
-
         
     def makeBitTensor(self, x, N):
         y = format(x, "b")
@@ -80,17 +82,20 @@ class Transformer(torch.nn.Module):
     
     
     def forward(self, x):    
-
         batch_size = x.shape[0]
         inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
-        pos = torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
+        pos = self.pos_embedding(inputNum)
         dat = self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
 
-        x = self.ln1(self.attention(x))
-        x = self.ln2(self.mlp(x))
-        x = x.view(batch_size, -1)
+        if self.ln:
+            x = self.ln1(x + self.attention(x))
+            x = self.ln2(x + self.mlp(x))
+        else:
+            x = x + self.attention(x)
+            x = x + self.mlp(x)       
 
+        x = x.view(batch_size, -1)
         x = self.out(x)
         return x
     

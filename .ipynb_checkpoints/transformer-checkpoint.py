@@ -18,7 +18,7 @@ else:
 
 class AttentionBlock(nn.Module):
     
-    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N,dropout,ln):
+    def __init__(self, hidden_dim, output_dim, ff_dim, num_heads, LNeps, N,dropout,ln):
         """
         Inputs:
             embed_dim - Dimensionality of input and attention feature vectors
@@ -28,30 +28,36 @@ class AttentionBlock(nn.Module):
             dropout - Amount of dropout to apply in the feed-forward network
         """
         super().__init__()
-        self.attn = CustomMHA(hidden_dim, num_heads, bias=False, batch_first=True, N=N,dropout=dropout)
-        # self.attn = nn.MultiheadAttention(hidden_dim, num_heads, bias=False, batch_first=True)
+        self.attn = CustomMHA(hidden_dim, output_dim, num_heads, bias=False, batch_first=True, N=N,dropout=dropout)
+        self.skip = hidden_dim == output_dim
         if ln:
-            self.norm1 = nn.LayerNorm(hidden_dim, eps=LNeps)
-            self.norm2 = nn.LayerNorm(hidden_dim, eps=LNeps)
+            self.norm1 = nn.LayerNorm(output_dim, eps=LNeps)
+            self.norm2 = nn.LayerNorm(output_dim, eps=LNeps)
         self.linear = nn.Sequential(
-            nn.Linear(hidden_dim, ff_dim),
+            nn.Linear(output_dim, ff_dim),
             nn.ReLU(),
-            nn.Linear(ff_dim, hidden_dim)
+            nn.Linear(ff_dim, output_dim)
             )
         self.ln = ln
         
     def forward(self, x):
         if self.ln:
-            x = self.norm1(x + self.attn(x, x, x)[0])
+            if self.skip: 
+                x = self.norm1(x + self.attn(x, x, x)[0])
+            else:
+                x = self.norm1(self.attn(x,x,x)[0])
             x = self.norm2(x + self.linear(x))
         else: 
-            x = x + self.attn(x, x, x)[0]
+            if self.skip: 
+                x = x + self.attn(x, x, x)[0]
+            else:
+                x = self.attn(x,x,x)[0]
             x = x + self.linear(x)
         return x
 
 class Transformer(torch.nn.Module):
     
-    def __init__(self,dropout, N, hidden_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln):
+    def __init__(self,dropout, N, hidden_dim, output_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln):
 
         super().__init__()
         self.N = N
@@ -62,28 +68,24 @@ class Transformer(torch.nn.Module):
         self.LNeps = LNeps
         self.rank = rank
         self.dropout = dropout
-        # Layers
+        
+        # Data embedding
         self.embeddings = torch.nn.Embedding(2, hidden_dim)
         if hidden_dim == 2:
-            self.embeddings.weight = nn.Parameter(torch.eye(hidden_dim))
-            self.embeddings.weight.requires_grad = False
+            self.embeddings.weight = nn.Parameter(torch.eye(hidden_dim), requires_grad=False)
+        
         hidden_dim = N + hidden_dim
-            
-        # self.positional_embeddings = torch.nn.Embedding(N, hidden_dim//2)
-        # self.positional_embeddings = torch.eye(N, N)
-        self.transformer = nn.Sequential(*[AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln) for _ in range(num_layers)])        
-        # Layers/Networks
-        # self.mlp_head = torch.nn.Sequential(
-        #     torch.nn.Linear(hidden_dim, ff_dim), 
-        #     torch.nn.ReLU(),
-        #     torch.nn.Linear(ff_dim, hidden_dim)
-        # )
+        output_dim = N + output_dim
 
-        self.output_proj = nn.Parameter(torch.randn((N, hidden_dim)), requires_grad=True)
+        # Positional Embedding
+        self.pos_embeddings = nn.Embedding(N, N)
+        self.pos_embeddings.weight = nn.Parameter(torch.eye(self.N), requires_grad=False)
+        self.transformer = AttentionBlock(hidden_dim=hidden_dim, output_dim=output_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln)       
+
+        self.output_proj = nn.Parameter(torch.randn((N, output_dim)), requires_grad=True)
         
         self.output_proj.to(rank)
        
-        
         #self.output_proj = nn.Linear(N*hidden_dim, 1, bias=False)
         #print("output proj: " + str(self.output_proj))
 
@@ -98,23 +100,21 @@ class Transformer(torch.nn.Module):
 
         batch_size = x.shape[0]
         inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
-        # positional = torch.LongTensor(list(range(0, self.N))).unsqueeze(1).expand(-1, batch_size).T.to(device)
-        # pos, dat = self.positional_embeddings(positional), self.embeddings(inputNum)
-        pos= torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
-        dat =self.embeddings(inputNum)
+        pos = self.pos_embeddings(inputNum)
+        dat = self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
         x = self.transformer(x)
         x.to(self.rank)
-        # x = self.mlp_head(x)
         #x = self.output_proj(x.view(x.shape[0], -1))
         x = torch.tensordot(x , self.output_proj)
         return x
     
 class CustomMHA(torch.nn.MultiheadAttention):
-    def __init__(self, embed_dim, num_heads, bias, batch_first, N,dropout):
+    def __init__(self, embed_dim, new_dim, num_heads, bias, batch_first, N,dropout):
         super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias, batch_first=batch_first,dropout=dropout)
         self.out_proj = None
         self.N = N
+        self.in_proj_weight = nn.Parameter(self.in_proj_weight[:2*embed_dim + new_dim , :])
 
     def forward(self, query, key, value):
         is_batched = query.dim() == 3
@@ -190,23 +190,27 @@ def multi_head_attention_forward(query, key, value, num_heads, N, embed_dim_to_c
     # compute in-projection
     #
     
-    E = query.size(-1)
     proj = F.linear(query, in_proj_weight, in_proj_bias)
-    proj = (
-                proj.unflatten(-1, (3, E))
-                .unsqueeze(0)
-                .transpose(0, -2)
-                .squeeze(-2)
-                .contiguous()
-            )
-    q, k, v = proj[0], proj[1], proj[2]
+    # print(in_proj_weight.shape) # (2*embed_dim+new_dim, hidden_dim)
+    # print(proj.shape) # (N, batch_size, 2*embed_dim+new_dim)
+    q, k, v = proj[:, :, :embed_dim], proj[:, :, embed_dim:2*embed_dim], proj[:, :, 2*embed_dim:]
+    new_dim = v.shape[-1]
+    # proj = (
+    #             proj.unflatten(-1, (3, embed_dim))
+    #             .unsqueeze(0)
+    #             .transpose(0, -2)
+    #             .squeeze(-2)
+    #             .contiguous()
+    #         )
+    # q, k, v = proj[0], proj[1], proj[2]
+    # print(q.shape, k.shape, v.shape)
 
     #
     # reshape q, k, v for multihead attention and make them batch first
     #
     q = q.view(tgt_len, bsz * num_heads, head_dim).transpose(0, 1)
     k = k.view(k.shape[0], bsz * num_heads, head_dim).transpose(0, 1)
-    v = v.view(v.shape[0], bsz * num_heads, head_dim).transpose(0, 1)
+    v = v.view(v.shape[0], bsz * num_heads, new_dim).transpose(0, 1)
 
     # update source sequence length after adjustments
     src_len = k.size(1)
