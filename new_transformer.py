@@ -28,7 +28,7 @@ class Attention(nn.Module):
         self.w_q = nn.Linear(hidden_dim, hidden_dim, bias=False)
         self.w_k = nn.Linear(hidden_dim, hidden_dim, bias=False)
         self.w_v = nn.Linear(hidden_dim, output_dim, bias=False)
-        self.dp  = nn.Dropout(0)
+        # self.dp  = nn.Dropout(0)
 
         
     def forward(self, x):
@@ -36,10 +36,10 @@ class Attention(nn.Module):
         k = self.w_k(x)
         v = self.w_v(x)
         A = torch.softmax(q @ k.transpose(-1, -2) / (self.hidden_dim**0.5), dim=-1)  # noqa: N806
-        y = self.dp(A) @ v
+        y = A @ v
         return y
 
-class Transformer2(torch.nn.Module):
+class Transformer(torch.nn.Module):
 
     def __init__(self,dropout, N, hidden_dim, hidden_dim2, num_layers, ff_dim, LNeps, rank, ln):
 
@@ -54,10 +54,10 @@ class Transformer2(torch.nn.Module):
         self.hidden_dim2 = hidden_dim2
         self.ln = ln
         # Layers
-        self.pos_embedding = nn.Embedding(self.N, self.N)
-        self.pos_embedding.weight = nn.Parameter(torch.eye(self.N), requires_grad=False)
+        # self.pos_embedding = nn.Embedding(self.N, self.N)
+        # self.pos_embedding.weight = nn.Parameter(torch.eye(self.N), requires_grad=False)
         self.embeddings = torch.nn.Embedding(2, hidden_dim)
-        hidden_dim = N + hidden_dim  
+        hidden_dim = N + hidden_dim
 
         self.attention = Attention(hidden_dim=hidden_dim, N=N, output_dim=hidden_dim2, dropout=self.dropout)    
         # self.attention = torch.nn.MultiheadAttention(embed_dim=hidden_dim, num_heads=1, bias=False)
@@ -84,7 +84,8 @@ class Transformer2(torch.nn.Module):
     def forward(self, x):    
         batch_size = x.shape[0]
         inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
-        pos = self.pos_embedding(inputNum)
+        # pos = self.pos_embedding(inputNum)
+        pos= torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
         dat = self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
 

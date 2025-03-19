@@ -9,8 +9,10 @@ import torch
 from torch.utils.data import DataLoader
 import random
 import argparse
-from transformer import Transformer
-from transformer_old import Transformer as Transformer2
+from new_transformer import Transformer
+from transformer import Transformer as Transformer2
+from transformer_old import Transformer as Transformer3
+
 
 import os
 import itertools
@@ -183,7 +185,6 @@ class Trainer:
     
     def _run_epoch(self,epoch):
         
-        #b_sz = len(next(iter(self.train_data))[0])
         b_sz = len(next(iter(self.train_data)))
         epoch_loss = 0
         total_records = 0
@@ -223,7 +224,6 @@ class Trainer:
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
             
-            #print("remainder: " + str(epoch % self.save_every))
             if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
             # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
 
@@ -313,11 +313,20 @@ class Trainer:
 
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
-        print(rank)
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        #model = Transformer(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
-        model = Transformer2(dropout,N, dim, h, l, f, ln_eps,rank,ln)
-
+        # model = Transformer(dropout,N, dim, dim2, l, f, ln_eps,rank,ln)
+        # total_params = sum(p.numel() for p in model.parameters())
+        # print(model)
+        # print("Model_New Parameter Count: " + str(total_params))
+        model = Transformer2(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
+        total_params = sum(p.numel() for p in model.parameters())
+        print(model)
+        print("Model_Mid Parameter Count: " + str(total_params))
+        # model = Transformer3(dropout,N, dim, h, l, f, ln_eps,rank,ln)
+        # total_params = sum(p.numel() for p in model.parameters())
+        # print(model)
+        # print("Model_Old Parameter Count: " + str(total_params))
+    
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
 
@@ -368,9 +377,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.ln_eps,
                                                   args.ln
                                                   )
-      total_params = sum(p.numel() for p in model.parameters())
-      print(model)
-      print("Model Parameter Count: " + str(total_params))
       model.to(rank)
       train_loader = DataLoader(
           train_set,
