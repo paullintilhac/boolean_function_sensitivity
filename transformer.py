@@ -16,7 +16,7 @@ else:
 
 class AttentionBlock(nn.Module):
     
-    def __init__(self, hidden_dim, output_dim, ff_dim, num_heads, LNeps, N,dropout,ln):
+    def __init__(self, hidden_dim, output_dim, ff_dim, num_heads, LNeps, N, dropout, ln):
         """
         Inputs:
             embed_dim - Dimensionality of input and attention feature vectors
@@ -77,14 +77,12 @@ class Transformer(torch.nn.Module):
         # Positional Embedding
         # self.pos_embeddings = nn.Embedding(N, N)
         # self.pos_embeddings.weight = nn.Parameter(torch.eye(self.N), requires_grad=False)
+
         self.transformer = AttentionBlock(hidden_dim=hidden_dim, output_dim=output_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln)       
 
         self.output_proj = nn.Parameter(torch.randn((N, output_dim)), requires_grad=True)
         
         self.output_proj.to(rank)
-       
-        #self.output_proj = nn.Linear(N*hidden_dim, 1, bias=False)
-        #print("output proj: " + str(self.output_proj))
 
         
     def makeBitTensor(self, x, N):
@@ -97,13 +95,11 @@ class Transformer(torch.nn.Module):
 
         batch_size = x.shape[0]
         inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
-        # pos = self.pos_embeddings(inputNum)
-        pos= torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
+        pos = torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
         dat = self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
         x = self.transformer(x)
         x.to(self.rank)
-        #x = self.output_proj(x.view(x.shape[0], -1))
         x = torch.tensordot(x , self.output_proj)
         return x
     

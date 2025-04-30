@@ -314,18 +314,11 @@ class Trainer:
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        # model = Transformer(dropout,N, dim, dim2, l, f, ln_eps,rank,ln)
-        # total_params = sum(p.numel() for p in model.parameters())
-        # print(model)
-        # print("Model_New Parameter Count: " + str(total_params))
+
         model = Transformer2(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
         total_params = sum(p.numel() for p in model.parameters())
         print(model)
         print("Model_Mid Parameter Count: " + str(total_params))
-        # model = Transformer3(dropout,N, dim, h, l, f, ln_eps,rank,ln)
-        # total_params = sum(p.numel() for p in model.parameters())
-        # print(model)
-        # print("Model_Old Parameter Count: " + str(total_params))
     
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
