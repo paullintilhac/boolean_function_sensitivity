@@ -3,8 +3,6 @@ from torch import nn
 import torch.nn.functional as F
 import math
 
-
-
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
 
