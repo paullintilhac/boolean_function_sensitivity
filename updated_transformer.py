@@ -61,13 +61,12 @@ class AttentionBlock(nn.Module):
 
 class Transformer(torch.nn.Module):
     
-    def __init__(self,dropout, N, hidden_dim, output_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln):
+    def __init__(self,dropout, N, hidden_dim, output_dim, num_heads, ff_dim, LNeps,rank,ln):
 
         super().__init__()
         self.N = N
         self.hidden_dim = hidden_dim
         self.h = num_heads
-        self.l = num_layers
         self.ff_dim = ff_dim
         self.LNeps = LNeps
         self.rank = rank
@@ -278,6 +277,18 @@ if __name__ == "__main__":
     dropout = 0.1
 
     model = Transformer(dropout, N, hidden_dim, output_dim, num_heads, num_layers, ff_dim, LNeps, rank, ln)
-    
+    loss_fn = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    for epoch in range(5):
+        optimizer.zero_grad()
+        x = torch.randint(0, 2**N, (10,))
+        y = torch.randint(0, 2**N, (10,))
+        output = model(x)
+        loss = loss_fn(output.squeeze(), y.float())
+        loss.backward()
+        optimizer.step()
+
+
     x = torch.randint(0, 2**N, (10,))
     output = model(x)

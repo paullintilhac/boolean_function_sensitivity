@@ -9,9 +9,10 @@ import torch
 from torch.utils.data import DataLoader
 import random
 import argparse
-from new_transformer import Transformer
-from transformer import Transformer as Transformer2
-from transformer_old import Transformer as Transformer3
+# from new_transformer import Transformer
+# from transformer import Transformer as Transformer2
+# from transformer_old import Transformer as Transformer3
+from updated_transformer import Transformer as Transformer
 
 
 import os
@@ -312,13 +313,13 @@ class Trainer:
 
 
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, f, rank, ln_eps, ln):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
 
-        model = Transformer2(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
+        model = Transformer(dropout,N, dim, dim2, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
         print(model)
-        print("Model_Mid Parameter Count: " + str(total_params))
+        print("Model Parameter Count: " + str(total_params))
     
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
@@ -326,12 +327,11 @@ def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_e
 
 def parse_args():
     parser = argparse.ArgumentParser(description='linear spectrum non boolean test.')
-    parser.add_argument('--N', type=int, default=10)
+    parser.add_argument('--N', type=int, default=20)
     parser.add_argument('--world_size', type=int, default=1)
-    parser.add_argument('--dim', type=int, default=20)
-    parser.add_argument('--dim2', type=int, default=20)
+    parser.add_argument('--dim', type=int, default=2)
+    parser.add_argument('--dim2', type=int, default=22)
     parser.add_argument('--f', type=int, default=64)
-    parser.add_argument('--l', type=int, default=1)
     parser.add_argument('--h', type=int, default=1)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--bs', type=int, default=32)
@@ -364,7 +364,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.dim,
                                                   args.dim2,
                                                   args.h,
-                                                  args.l,
                                                   args.f,
                                                   rank,
                                                   args.ln_eps,
