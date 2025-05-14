@@ -263,6 +263,8 @@ def multi_head_attention_forward(query, key, value, num_heads, N, embed_dim_to_c
         return attn_output, attn_output_weights
     
 
+
+# Test if it works
 if __name__ == "__main__":
     # Example usage
     N = 12
@@ -276,18 +278,19 @@ if __name__ == "__main__":
     ln = False
     dropout = 0.1
 
-    model = Transformer(dropout, N, hidden_dim, output_dim, num_heads, num_layers, ff_dim, LNeps, rank, ln)
+    model = Transformer(dropout, N, hidden_dim, output_dim, num_heads, ff_dim, LNeps, rank, ln)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    for epoch in range(5):
+    for epoch in range(50):
         optimizer.zero_grad()
         x = torch.randint(0, 2**N, (10,))
-        y = torch.randint(0, 2**N, (10,))
+        y = torch.randint(0, 2, (10,))
         output = model(x)
         loss = loss_fn(output.squeeze(), y.float())
         loss.backward()
         optimizer.step()
+        print(f"Epoch {epoch+1}, Loss: {loss.item()}")
 
 
     x = torch.randint(0, 2**N, (10,))
