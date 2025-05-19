@@ -13,7 +13,6 @@ from new_transformer import Transformer
 from transformer import Transformer as Transformer2
 from transformer_old import Transformer as Transformer3
 
-
 import os
 import itertools
 import time
