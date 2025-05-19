@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 import random
 import argparse
 # from new_transformer import Transformer
-# from transformer import Transformer as Transformer2
+ from transformer import Transformer as Transformer2
 # from transformer_old import Transformer as Transformer3
 from updated_transformer import Transformer as Transformer
 
@@ -51,6 +51,8 @@ def rboolf(N, width, deg,seed=None):
     
     combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
+    print("coefficients: "  + str(coefficients))
+    print("combs: "  + str(combs))
     return (coefficients, combs)
 
 def ddp_setup(rank, world_size,backend):
@@ -143,7 +145,6 @@ class Trainer:
         self.width=width
         self.deg = deg
         self.n_samples = n_samples
-        self.l = l
         self.d = d
         self.f = f
         self.h = h
@@ -264,7 +265,6 @@ class Trainer:
                                       "ln_eps": self.ln_eps,
                                       "ln": self.ln,
                                       "weight_norm": weight_norm,
-                                       "l":self.l,
                                        "d":self.d,
                                        "f":self.f,
                                        "h":self.h,
@@ -417,7 +417,7 @@ if __name__ == "__main__":
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in [1]:
+    for i in [3,4]:
         for deg in [2]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
