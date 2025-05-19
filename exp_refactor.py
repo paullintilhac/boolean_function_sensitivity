@@ -9,9 +9,10 @@ import torch
 from torch.utils.data import DataLoader
 import random
 import argparse
-from new_transformer import Transformer
-from transformer import Transformer as Transformer2
-from transformer_old import Transformer as Transformer3
+# from new_transformer import Transformer
+ from transformer import Transformer as Transformer2
+# from transformer_old import Transformer as Transformer3
+from updated_transformer import Transformer as Transformer
 
 
 import os
@@ -50,6 +51,8 @@ def rboolf(N, width, deg,seed=None):
     
     combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
+    print("coefficients: "  + str(coefficients))
+    print("combs: "  + str(combs))
     return (coefficients, combs)
 
 def ddp_setup(rank, world_size,backend):
@@ -92,7 +95,6 @@ class Trainer:
             save_checkpoints: bool,
             f: float,
             d: int,
-            l: int,
             h: int,
             dropout: float,
             wd: float,
@@ -143,7 +145,6 @@ class Trainer:
         self.width=width
         self.deg = deg
         self.n_samples = n_samples
-        self.l = l
         self.d = d
         self.f = f
         self.h = h
@@ -264,7 +265,6 @@ class Trainer:
                                       "ln_eps": self.ln_eps,
                                       "ln": self.ln,
                                       "weight_norm": weight_norm,
-                                       "l":self.l,
                                        "d":self.d,
                                        "f":self.f,
                                        "h":self.h,
@@ -312,13 +312,13 @@ class Trainer:
 
 
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, f, rank, ln_eps, ln):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
 
-        model = Transformer2(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
+        model = Transformer(dropout,N, dim, dim2, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
         print(model)
-        print("Model_Mid Parameter Count: " + str(total_params))
+        print("Model Parameter Count: " + str(total_params))
     
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         return train_set, model, optimizer                
@@ -326,12 +326,11 @@ def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_e
 
 def parse_args():
     parser = argparse.ArgumentParser(description='linear spectrum non boolean test.')
-    parser.add_argument('--N', type=int, default=10)
+    parser.add_argument('--N', type=int, default=20)
     parser.add_argument('--world_size', type=int, default=1)
-    parser.add_argument('--dim', type=int, default=20)
-    parser.add_argument('--dim2', type=int, default=20)
+    parser.add_argument('--dim', type=int, default=2)
+    parser.add_argument('--dim2', type=int, default=22)
     parser.add_argument('--f', type=int, default=64)
-    parser.add_argument('--l', type=int, default=1)
     parser.add_argument('--h', type=int, default=1)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--bs', type=int, default=32)
@@ -364,7 +363,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.dim,
                                                   args.dim2,
                                                   args.h,
-                                                  args.l,
                                                   args.f,
                                                   rank,
                                                   args.ln_eps,
@@ -394,7 +392,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         ln_eps = args.ln_eps,
                         ln = args.ln,
                         save_checkpoints=args.save_checkpoints,
-                        l=args.l,
                         d=args.dim,
                         f=args.f,
                         h=args.h,
@@ -420,7 +417,7 @@ if __name__ == "__main__":
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in [1]:
+    for i in [3,4]:
         for deg in [2]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):

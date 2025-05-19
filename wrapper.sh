@@ -17,8 +17,8 @@
 # conda info --env
 
 python exp_refactor.py  --N 20 \
- --dim 2 \x
-   --l 1 \
+ --dim 2 \
+  --dim2 22 \
      --h 1 \
        --f 32  \
         --bs 32  \
@@ -36,8 +36,7 @@ python exp_refactor.py  --N 20 \
 
 python exp_refactor.py  --N 20 \
  --dim 2 \
- --dim2 2 \
-   --l 1 \
+  --dim2 2 \
      --h 1 \
        --f 128 \
         --bs 32  \
