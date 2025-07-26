@@ -12,8 +12,6 @@ import argparse
 from new_transformer import Transformer
 from transformer import Transformer as Transformer2
 from transformer_old import Transformer as Transformer3
-
-
 import os
 import itertools
 import time
@@ -21,7 +19,10 @@ import datetime
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
-from torch.distributed import init_process_group, destroy_process_group, all_reduce, ReduceOp, barrier
+from torch.distributed import init_process_group, destroy_process_group, all_reduce, ReduceOp, barrier,get_rank, get_world_size, broadcast
+import numpy as np, math, collections, itertools
+from tqdm import tqdm
+
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
 #from functools import partial
@@ -40,18 +41,87 @@ def get_weight_norm(model):
                param_norm = p.data.norm(2)
                total_norm += param_norm.item() ** 2
        return total_norm ** 0.5
-    
+
 def rboolf(N, width, deg,seed=None):
     if seed:
         torch.manual_seed(seed)
     coefficients = torch.randn(width).to(device)
     #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
-    coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
-    
+    coefficients = (coefficients)/coefficients.pow(2).sum().sqrt()
+    print("coefficients: " + str(coefficients))
     combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
     return (coefficients, combs)
+from torch.fft import fft  # we will use a shortcut fast hadamard via bit-reordering
 
+    
+def ddp_restriction_tester(f, n, k, eps, delta=1/3,
+                           max_s=12, device=None):
+    rank  = get_rank()                     # 0 … world_size-1
+    world = get_world_size()
+
+    s     = min(max_s, math.ceil(math.log2(4*k/eps)))
+    T     = math.ceil(math.log(1/delta))
+    print("s: " + str(s) + ", T: " + str(T))
+    rej   = torch.zeros(1, device=device)
+    pow2_full = (1 << torch.arange(n, device=device, dtype=torch.long))
+
+    for _ in range(T):
+        
+        if rank == 0:
+            S = torch.tensor(random.sample(range(n), s),
+                             dtype=torch.int64,
+                             device=rank)        # <<< on GPU
+            fixed_bits = torch.randint(0, 2, (n-s,),
+                                       dtype=torch.uint8,
+                                       device=rank)          # <<< on GPU
+        else:
+            S = torch.empty(s,  dtype=torch.int64,  device=device)   # <<< GPU
+            fixed_bits = torch.empty(n-s, dtype=torch.uint8, device=device)
+
+        broadcast(S, 0); broadcast(fixed_bits, 0)
+
+        num   = 1 << s
+        chunk = torch.arange(rank, num, world, dtype=torch.long).to(device)
+        X     = torch.zeros(chunk.numel(), n, dtype=torch.uint8, device=device)
+        for j, bit in enumerate(S):
+            X[:, bit] = ((chunk >> j) & 1).to(torch.uint8)
+        X[:, [i for i in range(n) if i not in S.tolist()]] = fixed_bits.to(device)
+        ints = (X.long() * pow2_full).sum(dim=1)
+        vals = f(ints).float().to(device)                           # (chunk,)
+        # gather vals into a length-num vector “coeff”
+        coeff = torch.zeros(num, dtype=torch.float32, device=device)
+        #print("chunk: " + str(chunk) + ", vals: " + str(vals))
+        coeff.index_add_(0, chunk, vals)
+        all_reduce(coeff, op=ReduceOp.SUM)            # aggregate across GPUs
+        
+        coeff = hadamard_transform(coeff).abs_()**2   # energy
+        print("coeff: " + str(coeff[:10]))
+        total = coeff.sum()
+        head  = coeff.topk(k).values.sum() if k+1 < num else torch.tensor(0., device=device)
+        tail  = total - head
+
+        print("tail: " + str(tail))
+        if tail > eps * total / 2:
+            rej += 1
+    all_reduce(rej, op=ReduceOp.MAX)
+    return (rej.item() == 0)    
+import random
+def hadamard_transform(vals):
+    """Fast Walsh–Hadamard (in-place) for length power-of-two tensor (CPU or CUDA)."""
+    h = 1
+    n = vals.shape[0]
+    while h < n:
+        # pairwise butterfly:  vals[i], vals[i+h]  →  (a+b, a−b)
+        vals = vals.view(-1, 2*h)
+        first, second = vals[:, :h].clone(), vals[:, h:2*h].clone()
+        vals[:, :h] = first + second
+        vals[:, h:2*h] = first - second
+        vals = vals.view(n)
+        h <<= 1
+    vals /= math.sqrt(n)          # make it orthonormal ‖f‖₂ = ‖ĥ‖₂
+    return vals       
+    
 def ddp_setup(rank, world_size,backend):
     os.environ["MASTER_ADDR"]="localhost"
     os.environ["MASTER_PORT"]= "23456"
@@ -95,12 +165,15 @@ class Trainer:
             l: int,
             h: int,
             dropout: float,
-            wd: float,
+            wd: float
+            #test_dataloader:DataLoader
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
         self.model.to(self.gpu_id)
         self.train_data=train_data
+        print("length of train dataloader in init: " + str(len(train_data)))
+        #self.test_dataloader = test_dataloader
         self.optimizer = optimizer
         self.save_every=save_every
         self.ln_eps=ln_eps
@@ -153,14 +226,71 @@ class Trainer:
         self.lr = optimizer.param_groups[-1]['lr']
         self.backend = backend
         #self.func.to(gpu_id)
-    
-    def makeBitTensor(self, x, N):
+
+    def makeBitTensor(self,x, N):
         y = format(x, "b")
         y = ("0"*(N-len(y))) + y
-        return [int(z) for z in list(y)]
+        return [int(z) for z in list(y)]    
+    
+
+    # def YZ19_sparse_tester(self, N, k, eps,H):
+    #     """
+    #     One-sided tester:  returns True  (ACCEPT) if f is k-sparse,
+    #                       returns False (REJECT) if ℓ2-tail > eps.
+    #     Uses m = 64 * k/eps^4 * ln(12/eps) queries.  (δ = 1/3 by default.)
+    #     """
+    #     H = H.to(self.gpu_id)
+    #     # -- parameters from Theorem 3.1 (FOCS'19) --------------------------
+    #     d, _        = H.shape
+
+
+    #     q     = int(math.ceil(64 * k * eps**-4 * math.log(12/eps)))  # sample budget
+
+    #     print("q: " + str(q) + ", d: " + str(d))
+    #     # 1. pick a random linear hash  H : F2^n -> F2^d
+    #     #    represented by a d×n binary matrix chosen uniformly.
+    #     print("H dimension: " + str(H.shape))
+    #     print("head of H: " + str(H[:5,:5]))
+    #     # 2. draw q random x; bucket by  Hx
+    #     num_buckets  = 1 << d
+    #     pow2        = (1 << torch.arange(d, dtype=torch.long, device=self.gpu_id))  # 1,2,4,…
+    #     print("pow2 shape: " + str(pow2.shape))
+    #     sums   = torch.zeros(num_buckets, dtype=torch.float32, requires_grad=False).to(self.gpu_id)
+    #     counts = torch.zeros(num_buckets, dtype=torch.float32, requires_grad=False).to(self.gpu_id)
+        
+    #     print("number of batches: " + str(len(self.test_dataloader)))
+    #     for idx, batch in tqdm(enumerate(self.test_dataloader)):
+    #         #print("batch dimension: " + str(batch.shape))
+    #         binaryTensor = ((torch.tensor([self.makeBitTensor(y,N) for y in batch], requires_grad=False))).to(torch.float16).to(self.gpu_id)
+    #         #print("H: " + str(H))
+    #         #print("binaryTensor: " + str(binaryTensor))
+    #         prod = (binaryTensor @ torch.transpose(H,0,1)).to(torch.int32)
+    #         b = (prod.to(torch.int32) &1 ).to(torch.uint8) 
+    #         b = (b.long() * pow2).sum(dim=1)
+    #         #print("b shape: " + str(b.shape))
+    #         outputs = self.model(batch).to(self.gpu_id)
+    #         sums.index_add(0,   b, outputs)
+    #         counts.index_add(0, b, torch.ones_like(outputs, requires_grad=False))
+    #     # 3. estimate bucket energies  |g_H(u)|^2  via sample mean
+    #     all_reduce(sums, op=ReduceOp.SUM)
+    #     all_reduce(counts, op=ReduceOp.SUM)
+    #     means         = torch.zeros_like(sums, requires_grad=False)
+    #     nonempty      = counts > 0
+    #     means[nonempty] = sums[nonempty] / counts[nonempty]
+
+    #     energies = (means*means).detach().cpu().numpy()
+    #     tail_energy = energies[np.argpartition(-energies, k)[k:]].sum()
+    #     print("tail_energy: "  + str(tail_energy))
+    #     if tail_energy > 0.75*eps:               # 0.75 factor = constant slack in proof
+    #         return False                  # REJECT – evidence tail energy large
+    #     else:
+    #         return True
+    
         
     def func_batch(self,x):
         binaryTensor = ((torch.tensor([self.makeBitTensor(y,self.N) for y in x])-.5)*2)
+        #binaryTensor = ((torch.tensor([makeBitTensor(y,self.N) for y in x])))
+        #print("binaryTensor: " + str(binaryTensor))
         comps = []
         #print("self.combs length: " + str(len(self.combs)))
         for elem in self.combs:
@@ -189,8 +319,9 @@ class Trainer:
         epoch_loss = 0
         total_records = 0
         start_time = time.time()
-        
+        #print("number of batches: "  + str(len(self.train_data)))
         for idx, inputs in enumerate(self.train_data):
+          #print("length of inputs in training: " + str((inputs.shape)))
           #inputs.to(self.gpu_id)    
           targets =self.func_batch(inputs).to(self.gpu_id)
           batch_loss = self._run_batch(inputs, targets)
@@ -271,6 +402,7 @@ class Trainer:
                                        "dropout":self.dropout,
                                        "wd":self.wd
                                       }
+                
                
 
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
@@ -282,6 +414,8 @@ class Trainer:
             if flag > 0:
                 break
             barrier()
+        
+        
         # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
@@ -313,7 +447,7 @@ class Trainer:
 
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
-        train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
+        train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)    
 
         model = Transformer2(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
         total_params = sum(p.numel() for p in model.parameters())
@@ -356,7 +490,13 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       # Create new directory to save results for the particular function
       #dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
       #os.makedirs(dir_name, exist_ok=True)
-        
+      k=2
+      eps = .01
+    
+      #d     = int(math.ceil( 2*math.log2( 24*k/eps ) ))            # hash output bits
+
+      #q     = int(math.ceil(64 * k * eps**-4 * math.log(12/eps)))  # sample budget
+
       train_set,model,optimizer = load_train_objs(args.dropout,
                                                   args.wd,args.lr,
                                                   args.num_samples,
@@ -377,7 +517,13 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           batch_size=args.bs,
           sampler = DistributedSampler(train_set)
       )
-         
+      # #print("train length in main: " + str(len(train_loader)) +  ", len(train_loader[0]): "+ str(len(train_loader[0])))
+      # test_dataloader = DataLoader(
+      #     test_set,
+      #     shuffle=False,
+      #     batch_size=2048,
+      #     sampler = DistributedSampler(test_set)
+      # )   
       trainer = Trainer(coefs,combs, model,
                         train_loader,
                         optimizer,
@@ -400,10 +546,27 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         h=args.h,
                         dropout=args.dropout,
                         wd=args.wd
+                        #test_dataloader=test_dataloader
                         )
+      trainer.model.eval()
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
       barrier()
+      print("about to run sparsity property test")
+      delta = .01
+      # trials= int(math.ceil(math.log(1/delta)))
+
+      # sparsity = True
+      # for counter in range(trials):
+      #     H = torch.tensor(np.random.randint(0, 2, size=(d, args.N)), requires_grad=False).to(torch.float16)
+
+      #     if not trainer.YZ19_sparse_tester( 20, 2, .1, H):
+      #         sparsity= False
+      def f(X):
+        with torch.no_grad():
+            return trainer.model(X.to(device)).view(-1)
+      sparsity = ddp_restriction_tester(f,args.N, k, eps, delta, device=rank)
+      print("sparsity: " + str(sparsity))
       print("finished training, cleaning up process group...")
       destroy_process_group()
       print("finished cleaning up process group")
@@ -420,11 +583,11 @@ if __name__ == "__main__":
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in [1]:
+    for i in [2]:
         for deg in [2]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [2]:
+            for width in [3]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
