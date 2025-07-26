@@ -55,13 +55,15 @@ class AttentionBlock(nn.Module):
 
 class Transformer(torch.nn.Module):
     
-    def __init__(self,dropout, N, hidden_dim, output_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln):
+    def __init__(self,dropout, N, hidden_dim, proj_dim, output_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln):
 
         super().__init__()
         self.N = N
         self.hidden_dim = hidden_dim
-        self.h = num_heads
-        self.l = num_layers
+        self.proj_dim = proj_dim
+        self.output_dim = output_dim
+        self.num_heads = num_heads
+        self.num_layaers = num_layers
         self.ff_dim = ff_dim
         self.LNeps = LNeps
         self.rank = rank
@@ -72,11 +74,13 @@ class Transformer(torch.nn.Module):
         if hidden_dim == 2:
             self.embeddings.weight = nn.Parameter(torch.eye(hidden_dim), requires_grad=False)
         
-        hidden_dim = N + hidden_dim
+        # hidden_dim = N + hidden_dim
 
         # Positional Embedding
-        # self.pos_embeddings = nn.Embedding(N, N)
-        # self.pos_embeddings.weight = nn.Parameter(torch.eye(self.N), requires_grad=False)
+        self.random_projection = 1/torch.sqrt(torch.tensor(proj_dim)) * torch.randn((N, proj_dim), requires_grad=False).to(rank)
+
+        hidden_dim = proj_dim + hidden_dim
+
 
         self.transformer = AttentionBlock(hidden_dim=hidden_dim, output_dim=output_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln)       
 
@@ -96,8 +100,12 @@ class Transformer(torch.nn.Module):
         batch_size = x.shape[0]
         inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
         pos = torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
+        pos = torch.matmul(pos, self.random_projection)
         dat = self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
+
+
+
         x = self.transformer(x)
         x.to(self.rank)
         x = torch.tensordot(x , self.output_proj)
