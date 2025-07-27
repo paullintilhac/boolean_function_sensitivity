@@ -312,10 +312,10 @@ class Trainer:
 
 
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim, dim2, h, l, f, rank, ln_eps, ln):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim, proj_dim, output_dim, h, l, f, rank, ln_eps, ln):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
 
-        model = Transformer2(dropout,N, dim, dim2, h, l, f, ln_eps,rank,ln)
+        model = Transformer2(dropout,N, dim, proj_dim, output_dim, h, l, f, ln_eps,rank,ln)
         total_params = sum(p.numel() for p in model.parameters())
         print(model)
         print("Model_Mid Parameter Count: " + str(total_params))
@@ -363,7 +363,8 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.num_samples,
                                                   args.N,
                                                   args.dim,
-                                                  args.dim2,
+                                                  args.proj_dim,
+                                                  args.output_dim,
                                                   args.h,
                                                   args.l,
                                                   args.f,
