@@ -32,7 +32,8 @@ elif cuda_avail:
   device = torch.device("cuda")
 else:
   device = torch.device("cpu")
-    
+
+
 def get_weight_norm(model):
        total_norm = 0.0
        for p in model.parameters():
@@ -155,23 +156,22 @@ class Trainer:
         #self.func.to(gpu_id)
     
     def makeBitTensor(self, x, N):
+        print("x: "+ str(x))
         y = format(x, "b")
         y = ("0"*(N-len(y))) + y
         return [int(z) for z in list(y)]
         
-    def func_batch(self,x):
-        binaryTensor = ((torch.tensor([self.makeBitTensor(y,self.N) for y in x])-.5)*2)
-        comps = []
-        #print("self.combs length: " + str(len(self.combs)))
-        for elem in self.combs:
-            res = torch.tensor([1]*len(x))
-            for e in elem:
-                bitCol = binaryTensor[:,e]
-                res = torch.mul(res, bitCol)
-            comps.append(res)
-        comps = torch.transpose(torch.stack(comps),1,0).to(self.gpu_id)
-        return torch.matmul(comps, self.coeffs).to(self.gpu_id)
-        
+    def func_batch(self, x):
+        # x is now a (batch_size × N) tensor of 0/1 bits
+        x = x.float()                               # cast to float
+        binary = (x - 0.5) * 2                      # convert {0,1} → {–1,+1}
+        # for each combination, multiply together the relevant columns:
+        comps = torch.stack([
+            torch.prod(binary[:, elem], dim=1)
+            for elem in self.combs
+        ], dim=1).to(self.gpu_id)                  # shape (batch_size, width)
+        return comps @ self.coeffs                  # final mat-mul
+
     def _run_batch(self,inputs, targets):
         self.optimizer.zero_grad()
         inputs.to(self.gpu_id)
@@ -247,6 +247,7 @@ class Trainer:
                 end_time_hessian = time.time()
                 elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
                 print("elapsed time norm: " + str(elapsed_time_hessian))
+                test_bits = torch.randint(0, 2, (1, self.N), dtype=torch.int64, device=self.gpu_id)
                 self.summary.loc[0] = {"deg":self.deg,
                                        "width":self.width,
                                        "func":self.func,
@@ -256,7 +257,7 @@ class Trainer:
                                       "batch_size": self.batch_size,
                                       "lr":self.lr,
                                       "n_samples":self.n_samples,
-                                      "func_val_test":self.func_batch([2]).cpu(),
+                                      "func_val_test":self.func_batch(test_bits).cpu(),
                                       "time_elapsed":elapsed_time,
                                       "backend":self.backend,
                                       "top_eig":top_eig,
@@ -289,7 +290,7 @@ class Trainer:
 
     def validate(self, num_samples):
       self.model.eval()
-      inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
+      inputs = torch.randint(0, 2, (num_samples, self.N), dtype=torch.int64, device=self.gpu_id)
       targets = self.func_batch(inputs).to(self.gpu_id)
       result = self.model(inputs).to(self.gpu_id)
       loss = (result - targets).pow(2).mean()
@@ -297,7 +298,7 @@ class Trainer:
 
     def calc_hessian(self, model, loss_fn, num_samples,device_id):
         model.eval().to(self.gpu_id)
-        inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
+        inputs = torch.randint(0, 2, (num_samples, self.N), dtype=torch.int64, device=self.gpu_id)
         targets = self.func_batch(inputs).to(self.gpu_id)
         data = (inputs, targets)        
 
@@ -314,9 +315,13 @@ class Trainer:
 
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, proj_dim, output_dim, h, l, f, rank, ln_eps, ln):
-        train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-
-        model = Transformer2(dropout,N, dim, proj_dim, output_dim, h, l, f, ln_eps,rank,ln)
+        
+        #make it work for N>63
+        train_set = torch.randint(0, 2, (int(num_samples), N), dtype=torch.int64, device=rank)
+        print("type: " + str(type(train_set))+", type inside: " + str(type(train_set[0])))
+        #train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
+        use_random_proj = False
+        model = Transformer2(dropout,N, dim, proj_dim, output_dim, h, l, f, ln_eps,rank,ln, use_random_proj)
         total_params = sum(p.numel() for p in model.parameters())
         print(model)
         print("Model_Mid Parameter Count: " + str(total_params))
@@ -404,7 +409,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         dropout=args.dropout,
                         wd=args.wd
                         )
-      print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
+      #print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
       barrier()
       print("finished training, cleaning up process group...")
@@ -418,13 +423,13 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HYPERPARAM_TESTS_MECHINTERP"
+    main_dir = f"RANDOM_PROJECTIONS_REFACTOR"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
     for i in [1,2,3]:
-        for deg in [3, 4]:
+        for deg in [3,4]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
             for width in [2, 3, 4]:
@@ -446,3 +451,4 @@ if __name__ == "__main__":
         
                 elapsed_time = round((end_time - start_time)/60,3)
                 print("elapsed time for whole training process: " + str(elapsed_time))
+                

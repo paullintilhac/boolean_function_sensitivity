@@ -55,30 +55,39 @@ class AttentionBlock(nn.Module):
 
 class Transformer(torch.nn.Module):
     
-    def __init__(self,dropout, N, hidden_dim, output_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln):
+    def __init__(self,dropout, N, hidden_dim, proj_dim, output_dim, num_heads, num_layers, ff_dim, LNeps,rank,ln,dim_red):
 
         super().__init__()
         self.N = N
         self.hidden_dim = hidden_dim
-        self.h = num_heads
-        self.l = num_layers
+        self.proj_dim = proj_dim
+        self.output_dim = output_dim
+        self.num_heads = num_heads
+        self.num_layaers = num_layers
         self.ff_dim = ff_dim
         self.LNeps = LNeps
         self.rank = rank
         self.dropout = dropout
-        
+        self.dim_red = dim_red
         # Data embedding
         self.embeddings = torch.nn.Embedding(2, hidden_dim)
         if hidden_dim == 2:
             self.embeddings.weight = nn.Parameter(torch.eye(hidden_dim), requires_grad=False)
         
-        hidden_dim = N + hidden_dim
+        # hidden_dim = N + hidden_dim
 
         # Positional Embedding
-        # self.pos_embeddings = nn.Embedding(N, N)
-        # self.pos_embeddings.weight = nn.Parameter(torch.eye(self.N), requires_grad=False)
+        if self.dim_red:
+            self.random_projection = 1/torch.sqrt(torch.tensor(proj_dim)) * torch.randn((N, proj_dim), requires_grad=False).to(rank)
+        else:
+            print("dim red is flase, setting proj dim from " +str(self.proj_dim)+" to " + str(self.N))
+            self.proj_dim = self.N
+        print("proj_dim: " + str(self.proj_dim)+", N: " + str(self.N) + ", hidden_dim: " + str(hidden_dim))
+        self.hidden_dim = self.proj_dim + self.hidden_dim
+        
+        
 
-        self.transformer = AttentionBlock(hidden_dim=hidden_dim, output_dim=output_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln)       
+        self.transformer = AttentionBlock(hidden_dim=self.hidden_dim, output_dim=output_dim, ff_dim=ff_dim, num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln)       
 
         self.output_proj = nn.Parameter(torch.randn((N, output_dim)), requires_grad=True)
         
@@ -94,10 +103,16 @@ class Transformer(torch.nn.Module):
     def forward(self, x):    
 
         batch_size = x.shape[0]
-        inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
+        inputNum = x.to(self.rank).long()
+        #inputNum = torch.LongTensor([ self.makeBitTensor(num, self.N) for num in x]).to(self.rank)
         pos = torch.eye(self.N, self.N).to(self.rank).unsqueeze(0).repeat(batch_size, 1, 1)
+        if self.dim_red:
+            pos = torch.matmul(pos, self.random_projection)
         dat = self.embeddings(inputNum)
         x = torch.cat([pos, dat], dim=2)
+
+
+
         x = self.transformer(x)
         x.to(self.rank)
         x = torch.tensordot(x , self.output_proj)
