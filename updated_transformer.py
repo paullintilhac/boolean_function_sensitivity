@@ -16,7 +16,7 @@ else:
 
 class AttentionBlock(nn.Module):
     
-    def __init__(self, hidden_dim, output_dim, ff_dim, num_heads, LNeps, N, dropout, ln, add_linear=True):
+    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N, dropout, ln, add_linear=True):
         """
         Inputs:
             embed_dim - Dimensionality of input and attention feature vectors
@@ -26,20 +26,20 @@ class AttentionBlock(nn.Module):
             dropout - Amount of dropout to apply in the feed-forward network
         """
         super().__init__()
-        self.attn = CustomMHA(hidden_dim, output_dim, num_heads, bias=False, batch_first=True, N=N,dropout=dropout)
-        self.skip = hidden_dim == output_dim
+        self.attn = CustomMHA(hidden_dim, num_heads, bias=False, batch_first=True, N=N,dropout=dropout)
+        self.skip = True
         self.add_linear = add_linear
         self.ln = ln
 
         if ln:
-            self.norm1 = nn.LayerNorm(output_dim, eps=LNeps)
-            self.norm2 = nn.LayerNorm(output_dim, eps=LNeps)
+            self.norm1 = nn.LayerNorm(hidden_dim, eps=LNeps)
+            self.norm2 = nn.LayerNorm(hidden_dim, eps=LNeps)
         
         if add_linear:
             self.linear = nn.Sequential(
-                nn.Linear(output_dim, ff_dim),
+                nn.Linear(hidden_dim, ff_dim),
                 nn.ReLU(),
-                nn.Linear(ff_dim, output_dim)
+                nn.Linear(ff_dim, hidden_dim)
                 )
         
     def forward(self, x):
@@ -61,7 +61,7 @@ class AttentionBlock(nn.Module):
 
 class Transformer(torch.nn.Module):
     
-    def __init__(self,dropout, N, hidden_dim, output_dim, num_heads, ff_dim, LNeps,rank,ln):
+    def __init__(self,dropout, N, hidden_dim, num_heads, ff_dim, LNeps,rank,ln):
 
         super().__init__()
         self.N = N
@@ -83,12 +83,12 @@ class Transformer(torch.nn.Module):
         self.pos_embeddings = nn.Embedding(N+1, N).to(rank)
         self.pos_embeddings.weight = nn.Parameter(torch.cat([torch.eye(self.N), torch.zeros((1,N))], dim=0).to(rank), requires_grad=False)
 
-        self.attn1 = AttentionBlock(hidden_dim=hidden_dim, output_dim=output_dim, ff_dim=ff_dim, 
+        self.attn1 = AttentionBlock(hidden_dim=hidden_dim,  ff_dim=ff_dim, 
                                     num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln).to(rank)
-        self.attn2 = AttentionBlock(hidden_dim=output_dim, output_dim=output_dim, ff_dim=ff_dim, 
+        self.attn2 = AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, 
                                     num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln, add_linear=False).to(rank)  
      
-        self.output_proj = nn.Linear(output_dim, 1).to(rank)
+        self.output_proj = nn.Linear(hidden_dim, 1).to(rank)
         
         
     def makeBitTensor(self, x, N):
@@ -119,15 +119,15 @@ class Transformer(torch.nn.Module):
         x = self.attn1(x)
         x = self.attn2(x)
         x = x[:, -1, :]
-        x = self.output_proj(x)
+        x = self.output_proj(x).squeeze(-1)
         return x
     
 class CustomMHA(torch.nn.MultiheadAttention):
-    def __init__(self, embed_dim, new_dim, num_heads, bias, batch_first, N,dropout):
+    def __init__(self, embed_dim, num_heads, bias, batch_first, N,dropout):
         super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias, batch_first=batch_first,dropout=dropout)
         self.out_proj = None
         self.N = N
-        self.in_proj_weight = nn.Parameter(self.in_proj_weight[:2*embed_dim + new_dim , :])
+        #self.in_proj_weight = nn.Parameter(self.in_proj_weight[:2*embed_dim + new_dim , :])
 
     def forward(self, query, key, value):
         is_batched = query.dim() == 3
@@ -264,34 +264,33 @@ def multi_head_attention_forward(query, key, value, num_heads, N, embed_dim_to_c
     
 
 
-# Test if it works
-if __name__ == "__main__":
-    # Example usage
-    N = 12
-    hidden_dim = 2
-    output_dim = 2
-    num_heads = 1
-    num_layers = 1
-    ff_dim = 32
-    LNeps = 1e-5
-    rank = "cpu"
-    ln = False
-    dropout = 0.1
+# # Test if it works
+# if __name__ == "__main__":
+#     # Example usage
+#     N = 12
+#     hidden_dim = 2
+#     num_heads = 1
+#     num_layers = 1
+#     ff_dim = 32
+#     LNeps = 1e-5
+#     rank = "cpu"
+#     ln = False
+#     dropout = 0.1
 
-    model = Transformer(dropout, N, hidden_dim, output_dim, num_heads, ff_dim, LNeps, rank, ln)
-    loss_fn = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+#     model = Transformer(dropout, N, hidden_dim, num_heads, ff_dim, LNeps, rank, ln)
+#     loss_fn = nn.MSELoss()
+#     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    for epoch in range(50):
-        optimizer.zero_grad()
-        x = torch.randint(0, 2**N, (10,))
-        y = torch.randint(0, 2, (10,))
-        output = model(x)
-        loss = loss_fn(output.squeeze(), y.float())
-        loss.backward()
-        optimizer.step()
-        print(f"Epoch {epoch+1}, Loss: {loss.item()}")
+#     for epoch in range(50):
+#         optimizer.zero_grad()
+#         x = torch.randint(0, 2**N, (10,))
+#         y = torch.randint(0, 2, (10,))
+#         output = model(x)
+#         loss = loss_fn(output.squeeze(), y.float())
+#         loss.backward()
+#         optimizer.step()
+#         print(f"Epoch {epoch+1}, Loss: {loss.item()}")
 
 
-    x = torch.randint(0, 2**N, (10,))
-    output = model(x)
+#     x = torch.randint(0, 2**N, (10,))
+#     output = model(x)

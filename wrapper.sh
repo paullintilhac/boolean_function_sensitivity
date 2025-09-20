@@ -16,27 +16,26 @@
 # echo conda env:
 # conda info --env
 
-python exp_refactor.py  --N 20 \
- --dim 2 \
-  --dim2 22 \
-     --h 1 \
-       --f 32  \
-        --bs 32  \
-         --epochs 1500 \
-           --num_samples 8192  \
-             --repeat 1 \
-             --lr "4e-3" \
-             --dropout .2 \
-             --wd .01 \
-             --world_size 8 \
-              --backend nccl \
-              --stop_loss .000002 \
-              --save_every 50 \
-              --save_checkpoints
+# python exp_refactor.py  --N 20 \
+#  --dim 2 \
+#   --dim2 22 \
+#      --h 1 \
+#        --f 32  \
+#         --bs 32  \
+#          --epochs 1500 \
+#            --num_samples 8192  \
+#              --repeat 1 \
+#              --lr "4e-3" \
+#              --dropout .2 \
+#              --wd .01 \
+#              --world_size 8 \
+#               --backend nccl \
+#               --stop_loss .000002 \
+#               --save_every 50 \
+#               --save_checkpoints
 
 python exp_refactor.py  --N 20 \
  --dim 2 \
-  --dim2 2 \
      --h 1 \
        --f 128 \
         --bs 32  \
@@ -46,7 +45,7 @@ python exp_refactor.py  --N 20 \
              --lr "4e-3" \
              --dropout 0.2 \
              --wd .00001 \
-             --world_size 8 \
+             --world_size 1 \
               --backend nccl \
               --stop_loss .0002 \
               --save_every 10 \
