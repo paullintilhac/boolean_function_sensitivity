@@ -47,7 +47,7 @@ def rboolf(N, width, deg,seed=None):
         torch.manual_seed(seed)
     coefficients = torch.randn(width).to(device)
     #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
-    coefficients = (coefficients-coefficients.mean())/coefficients.pow(2).sum().sqrt()
+    coefficients = (coefficients)/coefficients.pow(2).sum().sqrt()
     
     combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
