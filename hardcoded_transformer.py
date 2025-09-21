@@ -98,7 +98,7 @@ def multi_head_attention_forward(query, key, value, num_heads, embed_dim_to_chec
 
 
 # ------------------- Hand-coded 2-attn-layer construction with residuals -------------------
-class HandCodedResidual(nn.Module):
+class HardCodedTransformer(nn.Module):
     """
     Tokens: N bit tokens + 1 readout token (L = N+1).
     Features per token = [pos (N+1 one-hot) | bit] => E = (N+1)+1.
@@ -243,7 +243,6 @@ class HandCodedResidual(nn.Module):
     def _int_to_bits(self, x: int):
         return torch.tensor([(x >> i) & 1 for i in reversed(range(self.N))], dtype=torch.long, device=self.device)
 
-    @torch.no_grad()
     def forward(self, x_ints):
         """
         x_ints: (B,) integers in [0, 2^N)
@@ -299,7 +298,7 @@ if __name__ == "__main__":
     raw = torch.randn(T)
     coeffs = (raw / raw.norm()).tolist()  # sum of squares = 1
 
-    model = HandCodedResidual(N=N, combs=combs, coeffs=coeffs, device=device)
+    model = HardCodedTransformer(N=N, combs=combs, coeffs=coeffs, device=device)
 
     # random batch
     B = 16

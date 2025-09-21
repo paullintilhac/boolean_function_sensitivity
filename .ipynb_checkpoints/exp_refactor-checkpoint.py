@@ -11,6 +11,7 @@ import random
 import argparse
 # from new_transformer import Transformer
 from transformer import Transformer as Transformer2
+from hardcoded_transformer import HardCodedTransformer
 # from transformer_old import Transformer as Transformer3
 from updated_transformer import Transformer as Transformer
 
@@ -299,7 +300,7 @@ class Trainer:
         inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
         targets = self.func_batch(inputs).to(self.gpu_id)
         data = (inputs, targets)        
-
+        print("data: " + str(data))
         # Estimate using PyHessian -- very good
         hess_mod = hessian(model, loss_fn, data)
         for param in model.parameters():
@@ -312,16 +313,16 @@ class Trainer:
 
 
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-
+        hardcoded_model = HardCodedTransformer(N, combs, coefs, device=rank)
         model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
         print(model)
         print("Model Parameter Count: " + str(total_params))
     
         optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
-        return train_set, model, optimizer                
+        return train_set, model, optimizer, hardcoded_model                
 
 
 def parse_args():
@@ -356,7 +357,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
       #os.makedirs(dir_name, exist_ok=True)
         
-      train_set,model,optimizer = load_train_objs(args.dropout,
+      train_set,model,optimizer,hardcoded_model = load_train_objs(args.dropout,
                                                   args.wd,args.lr,
                                                   args.num_samples,
                                                   args.N,
@@ -365,9 +366,12 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.f,
                                                   rank,
                                                   args.ln_eps,
-                                                  args.ln
+                                                  args.ln,
+                                                  coefs,
+                                                  combs
                                                   )
       model.to(rank)
+      hardcoded_model.to(rank)
       train_loader = DataLoader(
           train_set,
           shuffle=False,
@@ -397,6 +401,10 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         dropout=args.dropout,
                         wd=args.wd
                         )
+      loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+      print("hardcoded model: " + str(hardcoded_model))
+      hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank)
+      print("hardcoded hessian stats: " + str(hardcoded_hessian))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
       barrier()
