@@ -14,6 +14,53 @@ from transformer import Transformer as Transformer2
 from hardcoded_transformer import HardCodedTransformer
 # from transformer_old import Transformer as Transformer3
 from updated_transformer import Transformer as Transformer
+import math
+
+
+class SAM(torch.optim.Optimizer):
+    """SAM wrapper around a base optimizer (e.g., AdamW)."""
+    def __init__(self, params, base_optimizer, rho=0.05, adaptive=False):
+        if rho <= 0.0:
+            raise ValueError("rho must be > 0")
+        defaults = dict(rho=rho, adaptive=adaptive)
+        super().__init__(params, defaults)
+        self.base_optimizer = base_optimizer
+    @torch.no_grad()
+    def _grad_norm(self):
+        eps = 1e-12
+        norms = []
+        for group in self.param_groups:
+            adaptive = group['adaptive']
+            for p in group['params']:
+                if p.grad is None: continue
+                g = p.grad
+                w = p.abs() if adaptive else 1.0
+                norms.append((w * g).norm(p=2))
+        if not norms:
+            dev = self.param_groups[0]['params'][0].device
+            return torch.tensor(0.0, device=dev) + eps
+        return torch.norm(torch.stack(norms), p=2) + eps
+    @torch.no_grad()
+    def first_step(self, zero_grad=True):
+        scale = self.param_groups[0]['rho'] / self._grad_norm()
+        for group in self.param_groups:
+            adaptive = group['adaptive']
+            for p in group['params']:
+                if p.grad is None: continue
+                e = (p.abs() if adaptive else 1.0) * p.grad * scale
+                p.add_(e)
+                self.state[p]['e_w'] = e
+        if zero_grad: self.zero_grad()
+    @torch.no_grad()
+    def second_step(self, zero_grad=True):
+        for group in self.param_groups:
+            for p in group['params']:
+                if p.grad is None: continue
+                p.sub_(self.state[p]['e_w'])
+        self.base_optimizer.step()
+        if zero_grad: self.zero_grad()
+    def zero_grad(self): self.base_optimizer.zero_grad()
+    def step(self): raise NotImplementedError("Use first_step() and second_step()")
 
 
 import os
@@ -127,6 +174,8 @@ class Trainer:
                                  "backend",
                                  "top_eig",
                                  "trace",
+                                 "top_eig_train",
+                                 "trace_train",
                                  "stop_loss",
                                  "ln_eps",
                                  "ln",
@@ -152,7 +201,11 @@ class Trainer:
         for batch in train_data:
             self.batch_size = len(batch)
             break
-        self.lr = optimizer.param_groups[-1]['lr']
+        self.lr = (
+            optimizer.base_optimizer.param_groups[-1]['lr']
+            if hasattr(optimizer, 'base_optimizer')
+            else optimizer.param_groups[-1]['lr']
+        )
         self.backend = backend
         #self.func.to(gpu_id)
     
@@ -174,16 +227,36 @@ class Trainer:
         comps = torch.transpose(torch.stack(comps),1,0).to(self.gpu_id)
         return torch.matmul(comps, self.coeffs).to(self.gpu_id)
         
-    def _run_batch(self,inputs, targets):
+    def _run_batch(self, inputs, targets):
+        # Same loss as elsewhere
+        loss_fn = lambda out, tgt: (out - tgt).pow(2).mean()
+    
+        # ---- SAM path ----
+        if hasattr(self.optimizer, "base_optimizer"):
+            # 1) Compute grads at w and take the SAM ascent step to w~
+            #    Use no_sync() to avoid an extra all-reduce in DDP on the first backward.
+            with self.model.no_sync():
+                out = self.model(inputs)
+                loss = loss_fn(out, targets)
+                loss.backward()
+            self.optimizer.first_step(zero_grad=True)
+    
+            # 2) Compute grads at w~ and take the descent step (restoring weights)
+            out = self.model(inputs)
+            loss_perturbed = loss_fn(out, targets)
+            loss_perturbed.backward()
+            self.optimizer.second_step(zero_grad=True)
+    
+            # Return the original (unperturbed) loss for logging/averaging
+            return loss.detach()
+    
+        # ---- Standard optimizer path ----
+        out = self.model(inputs)
+        loss = loss_fn(out, targets)
         self.optimizer.zero_grad()
-        inputs.to(self.gpu_id)
-        result = self.model(inputs)
-        criterion = torch.nn.MSELoss()
-        loss =  criterion(result, targets)
-        # loss =(result-targets).pow(2).mean()
-        (loss).backward()
+        loss.backward()
         self.optimizer.step()
-        return loss.detach().cpu()
+        return loss.detach()
     
     def _run_epoch(self,epoch):
         
@@ -240,6 +313,7 @@ class Trainer:
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
+                top_eig_train, trace_train = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id, use_train=True)
                 #weight_norm = 0
                 weight_norm = get_weight_norm(self.model.module)
                 #weight_norm = torch.linalg.norm(self.model.weight)
@@ -262,6 +336,8 @@ class Trainer:
                                       "backend":self.backend,
                                       "top_eig":top_eig,
                                       "trace":trace,
+                                       "top_eig_train": top_eig_train,
+                                       "trace_train": trace_train,
                                       "stop_loss": self.stop_loss,
                                       "ln_eps": self.ln_eps,
                                       "ln": self.ln,
@@ -295,36 +371,79 @@ class Trainer:
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
 
-    def calc_hessian(self, model, loss_fn, num_samples,device_id):
+    def calc_hessian(self, model, loss_fn, num_samples,device_id, use_train=False):
         model.eval().to(self.gpu_id)
-        inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
+        if use_train:
+            ds = getattr(self.train_data, "dataset", None)
+            if isinstance(ds, torch.Tensor):
+                inputs = ds[:min(num_samples, ds.shape[0])].to(self.gpu_id)
+            else:
+                collected, total = [], 0
+                for batch in self.train_data:
+                    batch_inputs = batch[0] if isinstance(batch, (list, tuple)) else batch
+                    take = min(batch_inputs.shape[0], num_samples - total)
+                    collected.append(batch_inputs[:take])
+                    total += take
+                    if total >= num_samples: break
+                inputs = torch.cat(collected, dim=0).to(self.gpu_id)
+        else:
+            inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
         targets = self.func_batch(inputs).to(self.gpu_id)
-        data = (inputs, targets)        
-        #print("data: " + str(data))
-        # Estimate using PyHessian -- very good
+        data = (inputs, targets)
         hess_mod = hessian(model, loss_fn, data)
-        for param in model.parameters():
-            param.grad = None
+        for param in model.parameters(): param.grad = None
         top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-        top_eig = top_eigs[0] 
+        top_eig = top_eigs[0]
         trace = hess_mod.trace()
-        
         return top_eig, np.mean(trace)
 
 
     
-def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs):
+def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        hardcoded_model = HardCodedTransformer(N, combs, coefs, device=rank)
+        hardcoded_model = HardCodedTransformer(N, combs, coefs)
         model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
         print(model)
         print("Model Parameter Count: " + str(total_params))
     
-        optimizer = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
+        base_opt = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
+        optimizer = SAM(model.parameters(), base_optimizer=base_opt, rho=sam_rho, adaptive=asam) if sam else base_opt
         return train_set, model, optimizer, hardcoded_model                
 
+def addGaussianNoise(model, sigma, as_variance=True, skip_frozen=True, include_bias=True, seed=None):
+    """
+    Adds centered Gaussian noise to parameters in-place.
 
+    Args:
+      model: nn.Module (e.g., HardCodedTransformer)
+      sigma: if as_variance=True, interpreted as variance; else as std dev
+      as_variance: True -> use std = sqrt(sigma); False -> std = sigma
+      skip_frozen: if True, only perturb params with requires_grad=True
+      include_bias: if False, skip bias terms
+      seed: optional int for reproducibility
+    """
+    std = math.sqrt(sigma) if as_variance else float(sigma)
+    if seed is not None:
+        # Use device-aware generator so CUDA noise is deterministic too
+        device = next(model.parameters()).device
+        g = torch.Generator(device=device).manual_seed(seed)
+    else:
+        g = None
+
+    with torch.no_grad():
+        for name, p in model.named_parameters():
+            if skip_frozen and not p.requires_grad:
+                continue
+            if (not include_bias) and name.endswith(".bias"):
+                continue
+            # If you want to explicitly skip the fixed embeddings:
+            if "pos_embed.weight" in name or "bit_embed.weight" in name:
+                continue
+            noise = torch.empty_like(p)
+            noise = noise.normal_(mean=0.0, std=std, generator=g)
+            p.add_(noise)
+            
 def parse_args():
     parser = argparse.ArgumentParser(description='linear spectrum non boolean test.')
     parser.add_argument('--N', type=int, default=20)
@@ -348,6 +467,9 @@ def parse_args():
     parser.add_argument('--save_checkpoints', action='store_true')
 
 
+    parser.add_argument('--sam', action='store_true')
+    parser.add_argument('--sam_rho', type=float, default=0.05)
+    parser.add_argument('--asam', action='store_true')
     return parser.parse_args()
 
 def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
@@ -368,7 +490,10 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   args.ln_eps,
                                                   args.ln,
                                                   coefs,
-                                                  combs
+                                                  combs,
+                                                  sam=args.sam,
+                                                  sam_rho=args.sam_rho,
+                                                  asam=args.asam
                                                   )
       model.to(rank)
       hardcoded_model.to(rank)
@@ -403,8 +528,20 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         )
       loss_fn = lambda result, targets: (result-targets).pow(2).mean()
       print("hardcoded model: " + str(hardcoded_model))
+      #addGaussianNoise(hardcoded_model, .1)
       hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank)
+      hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank, use_train=True)
       print("hardcoded hessian stats: " + str(hardcoded_hessian))
+      _hc_df = pd.DataFrame([{
+          "deg": trainer.deg,
+          "width": trainer.width,
+          "func": trainer.func,
+          "top_eig": hardcoded_hessian[0],
+          "trace": hardcoded_hessian[1],
+          "top_eig_train": hardcoded_hessian_train[0],
+          "trace_train": hardcoded_hessian_train[1],
+      }])
+      _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False)
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
       barrier()

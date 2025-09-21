@@ -37,7 +37,7 @@
 python exp_refactor.py  --N 20 \
  --dim 2 \
      --h 1 \
-       --f 128 \
+       --f 32 \
         --bs 32  \
          --epochs 1500 \
            --num_samples 8192  \
@@ -49,3 +49,4 @@ python exp_refactor.py  --N 20 \
               --backend nccl \
               --stop_loss .0002 \
               --save_every 10 \
+              --sam \
