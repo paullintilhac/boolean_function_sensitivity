@@ -420,7 +420,7 @@ if __name__ == "__main__":
         for deg in [2]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [2]:
+            for width in [4]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
