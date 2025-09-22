@@ -19,7 +19,7 @@ import math
 
 class SAM(torch.optim.Optimizer):
     """SAM wrapper around a base optimizer (e.g., AdamW)."""
-    def __init__(self, params, base_optimizer, rho=0.05, adaptive=False):
+    def __init__(self, params, base_optimizer, rho=0.05, adaptive=True):
         if rho <= 0.0:
             raise ValueError("rho must be > 0")
         defaults = dict(rho=rho, adaptive=adaptive)
@@ -309,7 +309,7 @@ class Trainer:
                 elapsed_time = round((end_time - start_time)/60,3) 
 
                 #print("self.func: " + str(self.func))
-                val_loss = self.validate(1000) 
+                val_loss = self.validate(1000,model) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
@@ -363,11 +363,11 @@ class Trainer:
         # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
 
-    def validate(self, num_samples):
-      self.model.eval()
+    def validate(self, num_samples,test_model):
+      test_model.eval()
       inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
       targets = self.func_batch(inputs).to(self.gpu_id)
-      result = self.model(inputs).to(self.gpu_id)
+      result = test_model(inputs).to(self.gpu_id)
       loss = (result - targets).pow(2).mean()
       return loss.detach().cpu()
 
@@ -404,9 +404,11 @@ def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,co
         hardcoded_model = HardCodedTransformer(N, combs, coefs)
         model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
-        print(model)
-        print("Model Parameter Count: " + str(total_params))
-    
+        #print(model)
+        print("Trainable Model Parameter Count: " + str(total_params))
+        hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
+        #print(model)
+        print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
         base_opt = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
         optimizer = SAM(model.parameters(), base_optimizer=base_opt, rho=sam_rho, adaptive=asam) if sam else base_opt
         return train_set, model, optimizer, hardcoded_model                
@@ -465,8 +467,6 @@ def parse_args():
     parser.add_argument('--ln_eps', type=float,default = 1e-5)
     parser.add_argument('--ln', action='store_true')
     parser.add_argument('--save_checkpoints', action='store_true')
-
-
     parser.add_argument('--sam', action='store_true')
     parser.add_argument('--sam_rho', type=float, default=0.05)
     parser.add_argument('--asam', action='store_true')
@@ -531,7 +531,11 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #addGaussianNoise(hardcoded_model, .1)
       hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank)
       hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank, use_train=True)
-      print("hardcoded hessian stats: " + str(hardcoded_hessian))
+      weight_norm = get_weight_norm(hardcoded_model)
+      hardcoded_loss = trainer.validate(1000,hardcoded_model)
+      
+      # print("frobenius weight norm: " + str(weight_norm)) 
+      # print("hardcoded hessian stats: " + str(hardcoded_hessian))
       _hc_df = pd.DataFrame([{
           "deg": trainer.deg,
           "width": trainer.width,
@@ -540,10 +544,12 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           "trace": hardcoded_hessian[1],
           "top_eig_train": hardcoded_hessian_train[0],
           "trace_train": hardcoded_hessian_train[1],
+          "frobenius_weight_norm": weight_norm,
+          "test_loss": hardcoded_loss
       }])
-      _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False)
+      _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-      trainer.train(args.epochs)
+      #trainer.train(args.epochs)
       barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
@@ -556,16 +562,16 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HYPERPARAM_TESTS_MECHINTERP"
+    main_dir = f"HESSIAN_CALCS4"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in [3,4]:
-        for deg in [2]:
+    for i in range(1):
+        for deg in range(1,5):
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [4]:
+            for width in [1,7,14,20]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 

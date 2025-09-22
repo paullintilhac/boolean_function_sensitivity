@@ -37,14 +37,14 @@
 python exp_refactor.py  --N 20 \
  --dim 2 \
      --h 1 \
-       --f 32 \
-        --bs 32  \
+       --f 128 \
+        --bs 128  \
          --epochs 1500 \
            --num_samples 8192  \
              --repeat 1 \
              --lr "4e-3" \
-             --dropout 0.2 \
-             --wd .00001 \
+             --dropout 0.1 \
+             --wd .0001 \
              --world_size 1 \
               --backend nccl \
               --stop_loss .0002 \
