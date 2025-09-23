@@ -93,7 +93,7 @@ def get_weight_norm(model):
 def rboolf(N, width, deg,seed=None):
     if seed:
         torch.manual_seed(seed)
-    coefficients = torch.randn(width).to(device)
+    coefficients = torch.randn(width).abs().to(device)
     #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
     coefficients = (coefficients)/coefficients.pow(2).sum().sqrt()
     
@@ -533,9 +533,9 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank, use_train=True)
       weight_norm = get_weight_norm(hardcoded_model)
       hardcoded_loss = trainer.validate(1000,hardcoded_model)
-      
-      # print("frobenius weight norm: " + str(weight_norm)) 
-      # print("hardcoded hessian stats: " + str(hardcoded_hessian))
+      print("hardcoded loss: " + str(hardcoded_loss))
+      print("frobenius weight norm: " + str(weight_norm)) 
+      print("hardcoded hessian stats: " + str(hardcoded_hessian))
       _hc_df = pd.DataFrame([{
           "deg": trainer.deg,
           "width": trainer.width,
@@ -562,7 +562,7 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS4"
+    main_dir = f"HESSIAN_CALCS6"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
