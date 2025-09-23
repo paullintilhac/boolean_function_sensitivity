@@ -6,91 +6,15 @@ import itertools
 import random
 
 # =========================
-# Custom single-head MHA (no out_proj required)
+# MultiheadAttention with identity out-proj (use standard kernel)
 # =========================
 class CustomMHA(nn.MultiheadAttention):
     def __init__(self, embed_dim, num_heads=1, bias=True, batch_first=True, dropout=0.0):
         super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias,
                          batch_first=batch_first, dropout=dropout)
-        # We'll call a private kernel that doesn't need out_proj.
-        self.out_proj = None
-
-    def forward(self, query, key, value):
-        is_batched = query.dim() == 3
-        if self.batch_first and is_batched:
-            if key is value:
-                if query is key:
-                    query = key = value = query.transpose(1, 0)
-                else:
-                    query, key = (x.transpose(1, 0) for x in (query, key))
-                    value = key
-            else:
-                query, key, value = (x.transpose(1, 0) for x in (query, key, value))
-
-        attn_out, attn_w = _mha_forward_no_outproj(
-            query, key, value,
-            num_heads=self.num_heads,
-            embed_dim_to_check=self.embed_dim,
-            in_proj_weight=self.in_proj_weight,
-            in_proj_bias=self.in_proj_bias,
-            dropout_p=self.dropout,
-            training=self.training,
-            need_weights=True,
-            average_attn_weights=True,
-        )
-
-        if self.batch_first and is_batched:
-            return attn_out.transpose(1, 0), attn_w
-        else:
-            return attn_out, attn_w
-
-
-def _mha_forward_no_outproj(query, key, value, num_heads, embed_dim_to_check,
-                            in_proj_weight, in_proj_bias,
-                            dropout_p=0.0, training=True, need_weights=True, average_attn_weights=True):
-    Lq, B, E = query.shape
-    Lk, Bk, Ek = key.shape
-    Lv, Bv, Ev = value.shape
-    assert B == Bk == Bv
-    assert E == Ek == Ev == embed_dim_to_check
-    assert Lk == Lv
-
-    head_dim = E // num_heads
-    assert head_dim * num_heads == E
-
-    # In-proj: Q from query, K from key, V from value
-    if in_proj_bias is None:
-        q = F.linear(query, in_proj_weight[0:E, :], None)
-        k = F.linear(key,   in_proj_weight[E:2*E, :], None)
-        v = F.linear(value, in_proj_weight[2*E: , :], None)
-    else:
-        q = F.linear(query, in_proj_weight[0:E, :],    in_proj_bias[0:E])
-        k = F.linear(key,   in_proj_weight[E:2*E, :],  in_proj_bias[E:2*E])
-        v = F.linear(value, in_proj_weight[2*E: , :],  in_proj_bias[2*E:])
-
-    # reshape for batched matmul
-    q = q.reshape(Lq, B * num_heads, head_dim).transpose(0, 1)  # (B*H, Lq, D)
-    k = k.reshape(Lk, B * num_heads, head_dim).transpose(0, 1)  # (B*H, Lk, D)
-    v = v.reshape(Lv, B * num_heads, E).transpose(0, 1)         # (B*H, Lk, E)
-
-    if not training:
-        dropout_p = 0.0
-
-    attn_w = torch.bmm(q, k.transpose(-2, -1))                  # (B*H, Lq, Lk)
-    attn_w = F.softmax(attn_w, dim=-1)
-    if dropout_p > 0.0:
-        attn_w = F.dropout(attn_w, p=dropout_p)
-
-    attn_out = torch.bmm(attn_w, v)                             # (B*H, Lq, E)
-    attn_out = attn_out.reshape(B, num_heads, Lq, E).sum(dim=1) # (B, Lq, E)
-    attn_out = attn_out.transpose(0, 1)                         # (Lq, B, E)
-
-    if need_weights:
-        attn_w = attn_w.reshape(B, num_heads, Lq, Lk).mean(dim=1)  # (B, Lq, Lk)
-        return attn_out, attn_w
-    else:
-        return attn_out, None
-
+        self.out_proj = nn.Linear(embed_dim, embed_dim, bias=False)
+        with torch.no_grad():
+            self.out_proj.weight.copy_(torch.eye(embed_dim, dtype=torch.float32))
 
 # =========================
 # Integer-Count Parity MLP (COUNT -> PARITY on normalized grid)
@@ -98,17 +22,17 @@ def _mha_forward_no_outproj(query, key, value, num_heads, embed_dim_to_check,
 class IntCountParityMLP(nn.Module):
     """
     Triangular-wave interpolation at grid {0,1/D,...,1}:
-      - fc1 computes ramps ReLU((COUNT/D) - (k/D))
-      - fc2 applies second-difference (+1,-2,+1) * D * v_k
-      - v_k = (-1)^D * (-1)^k  (so target = (-1)^(D-k))
-      - fc_out writes to PARITY channel only (residual add)
+      - fc1 computes ramps ReLU((COUNT/D) - (k/D))  (normalizes COUNT by D)
+      - fc2 applies second-difference (+1,-2,+1) * v_k  (NO extra *D here)
+      - v_k = (-1)^D * (-1)^k  (target = (-1)^(D-k))
+      - fc_out writes to PARITY channel only; caller adds residual.
     """
     def __init__(self, embed_dim, D, count_idx, parity_idx):
         super().__init__()
         self.E, self.D = int(embed_dim), int(D)
         self.count_idx, self.parity_idx = int(count_idx), int(parity_idx)
 
-        self.t_list = list(range(-1, self.D + 2))  # normalized grid indexes
+        self.t_list = list(range(-1, self.D + 2))  # -1,0,1,...,D,D+1
         H = len(self.t_list)
 
         self.fc1 = nn.Linear(self.E, H, bias=True)
@@ -124,20 +48,20 @@ class IntCountParityMLP(nn.Module):
             # fc1: ramps in normalized COUNT
             self.fc1.weight.zero_(); self.fc1.bias.zero_()
             for h, t in enumerate(self.t_list):
-                kk = min(max(t, 0), self.D)  # clamp for edge ramps
-                self.fc1.weight[h, self.count_idx] = invD
-                self.fc1.bias[h] = - float(kk) * invD
+                kk = min(max(t, 0), self.D)  # clamp edges
+                self.fc1.weight[h, self.count_idx] = invD          # COUNT/D
+                self.fc1.bias[h] = - float(kk) * invD               # -(k/D)
 
-            # fc2: (+1,-2,+1) * D * v_k with v_k = (-1)^D * (-1)^k
+            # fc2: (+1,-2,+1) * v_k   (no extra *D)
             self.fc2.weight.zero_(); self.fc2.bias.zero_()
-            sD = -1.0 if (self.D % 2 == 1) else 1.0
+            sD = -1.0 if (self.D % 2 == 1) else 1.0   # (-1)^D
             index = {t: i for i, t in enumerate(self.t_list)}
             for k in range(self.D + 1):
-                v_k = (1.0 if (k % 2 == 0) else -1.0) * sD
+                v_k = (1.0 if (k % 2 == 0) else -1.0) * sD  # (-1)^k * (-1)^D = (-1)^(D-k)
                 i_m1 = index[k - 1]; i_0 = index[k]; i_p1 = index[k + 1]
-                self.fc2.weight[0, i_m1] += +1.0 * self.D * v_k
-                self.fc2.weight[0, i_0 ] += -2.0 * self.D * v_k
-                self.fc2.weight[0, i_p1] += +1.0 * self.D * v_k
+                self.fc2.weight[0, i_m1] += +1.0 * v_k
+                self.fc2.weight[0, i_0 ] += -2.0 * v_k
+                self.fc2.weight[0, i_p1] += +1.0 * v_k
 
             # write only to PARITY channel
             self.fc_out.weight.zero_()
@@ -147,7 +71,7 @@ class IntCountParityMLP(nn.Module):
         H = F.relu(self.fc1(X))
         s = self.fc2(H)
         Y = self.fc_out(s)  # only PARITY row non-zero
-        return X + Y        # residual add
+        return Y            # caller will add residual
 
 
 # =========================
@@ -157,18 +81,18 @@ class HardCodedTransformer(nn.Module):
     """
     Channels: [N pos one-hot] + BIT + COUNT + PARITY + AGG  => E = N + 4
 
-    attn1: for each representative t, mask all non-members to a big negative,
-           set members' logits to 2*log(N); V routes BIT->COUNT with factor D
-           so COUNT = integer k at reps.
+    attn1: for each representative t, non-members hard-masked ONLY in that column;
+           members at 2*log(N); V routes BIT->COUNT with factor D so COUNT = integer k at reps.
 
-    MLP: COUNT->PARITY (normalized grid, sign-correct), residual add.
+    MLP: COUNT->PARITY on normalized grid (hats peak at 1 when fed COUNT/D), residual add.
 
-    attn2: aggregator attends only to reps with logits log(c_i)+2*log(N),
-           V routes PARITY->AGG with factor Z = sum_i c_i; NO residual here.
+    attn2: aggregator attends only to reps with logits log(c_i)+2*log(N), nonreps hard-masked in
+           the aggregator column; V routes PARITY->AGG with gain Z = sum_i c_i (to cancel softmax denom);
+           NO residual here.
 
     Output: AGG channel at aggregator token.
     """
-    def __init__(self, N, combs, coefs, aggregator_idx=None, nonrep_mask=-40.0):
+    def __init__(self, N, combs, coefs, aggregator_idx=None, nonrep_mask=-40.0, debug=False):
         super().__init__()
         self.N = int(N); self.L = int(N)
         if isinstance(combs, torch.Tensor):
@@ -184,6 +108,7 @@ class HardCodedTransformer(nn.Module):
         self.aggregator_idx = int(self.L - 1 if aggregator_idx is None else aggregator_idx)
         self.nonrep_mask = float(nonrep_mask)
         self.Z = float(self.coefs.sum().item())
+        self.DEBUG = bool(debug)
 
         # channel indices
         self.bit_idx   = self.L
@@ -223,19 +148,17 @@ class HardCodedTransformer(nn.Module):
         E, N = self.E, self.N
         # Keys: positional identity (first N dims)
         Wk = torch.zeros(E, E); Wk[:N, :N] = torch.eye(N)
-        # Values: route BIT -> COUNT with factor D to convert average to integer count
+        # Values: route BIT -> COUNT with factor D to convert avg to integer count
         Wv = torch.zeros(E, E); Wv[self.count_idx, self.bit_idx] = float(self.D)
-        # Queries: for each representative t, mask all keys to nonrep_mask,
-        # then set component members to 2*log(N) to get uniform over the D members.
-        Wq = torch.full((E, E), 0.0)
+        # Queries: per-column mask; members at scale, non-members at mask
+        Wq = torch.zeros(E, E)
         scale = 2.0 * math.log(max(2, N))
         for comp in self.combs:
             t = comp[0]
-            # start by strongly masking all positions for query column t
             Wq[:N, t] = self.nonrep_mask
-            # then enable the component members
             for j in comp:
                 Wq[j, t] = scale
+
         with torch.no_grad():
             self.attn1.in_proj_weight.zero_()
             self.attn1.in_proj_weight[:E, :].copy_(Wq)
@@ -248,14 +171,15 @@ class HardCodedTransformer(nn.Module):
         E, N = self.E, self.N
         # Keys: positional identity
         Wk = torch.zeros(E, E); Wk[:N, :N] = torch.eye(N)
-        # Values: route PARITY -> AGG scaled by Z = sum c_i to cancel softmax denom
+        # Values: route PARITY -> AGG with **gain Z** to cancel softmax denom
         Wv = torch.zeros(E, E); Wv[self.agg_idx, self.parity_idx] = self.Z
-        # Queries: mask all positions for aggregator column, then place reps
-        Wq = torch.full((E, E), 0.0)
+        # Queries: aggregator column — nonreps masked; reps at log(c_i)+2*log(N)
+        Wq = torch.zeros(E, E)
         Wq[:N, self.aggregator_idx] = self.nonrep_mask
         base = 2.0 * math.log(max(2, N))
         for ci, t in zip(self.coefs, self.rep_idx):
             Wq[t, self.aggregator_idx] = math.log(max(float(ci), 1e-12)) + base
+
         with torch.no_grad():
             self.attn2.in_proj_weight.zero_()
             self.attn2.in_proj_weight[:E, :].copy_(Wq)
@@ -276,20 +200,21 @@ class HardCodedTransformer(nn.Module):
         B = x_ints.shape[0]
 
         bits = self._ints_to_bits(x_ints, self.N)                 # (B,N)
-        dat_bits = self.bit_embed(bits)                           # (B,N,1)
+        dat_bits = self.bit_embed(bits)                           # (B,N,1) in {0,1}
         pos_idx  = self.pos_idx_base.unsqueeze(0).expand(B, -1)   # (B,N)
         pos_vecs = self.pos_embed(pos_idx)                        # (B,N,N)
-        zeros = torch.zeros(B, self.N, 3, device=dev)             # COUNT, PARITY, AGG channels
+        zeros = torch.zeros(B, self.N, 3, device=dev)             # COUNT, PARITY, AGG
         X0 = torch.cat([pos_vecs, dat_bits, zeros], dim=-1)       # (B,N,E)
 
-        # attn1 residual: COUNT integers at representative tokens
+        # attn1 residual: integer COUNT at rep positions
         Y1, _ = self.attn1(X0, X0, X0)
         X1 = X0 + Y1
 
-        # MLP residual: COUNT -> PARITY at integers
-        X2 = self.mlp(X1)
+        # MLP residual: COUNT -> PARITY exactly at integers
+        Ymlp = self.mlp(X1)
+        X2 = X1 + Ymlp
 
-        # attn2 (no residual): aggregate PARITY at reps into AGG at aggregator token
+        # attn2 (NO residual): aggregate PARITY at reps into AGG at aggregator token
         Y2, _ = self.attn2(X2, X2, X2)
         X3 = Y2
 
