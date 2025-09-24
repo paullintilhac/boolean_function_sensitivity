@@ -734,7 +734,7 @@ class Trainer:
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        hardcoded_model = HardCodedTransformer(N, combs, coefs,nonrep_mask = -.1)
+        hardcoded_model = HardCodedTransformer(N, combs, coefs,nonrep_mask = -40)
         model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
         #print(model)
@@ -972,7 +972,7 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS10"
+    main_dir = f"HESSIAN_CALCS11"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
