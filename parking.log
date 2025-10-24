@@ -664,3 +664,25 @@
 	6224  -  MemoryUsage of job (MB)
 	6373092  -  ResidentSetSize of job (KB)
 ...
+040 (47401.000.000) 2025-10-24 09:15:01 Started transferring output files
+...
+040 (47401.000.000) 2025-10-24 09:15:01 Finished transferring output files
+...
+004 (47401.000.000) 2025-10-24 09:15:01 Job was evicted.
+	(0) CPU times
+		Usr 0 00:42:06, Sys 0 00:14:23  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	2244  -  Run Bytes Sent By Job
+	92729  -  Run Bytes Received By Job
+	Partitionable Resources :      Usage  Request Allocated Assigned
+	   Cpus                 :       0.00       32        32 
+	   Disk (KB)            : 9302434         100      2048 
+	   GPUs                 :       0.17        4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :    1796                       
+	   Memory (MB)          :    6224      122880    122880 
+	   TimeExecute (s)      :    6682                       
+	   TimeSlotBusy (s)     :    6683                       
+...
+009 (47401.000.000) 2025-10-24 09:15:01 Job was aborted.
+	via condor_rm (by user plintilhac)
+...

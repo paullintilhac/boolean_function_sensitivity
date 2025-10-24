@@ -547,6 +547,9 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           shuffle=False,
           batch_size=args.bs,
           sampler = DistributedSampler(train_set)
+          pin_memory=True,
+          persistent_workers=True,
+          prefetch_factor=2
       )
          
       trainer = Trainer(coefs,combs, model,
@@ -627,7 +630,7 @@ if __name__ == "__main__":
         for deg in [4]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [1,7,14,20]:
+            for width in [14]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
