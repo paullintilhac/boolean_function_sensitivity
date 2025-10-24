@@ -1,0 +1,44 @@
+000 (47385.000.000) 2025-10-24 02:20:48 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47385.000.000) 2025-10-24 02:20:49 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2075>
+...
+040 (47385.000.000) 2025-10-24 02:20:49 Finished transferring input files
+...
+001 (47385.000.000) 2025-10-24 02:20:50 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3063049"
+	Cpus = 32
+	Disk = 2048
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+040 (47385.000.000) 2025-10-24 02:20:53 Started transferring output files
+...
+040 (47385.000.000) 2025-10-24 02:20:53 Finished transferring output files
+...
+005 (47385.000.000) 2025-10-24 02:20:53 Job terminated.
+	(1) Normal termination (return value 1)
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	2797  -  Run Bytes Sent By Job
+	19579  -  Run Bytes Received By Job
+	2797  -  Total Bytes Sent By Job
+	19579  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       32        32 
+	   Disk (KB)            :       44       22      2048 
+	   GPUs                 :                 4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   Memory (MB)          :            122880    122880 
+	   TimeExecute (s)      :        3                    
+	   TimeSlotBusy (s)     :        5                    
+
+	Job terminated of its own accord at 2025-10-24T00:20:53Z with exit-code 1.
+...

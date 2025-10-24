@@ -1,0 +1,666 @@
+000 (47386.000.000) 2025-10-24 02:23:48 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+001 (47386.000.000) 2025-10-24 02:24:09 Job executing on host: <134.96.105.140:9618?addrs=134.96.105.140-9618&alias=tony-2.coli.uni-saarland.de&noUDP&sock=startd_61303_5667>
+	SlotName: slot1_1@tony-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_1f2b1ecf }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3241703"
+	Cpus = 1
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_1f2b1ecf = [ Id = "GPU-1f2b1ecf"; ClockMhz = 1380.0; Capability = 7.0; CoresPerCU = 64; DeviceName = "Tesla V100-PCIE-32GB"; DeviceUuid = "1f2b1ecf-2033-f22e-e239-39aef869bc70"; ECCEnabled = true; ComputeUnits = 80; DriverVersion = 12.8; DevicePciBusId = "0000:89:00.0"; GlobalMemoryMb = 32494; MaxSupportedVersion = 12080 ]
+	Memory = 4096
+...
+006 (47386.000.000) 2025-10-24 02:24:09 Image size of job updated: 92
+	0  -  MemoryUsage of job (MB)
+	0  -  ResidentSetSize of job (KB)
+...
+004 (47386.000.000) 2025-10-24 02:24:09 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        1         1 
+	   Disk (KB)            :       37       37      2048 
+	   GPUs                 :                 1         1 "GPU-1f2b1ecf"
+	   Memory (MB)          :        0     4096      4096 
+	   TimeExecute (s)      :        0                    
+	   TimeSlotBusy (s)     :        1                    
+...
+009 (47386.000.000) 2025-10-24 02:24:09 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47387.000.000) 2025-10-24 02:25:41 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+001 (47387.000.000) 2025-10-24 02:25:42 Job executing on host: <134.96.105.140:9618?addrs=134.96.105.140-9618&alias=tony-2.coli.uni-saarland.de&noUDP&sock=startd_61303_5667>
+	SlotName: slot1_1@tony-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_1f2b1ecf }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3241709"
+	Cpus = 1
+	Disk = 3072
+	GPUs = 1
+	GPUs_GPU_1f2b1ecf = [ Id = "GPU-1f2b1ecf"; ClockMhz = 1380.0; Capability = 7.0; CoresPerCU = 64; DeviceName = "Tesla V100-PCIE-32GB"; DeviceUuid = "1f2b1ecf-2033-f22e-e239-39aef869bc70"; ECCEnabled = true; ComputeUnits = 80; DriverVersion = 12.8; DevicePciBusId = "0000:89:00.0"; GlobalMemoryMb = 32494; MaxSupportedVersion = 12080 ]
+	Memory = 4096
+...
+006 (47387.000.000) 2025-10-24 02:25:50 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	392  -  ResidentSetSize of job (KB)
+...
+006 (47387.000.000) 2025-10-24 02:25:55 Image size of job updated: 1748
+	2  -  MemoryUsage of job (MB)
+	1748  -  ResidentSetSize of job (KB)
+...
+006 (47387.000.000) 2025-10-24 02:27:19 Image size of job updated: 1748
+	4  -  MemoryUsage of job (MB)
+	3300  -  ResidentSetSize of job (KB)
+...
+005 (47387.000.000) 2025-10-24 02:27:19 Job terminated.
+	(1) Normal termination (return value 255)
+		Usr 0 00:00:01, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:01, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        1         1 
+	   Disk (KB)            :     1500     1500      3072 
+	   GPUs                 :                 1         1 "GPU-1f2b1ecf"
+	   Memory (MB)          :        4     4096      4096 
+	   TimeExecute (s)      :       97                    
+	   TimeSlotBusy (s)     :       98                    
+
+	Job terminated of its own accord at 2025-10-24T00:25:55Z with signal 15.
+...
+000 (47388.000.000) 2025-10-24 02:28:21 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+001 (47388.000.000) 2025-10-24 02:28:21 Job executing on host: <134.96.105.140:9618?addrs=134.96.105.140-9618&alias=tony-2.coli.uni-saarland.de&noUDP&sock=startd_61303_5667>
+	SlotName: slot1_1@tony-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_1f2b1ecf }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3241782"
+	Cpus = 1
+	Disk = 3072
+	GPUs = 1
+	GPUs_GPU_1f2b1ecf = [ Id = "GPU-1f2b1ecf"; ClockMhz = 1380.0; Capability = 7.0; CoresPerCU = 64; DeviceName = "Tesla V100-PCIE-32GB"; DeviceUuid = "1f2b1ecf-2033-f22e-e239-39aef869bc70"; ECCEnabled = true; ComputeUnits = 80; DriverVersion = 12.8; DevicePciBusId = "0000:89:00.0"; GlobalMemoryMb = 32494; MaxSupportedVersion = 12080 ]
+	Memory = 4096
+...
+006 (47388.000.000) 2025-10-24 02:28:29 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	392  -  ResidentSetSize of job (KB)
+...
+006 (47388.000.000) 2025-10-24 02:28:34 Image size of job updated: 1740
+	2  -  MemoryUsage of job (MB)
+	1740  -  ResidentSetSize of job (KB)
+...
+006 (47388.000.000) 2025-10-24 02:30:37 Image size of job updated: 1740
+	4  -  MemoryUsage of job (MB)
+	3292  -  ResidentSetSize of job (KB)
+...
+005 (47388.000.000) 2025-10-24 02:30:37 Job terminated.
+	(1) Normal termination (return value 255)
+		Usr 0 00:00:01, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:01, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        1         1 
+	   Disk (KB)            :     1500     1500      3072 
+	   GPUs                 :        0        1         1 "GPU-1f2b1ecf"
+	   GpusMemory (MB)      :      278                    
+	   Memory (MB)          :        4     4096      4096 
+	   TimeExecute (s)      :      136                    
+	   TimeSlotBusy (s)     :      136                    
+
+	Job terminated of its own accord at 2025-10-24T00:28:34Z with signal 15.
+...
+000 (47389.000.000) 2025-10-24 02:35:22 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47389.000.000) 2025-10-24 02:35:41 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2076>
+...
+040 (47389.000.000) 2025-10-24 02:35:41 Finished transferring input files
+...
+001 (47389.000.000) 2025-10-24 02:35:42 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3072984"
+	Cpus = 32
+	Disk = 2048
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47389.000.000) 2025-10-24 02:35:56 Image size of job updated: 88
+	1  -  MemoryUsage of job (MB)
+	88  -  ResidentSetSize of job (KB)
+...
+006 (47389.000.000) 2025-10-24 02:36:59 Image size of job updated: 5212
+	1  -  MemoryUsage of job (MB)
+	88  -  ResidentSetSize of job (KB)
+...
+004 (47389.000.000) 2025-10-24 02:36:59 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	36520  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0.00       32        32 
+	   Disk (KB)            :    58          37      2048 
+	   GPUs                 :     0           4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :   473                       
+	   Memory (MB)          :     1      122880    122880 
+	   TimeExecute (s)      :    77                       
+	   TimeSlotBusy (s)     :    78                       
+...
+009 (47389.000.000) 2025-10-24 02:36:59 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47390.000.000) 2025-10-24 02:37:24 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47390.000.000) 2025-10-24 02:37:24 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2077>
+...
+040 (47390.000.000) 2025-10-24 02:37:24 Finished transferring input files
+...
+001 (47390.000.000) 2025-10-24 02:37:25 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3073808"
+	Cpus = 32
+	Disk = 3072
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47390.000.000) 2025-10-24 02:37:38 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	368  -  ResidentSetSize of job (KB)
+...
+006 (47390.000.000) 2025-10-24 02:37:47 Image size of job updated: 1684
+	2  -  MemoryUsage of job (MB)
+	1684  -  ResidentSetSize of job (KB)
+...
+006 (47390.000.000) 2025-10-24 02:46:58 Image size of job updated: 1684
+	4  -  MemoryUsage of job (MB)
+	3232  -  ResidentSetSize of job (KB)
+...
+040 (47390.000.000) 2025-10-24 02:46:58 Started transferring output files
+...
+040 (47390.000.000) 2025-10-24 02:46:58 Finished transferring output files
+...
+005 (47390.000.000) 2025-10-24 02:46:58 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	29  -  Run Bytes Sent By Job
+	36520  -  Run Bytes Received By Job
+	29  -  Total Bytes Sent By Job
+	36520  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       32        32 
+	   Disk (KB)            :       72     1500      3072 
+	   GPUs                 :        0        4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :      473                    
+	   Memory (MB)          :        4   122880    122880 
+	   TimeExecute (s)      :      573                    
+	   TimeSlotBusy (s)     :      574                    
+
+	Job terminated of its own accord at 2025-10-24T00:37:47Z with signal 15.
+...
+000 (47391.000.000) 2025-10-24 02:47:07 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+009 (47391.000.000) 2025-10-24 02:47:25 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47392.000.000) 2025-10-24 02:47:28 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47392.000.000) 2025-10-24 02:47:28 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2078>
+...
+040 (47392.000.000) 2025-10-24 02:47:28 Finished transferring input files
+...
+001 (47392.000.000) 2025-10-24 02:47:29 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3079732"
+	Cpus = 32
+	Disk = 3072
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47392.000.000) 2025-10-24 02:47:38 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	364  -  ResidentSetSize of job (KB)
+...
+006 (47392.000.000) 2025-10-24 02:47:46 Image size of job updated: 1868
+	2  -  MemoryUsage of job (MB)
+	1868  -  ResidentSetSize of job (KB)
+...
+006 (47392.000.000) 2025-10-24 02:47:53 Image size of job updated: 1868
+	4  -  MemoryUsage of job (MB)
+	3228  -  ResidentSetSize of job (KB)
+...
+040 (47392.000.000) 2025-10-24 02:47:53 Started transferring output files
+...
+040 (47392.000.000) 2025-10-24 02:47:53 Finished transferring output files
+...
+005 (47392.000.000) 2025-10-24 02:47:53 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	14  -  Run Bytes Sent By Job
+	36520  -  Run Bytes Received By Job
+	14  -  Total Bytes Sent By Job
+	36520  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       32        32 
+	   Disk (KB)            :       58     1500      3072 
+	   GPUs                 :                 4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   Memory (MB)          :        4   122880    122880 
+	   TimeExecute (s)      :       24                    
+	   TimeSlotBusy (s)     :       25                    
+
+	Job terminated of its own accord at 2025-10-24T00:47:46Z with signal 15.
+...
+000 (47393.000.000) 2025-10-24 02:47:57 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47393.000.000) 2025-10-24 02:47:58 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2079>
+...
+040 (47393.000.000) 2025-10-24 02:47:58 Finished transferring input files
+...
+001 (47393.000.000) 2025-10-24 02:47:59 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3080143"
+	Cpus = 32
+	Disk = 2048
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47393.000.000) 2025-10-24 02:48:07 Image size of job updated: 96
+	1  -  MemoryUsage of job (MB)
+	96  -  ResidentSetSize of job (KB)
+...
+006 (47393.000.000) 2025-10-24 02:53:07 Image size of job updated: 3796
+	4  -  MemoryUsage of job (MB)
+	3796  -  ResidentSetSize of job (KB)
+...
+006 (47393.000.000) 2025-10-24 03:03:07 Image size of job updated: 3804
+	4  -  MemoryUsage of job (MB)
+	3804  -  ResidentSetSize of job (KB)
+...
+040 (47393.000.000) 2025-10-24 03:05:16 Started transferring output files
+...
+040 (47393.000.000) 2025-10-24 03:05:16 Finished transferring output files
+...
+004 (47393.000.000) 2025-10-24 03:05:16 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	949  -  Run Bytes Sent By Job
+	36520  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       32        32 
+	   Disk (KB)            :       72       37      2048 
+	   GPUs                 :        0        4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :      473                    
+	   Memory (MB)          :        4   122880    122880 
+	   TimeExecute (s)      :     1037                    
+	   TimeSlotBusy (s)     :     1039                    
+...
+009 (47393.000.000) 2025-10-24 03:05:16 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47395.000.000) 2025-10-24 03:56:37 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47395.000.000) 2025-10-24 03:56:50 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2080>
+...
+040 (47395.000.000) 2025-10-24 03:56:50 Finished transferring input files
+...
+001 (47395.000.000) 2025-10-24 03:56:51 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3122501"
+	Cpus = 32
+	Disk = 3072
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47395.000.000) 2025-10-24 03:57:05 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	360  -  ResidentSetSize of job (KB)
+...
+006 (47395.000.000) 2025-10-24 03:57:10 Image size of job updated: 1816
+	2  -  MemoryUsage of job (MB)
+	1816  -  ResidentSetSize of job (KB)
+...
+006 (47395.000.000) 2025-10-24 04:20:14 Image size of job updated: 1816
+	4  -  MemoryUsage of job (MB)
+	3228  -  ResidentSetSize of job (KB)
+...
+040 (47395.000.000) 2025-10-24 04:20:14 Started transferring output files
+...
+040 (47395.000.000) 2025-10-24 04:20:14 Finished transferring output files
+...
+005 (47395.000.000) 2025-10-24 04:20:14 Job terminated.
+	(1) Normal termination (return value 255)
+		Usr 0 00:00:57, Sys 0 00:00:12  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:57, Sys 0 00:00:12  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	727  -  Run Bytes Sent By Job
+	36520  -  Run Bytes Received By Job
+	727  -  Total Bytes Sent By Job
+	36520  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       32        32 
+	   Disk (KB)            :  9227986     1500      3072 
+	   GPUs                 :        0        4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :      473                    
+	   Memory (MB)          :        4   122880    122880 
+	   TimeExecute (s)      :     1403                    
+	   TimeSlotBusy (s)     :     1404                    
+
+	Job terminated of its own accord at 2025-10-24T01:57:10Z with signal 15.
+...
+000 (47396.000.000) 2025-10-24 04:32:12 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47396.000.000) 2025-10-24 04:32:12 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2081>
+...
+040 (47396.000.000) 2025-10-24 04:32:12 Finished transferring input files
+...
+001 (47396.000.000) 2025-10-24 04:32:13 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3145221"
+	Cpus = 32
+	Disk = 3072
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47396.000.000) 2025-10-24 04:32:22 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	364  -  ResidentSetSize of job (KB)
+...
+040 (47396.000.000) 2025-10-24 04:32:30 Started transferring output files
+...
+040 (47396.000.000) 2025-10-24 04:32:30 Finished transferring output files
+...
+004 (47396.000.000) 2025-10-24 04:32:30 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	90790  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       32        32 
+	   Disk (KB)            :      111     1500      3072 
+	   GPUs                 :                 4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   Memory (MB)          :        1   122880    122880 
+	   TimeExecute (s)      :       17                    
+	   TimeSlotBusy (s)     :       18                    
+...
+009 (47396.000.000) 2025-10-24 04:32:30 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47397.000.000) 2025-10-24 04:32:41 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47397.000.000) 2025-10-24 04:32:41 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2082>
+...
+040 (47397.000.000) 2025-10-24 04:32:41 Finished transferring input files
+...
+001 (47397.000.000) 2025-10-24 04:32:42 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3145718"
+	Cpus = 32
+	Disk = 3072
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47397.000.000) 2025-10-24 04:32:50 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	360  -  ResidentSetSize of job (KB)
+...
+006 (47397.000.000) 2025-10-24 04:32:59 Image size of job updated: 1820
+	2  -  MemoryUsage of job (MB)
+	1820  -  ResidentSetSize of job (KB)
+...
+006 (47397.000.000) 2025-10-24 06:25:25 Image size of job updated: 1820
+	4  -  MemoryUsage of job (MB)
+	3228  -  ResidentSetSize of job (KB)
+...
+040 (47397.000.000) 2025-10-24 06:25:25 Started transferring output files
+...
+040 (47397.000.000) 2025-10-24 06:25:26 Finished transferring output files
+...
+005 (47397.000.000) 2025-10-24 06:25:26 Job terminated.
+	(1) Normal termination (return value 255)
+		Usr 0 00:08:36, Sys 0 00:05:23  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:08:36, Sys 0 00:05:23  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	59485  -  Run Bytes Sent By Job
+	90790  -  Run Bytes Received By Job
+	59485  -  Total Bytes Sent By Job
+	90790  -  Total Bytes Received By Job
+	Partitionable Resources :      Usage  Request Allocated Assigned
+	   Cpus                 :       0          32        32 
+	   Disk (KB)            : 9302209        1500      3072 
+	   GPUs                 :       0.00        4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :    1728                       
+	   Memory (MB)          :       4      122880    122880 
+	   TimeExecute (s)      :    6762                       
+	   TimeSlotBusy (s)     :    6765                       
+
+	Job terminated of its own accord at 2025-10-24T02:32:59Z with signal 15.
+...
+000 (47398.000.000) 2025-10-24 06:25:53 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47398.000.000) 2025-10-24 06:26:04 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2083>
+...
+040 (47398.000.000) 2025-10-24 06:26:04 Finished transferring input files
+...
+001 (47398.000.000) 2025-10-24 06:26:05 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3218761"
+	Cpus = 32
+	Disk = 3072
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47398.000.000) 2025-10-24 06:26:14 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	364  -  ResidentSetSize of job (KB)
+...
+006 (47398.000.000) 2025-10-24 06:26:21 Image size of job updated: 1768
+	2  -  MemoryUsage of job (MB)
+	1768  -  ResidentSetSize of job (KB)
+...
+006 (47398.000.000) 2025-10-24 06:28:13 Image size of job updated: 1768
+	4  -  MemoryUsage of job (MB)
+	3220  -  ResidentSetSize of job (KB)
+...
+040 (47398.000.000) 2025-10-24 06:28:13 Started transferring output files
+...
+040 (47398.000.000) 2025-10-24 06:28:13 Finished transferring output files
+...
+005 (47398.000.000) 2025-10-24 06:28:13 Job terminated.
+	(1) Normal termination (return value 255)
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	9  -  Run Bytes Sent By Job
+	93023  -  Run Bytes Received By Job
+	9  -  Total Bytes Sent By Job
+	93023  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0.00       32        32 
+	   Disk (KB)            :   113        1500      3072 
+	   GPUs                 :     0           4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :   473                       
+	   Memory (MB)          :     4      122880    122880 
+	   TimeExecute (s)      :   128                       
+	   TimeSlotBusy (s)     :   129                       
+
+	Job terminated of its own accord at 2025-10-24T04:26:21Z with signal 15.
+...
+000 (47399.000.000) 2025-10-24 06:28:58 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47399.000.000) 2025-10-24 06:28:59 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2084>
+...
+040 (47399.000.000) 2025-10-24 06:28:59 Finished transferring input files
+...
+001 (47399.000.000) 2025-10-24 06:29:00 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3220270"
+	Cpus = 32
+	Disk = 3072
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47399.000.000) 2025-10-24 06:29:08 Image size of job updated: 1500
+	1  -  MemoryUsage of job (MB)
+	368  -  ResidentSetSize of job (KB)
+...
+006 (47399.000.000) 2025-10-24 06:29:17 Image size of job updated: 1832
+	2  -  MemoryUsage of job (MB)
+	1832  -  ResidentSetSize of job (KB)
+...
+006 (47399.000.000) 2025-10-24 07:14:12 Image size of job updated: 3704
+	4  -  MemoryUsage of job (MB)
+	3704  -  ResidentSetSize of job (KB)
+...
+000 (47400.000.000) 2025-10-24 07:16:17 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+009 (47400.000.000) 2025-10-24 07:16:56 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+006 (47399.000.000) 2025-10-24 07:19:12 Image size of job updated: 7560
+	8  -  MemoryUsage of job (MB)
+	7560  -  ResidentSetSize of job (KB)
+...
+006 (47399.000.000) 2025-10-24 07:22:37 Image size of job updated: 6522884
+	8  -  MemoryUsage of job (MB)
+	7560  -  ResidentSetSize of job (KB)
+...
+040 (47399.000.000) 2025-10-24 07:22:37 Started transferring output files
+...
+040 (47399.000.000) 2025-10-24 07:22:37 Finished transferring output files
+...
+005 (47399.000.000) 2025-10-24 07:22:37 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:09:45, Sys 0 00:00:21  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:09:45, Sys 0 00:00:21  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	57825  -  Run Bytes Sent By Job
+	92672  -  Run Bytes Received By Job
+	57825  -  Total Bytes Sent By Job
+	92672  -  Total Bytes Received By Job
+	Partitionable Resources :       Usage  Request Allocated Assigned
+	   Cpus                 :        3.01       32        32 
+	   Disk (KB)            : 10585081        1500      3072 
+	   GPUs                 :        0.09        4         4 "GPU-84c47e6e,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :     1720                       
+	   Memory (MB)          :        8      122880    122880 
+	   TimeExecute (s)      :     3216                       
+	   TimeSlotBusy (s)     :     3218                       
+
+	Job terminated of its own accord at 2025-10-24T04:29:17Z with signal 15.
+...
+000 (47401.000.000) 2025-10-24 07:23:27 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47401.000.000) 2025-10-24 07:23:38 Started transferring input files
+	Transferring to host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=slot1_1_3249734_566e_2085>
+...
+040 (47401.000.000) 2025-10-24 07:23:38 Finished transferring input files
+...
+001 (47401.000.000) 2025-10-24 07:23:39 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3257111"
+	Cpus = 32
+	Disk = 2048
+	GPUs = 4
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47401.000.000) 2025-10-24 07:23:47 Image size of job updated: 96
+	1  -  MemoryUsage of job (MB)
+	96  -  ResidentSetSize of job (KB)
+...
+006 (47401.000.000) 2025-10-24 07:28:47 Image size of job updated: 1443892
+	4  -  MemoryUsage of job (MB)
+	4072  -  ResidentSetSize of job (KB)
+...
+006 (47401.000.000) 2025-10-24 07:33:47 Image size of job updated: 6373508
+	4  -  MemoryUsage of job (MB)
+	4072  -  ResidentSetSize of job (KB)
+...
+006 (47401.000.000) 2025-10-24 07:43:48 Image size of job updated: 6377080
+	6224  -  MemoryUsage of job (MB)
+	6373092  -  ResidentSetSize of job (KB)
+...
+006 (47401.000.000) 2025-10-24 07:58:49 Image size of job updated: 6391608
+	6224  -  MemoryUsage of job (MB)
+	6373092  -  ResidentSetSize of job (KB)
+...

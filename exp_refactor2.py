@@ -101,15 +101,18 @@ def get_weight_norm(model):
                param_norm = p.data.norm(2)
                total_norm += param_norm.item() ** 2
        return total_norm ** 0.5
-
-def rboolf(N, width, deg, seed=None):
-    if seed: torch.manual_seed(seed)
-    coefficients = torch.randn(width).abs()  # CPU
-    coefficients = coefficients / coefficients.pow(2).sum().sqrt()
-    combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg)))  # CPU
-    combs = combs[torch.randperm(len(combs))][:width]
-    print("coefficients:", coefficients)
-    print("combs:", combs)
+    
+def rboolf(N, width, deg,seed=None):
+    if seed:
+        torch.manual_seed(seed)
+    coefficients = torch.randn(width).abs().to(device)
+    #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
+    coefficients = (coefficients)/coefficients.pow(2).sum().sqrt()
+    
+    combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
+    combs = combs[torch.randperm(len(combs))][:width] # Shuffled
+    print("coefficients: "  + str(coefficients))
+    print("combs: "  + str(combs))
     return (coefficients, combs)
 
 def ddp_setup(rank, world_size,backend):
@@ -157,8 +160,9 @@ class Trainer:
             wd: float,
     ) -> None:
         self.gpu_id = gpu_id
-        self.model = DDP(model,device_ids=[self.gpu_id])
-        self.model.to(self.gpu_id)
+        torch.cuda.set_device(self.gpu_id)                # <- pin the process
+        model = model.to(self.gpu_id) 
+        self.model = DDP(model,device_ids=[self.gpu_id],output_device=self.gpu_id)
         self.train_data=train_data
         self.optimizer = optimizer
         self.save_every=save_every
@@ -388,50 +392,36 @@ class Trainer:
         result  = test_model(inputs).squeeze(-1)          # (B,)
         return (result - targets).pow(2).mean().detach().cpu()
         
+
     def calc_hessian(self, model, loss_fn, num_samples, device_id, use_train=False):
-        # 1) Pin current CUDA device so any implicit allocations (incl. PyHessian's v) land here
-        torch.cuda.set_device(device_id)
-        dev = torch.device(f"cuda:{device_id}")
+        dev = torch.device(f"cuda:{self.gpu_id}" if torch.cuda.is_available() else "cpu")
+        m = model.to(dev).eval()
 
-        # 2) Ensure the (copied) model is on dev and all params agree
-        model = model.to(dev).eval()
-        for n, p in model.named_parameters():
-            assert p.device == dev, f"param {n} on {p.device}, expected {dev}"
-
-        # 3) Build inputs/targets on dev
         if use_train:
             ds = getattr(self.train_data, "dataset", None)
             if isinstance(ds, torch.Tensor):
-                inputs = ds[:min(num_samples, ds.shape[0])].to(dev, non_blocking=True)
+                x = ds[:min(num_samples, ds.shape[0])].to(dev)
             else:
-                collected, total = [], 0
-                for batch in self.train_data:
-                    x = batch[0] if isinstance(batch, (list, tuple)) else batch
-                    take = min(x.shape[0], num_samples - total)
-                    collected.append(x[:take])
-                    total += take
-                    if total >= num_samples: break
-                inputs = torch.cat(collected, dim=0).to(dev, non_blocking=True)
+                xs, n = [], 0
+                for b in self.train_data:
+                    b = b[0] if isinstance(b, (list, tuple)) else b
+                    k = min(b.shape[0], num_samples - n)
+                    xs.append(b[:k]); n += k
+                    if n >= num_samples: break
+                x = torch.cat(xs, 0).to(dev)
         else:
-            inputs = torch.randint(0, 2**self.N, (num_samples,), device=dev)
+            x = torch.randint(0, 2**self.N, (num_samples,), device=dev)
 
-        targets = self.func_batch(inputs).to(dev, non_blocking=True)
-        data = (inputs, targets)
+        y = self.func_batch(x).to(dev)
 
-        # (final guard) match data to the model device
-        mdev = next(model.parameters()).device
-        data = tuple(t.to(mdev, non_blocking=True) for t in data)
+        H = hessian(m, loss_fn, (x, y))
+        for p in m.parameters(): p.grad = None
+        top_eig = H.eigenvalues(maxIter=200)[0][0]
+        trace   = H.trace()
+        return float(top_eig), float(np.mean(trace))
 
-        # 4) Construct PyHessian AFTER device is pinned and tensors are on the right GPU
-        hess_mod = hessian(model, loss_fn, data)
 
-        # 5) HVPs / trace
-        for p in model.parameters(): p.grad = None
-        top_eigs, _ = hess_mod.eigenvalues(maxIter=200)
-        top_eig = top_eigs[0]
-        trace = hess_mod.trace()
-        return top_eig, float(np.mean(trace))
-        
+
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
         hardcoded_models=[]
@@ -512,11 +502,15 @@ def parse_args():
     return parser.parse_args()
 
 def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
-      
+      if "CUDA_VISIBLE_DEVICES" in os.environ:
+        # rank becomes local index within the visible set
+        torch.cuda.set_device(rank)
+      else:
+        # fallback: bind by absolute id (rare if scheduler sets visibility)
+        torch.cuda.set_device(rank)
       coefs = coefs.to(rank)
       combs = combs.to(rank)
       #print("func in main: " + str(func))
-      torch.cuda.set_device(rank)
       ddp_setup(rank,world_size,args.backend)
       # Create new directory to save results for the particular function
       #dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
@@ -573,7 +567,6 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         )
 
       # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-      torch.cuda.set_device(rank)
       loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt.to(out.device)).pow(2).mean()
       hardcoded_hessian_stats = []
       
@@ -606,7 +599,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
-      barrier(device_ids=[rank])
+      barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
       print("finished cleaning up process group")

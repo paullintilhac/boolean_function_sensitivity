@@ -1,40 +1,29 @@
 #!/bin/bash
+# --- Normalize CUDA visibility (fix truncated UUIDs from scheduler) ---
+# If CUDA_VISIBLE_DEVICES contains GPU UUIDs (possibly truncated), map them to indices.
+if [ -n "${CUDA_VISIBLE_DEVICES:-}" ] && echo "$CUDA_VISIBLE_DEVICES" | grep -q 'GPU-'; then
+  echo "Normalizing CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
+  MAP="$(nvidia-smi --query-gpu=uuid,index --format=csv,noheader)"
+  RES=""
+  IFS=',' read -ra TOKS <<< "$CUDA_VISIBLE_DEVICES"
+  for t in "${TOKS[@]}"; do
+    t="$(echo "$t" | xargs)"  # trim spaces
+    idx="$(echo "$MAP" | awk -v u="$t" '$1 ~ u {print $2}')"
+    [ -n "$idx" ] && RES="${RES}${RES:+,}$idx"
+  done
+  if [ -n "$RES" ]; then
+    export CUDA_VISIBLE_DEVICES="$RES"
+  else
+    # If mapping failed (e.g., tokens too truncated), unmask to show all GPUs assigned
+    unset CUDA_VISIBLE_DEVICES
+  fi
+  echo "CUDA_VISIBLE_DEVICES -> ${CUDA_VISIBLE_DEVICES:-<unset>}"
+fi
 
-#SBATCH --account=temfom0  # Specify the account to charge
+# Use PCI bus order so indices are stable and match NCCL expectations
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-#SBATCH --job-name=my_job  # Job name
-
-#SBATCH --output=my_job_%j.out  # Standard output and error log
-
-#SBATCH --error=my_job_%j.err  
-#SBATCH --time=24:00:00  # Time limit hrs:min:sec
-
-#SBATCH --partition=gpuq  # Specify the partition to submit to
-# echo $(hostname -s)
-# nvcc --version
-# source activate gpuq
-# echo conda env:
-# conda info --env
-
-# python exp_refactor.py  --N 20 \
-#  --dim 2 \
-#   --dim2 22 \
-#      --h 1 \
-#        --f 32  \
-#         --bs 32  \
-#          --epochs 1500 \
-#            --num_samples 8192  \
-#              --repeat 1 \
-#              --lr "4e-3" \
-#              --dropout .2 \
-#              --wd .01 \
-#              --world_size 8 \
-#               --backend nccl \
-#               --stop_loss .000002 \
-#               --save_every 50 \
-#               --save_checkpoints
-
-python exp_refactor.py  --N 20 \
+python3 exp_refactor2.py  --N 20 \
  --dim 2 \
      --h 1 \
        --f 128 \
@@ -45,8 +34,10 @@ python exp_refactor.py  --N 20 \
              --lr "4e-3" \
              --dropout 0.1 \
              --wd .0001 \
-             --world_size 1 \
+             --world_size 4 \
               --backend nccl \
               --stop_loss .02 \
               --save_every 10 \
               # --sam \
+watch -n 1 nvidia-smi
+
