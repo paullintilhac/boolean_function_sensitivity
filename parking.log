@@ -686,3 +686,341 @@
 009 (47401.000.000) 2025-10-24 09:15:01 Job was aborted.
 	via condor_rm (by user plintilhac)
 ...
+000 (47550.000.000) 2025-10-24 20:46:19 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47550.000.000) 2025-10-24 20:46:35 Started transferring input files
+	Transferring to host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=slot1_1_4897_2120_1710>
+...
+040 (47550.000.000) 2025-10-24 20:46:35 Finished transferring input files
+...
+001 (47550.000.000) 2025-10-24 20:46:36 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4366_4a94>
+	SlotName: slot1_1@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_45de52f4,GPUs_GPU_b893db5b,GPUs_GPU_d599f77e,GPUs_GPU_f0308d46 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_4029235"
+	Cpus = 32
+	Disk = 2048
+	GPUs = 4
+	GPUs_GPU_45de52f4 = [ Id = "GPU-45de52f4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "45de52f4-d702-ecbf-6bda-1f1cce804ac1"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d599f77e = [ Id = "GPU-d599f77e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d599f77e-38a2-e599-09c1-f660972516c2"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0308d46 = [ Id = "GPU-f0308d46"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0308d46-1907-1608-9088-35894cca51f8"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47550.000.000) 2025-10-24 20:46:45 Image size of job updated: 96
+	1  -  MemoryUsage of job (MB)
+	96  -  ResidentSetSize of job (KB)
+...
+006 (47550.000.000) 2025-10-24 20:47:53 Image size of job updated: 3816
+	1  -  MemoryUsage of job (MB)
+	96  -  ResidentSetSize of job (KB)
+...
+040 (47550.000.000) 2025-10-24 20:47:53 Started transferring output files
+...
+040 (47550.000.000) 2025-10-24 20:47:53 Finished transferring output files
+...
+004 (47550.000.000) 2025-10-24 20:47:53 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	19  -  Run Bytes Sent By Job
+	92729  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0.00       32        32 
+	   Disk (KB)            :   113         100      2048 
+	   GPUs                 :     0           4         4 "GPU-45de52f4,GPU-b893db5b,GPU-d599f77e,GPU-f0308d46"
+	   GpusMemory (MB)      :   486                       
+	   Memory (MB)          :     1      122880    122880 
+	   TimeExecute (s)      :    77                       
+	   TimeSlotBusy (s)     :    78                       
+...
+009 (47550.000.000) 2025-10-24 20:47:53 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47551.000.000) 2025-10-24 20:48:03 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47551.000.000) 2025-10-24 20:48:03 Started transferring input files
+	Transferring to host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=slot1_1_4897_2120_1711>
+...
+040 (47551.000.000) 2025-10-24 20:48:03 Finished transferring input files
+...
+001 (47551.000.000) 2025-10-24 20:48:04 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4366_4a94>
+	SlotName: slot1_1@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_45de52f4,GPUs_GPU_b893db5b,GPUs_GPU_d599f77e,GPUs_GPU_f0308d46 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_4029451"
+	Cpus = 32
+	Disk = 2048
+	GPUs = 4
+	GPUs_GPU_45de52f4 = [ Id = "GPU-45de52f4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "45de52f4-d702-ecbf-6bda-1f1cce804ac1"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d599f77e = [ Id = "GPU-d599f77e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d599f77e-38a2-e599-09c1-f660972516c2"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0308d46 = [ Id = "GPU-f0308d46"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0308d46-1907-1608-9088-35894cca51f8"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 122880
+...
+006 (47551.000.000) 2025-10-24 20:48:13 Image size of job updated: 92
+	1  -  MemoryUsage of job (MB)
+	92  -  ResidentSetSize of job (KB)
+...
+006 (47551.000.000) 2025-10-24 20:53:15 Image size of job updated: 6381268
+	6208  -  MemoryUsage of job (MB)
+	6356388  -  ResidentSetSize of job (KB)
+...
+006 (47551.000.000) 2025-10-24 21:03:15 Image size of job updated: 6383308
+	6234  -  MemoryUsage of job (MB)
+	6383308  -  ResidentSetSize of job (KB)
+...
+006 (47551.000.000) 2025-10-24 21:08:15 Image size of job updated: 6455540
+	6281  -  MemoryUsage of job (MB)
+	6430824  -  ResidentSetSize of job (KB)
+...
+006 (47551.000.000) 2025-10-24 21:28:17 Image size of job updated: 7545480
+	6281  -  MemoryUsage of job (MB)
+	6430824  -  ResidentSetSize of job (KB)
+...
+006 (47551.000.000) 2025-10-24 21:53:20 Image size of job updated: 22493884
+	6281  -  MemoryUsage of job (MB)
+	6430824  -  ResidentSetSize of job (KB)
+...
+006 (47551.000.000) 2025-10-24 22:08:21 Image size of job updated: 23688124
+	23118  -  MemoryUsage of job (MB)
+	23672100  -  ResidentSetSize of job (KB)
+...
+040 (47551.000.000) 2025-10-24 22:23:29 Started transferring output files
+...
+040 (47551.000.000) 2025-10-24 22:23:29 Finished transferring output files
+...
+004 (47551.000.000) 2025-10-24 22:23:29 Job was evicted.
+	(0) CPU times
+		Usr 0 02:15:47, Sys 0 00:32:03  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	240964  -  Run Bytes Sent By Job
+	93250  -  Run Bytes Received By Job
+	Partitionable Resources :      Usage  Request Allocated Assigned
+	   Cpus                 :       4.99       32        32 
+	   Disk (KB)            : 9302954         100      2048 
+	   GPUs                 :       0.76        4         4 "GPU-45de52f4,GPU-b893db5b,GPU-d599f77e,GPU-f0308d46"
+	   GpusMemory (MB)      :    6974                       
+	   Memory (MB)          :   23118      122880    122880 
+	   TimeExecute (s)      :    5725                       
+	   TimeSlotBusy (s)     :    5726                       
+...
+009 (47551.000.000) 2025-10-24 22:23:29 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47553.000.000) 2025-10-24 22:24:34 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+009 (47553.000.000) 2025-10-24 22:26:22 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (47554.000.000) 2025-10-24 22:27:37 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (47554.000.000) 2025-10-24 22:27:38 Started transferring input files
+	Transferring to host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=slot1_1_5242_368e_1403>
+...
+040 (47554.000.000) 2025-10-24 22:27:38 Finished transferring input files
+...
+001 (47554.000.000) 2025-10-24 22:27:39 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
+	SlotName: slot1_1@tony-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_141edc3b,GPUs_GPU_1b6afc04,GPUs_GPU_2c81d871,GPUs_GPU_46674791,GPUs_GPU_77388151,GPUs_GPU_79ae9915,GPUs_GPU_b635bb5d,GPUs_GPU_f9e3f28e }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3521236"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_141edc3b = [ Id = "GPU-141edc3b"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "141edc3b-a53b-b27a-0b17-e788ea510d5e"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:61:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_1b6afc04 = [ Id = "GPU-1b6afc04"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "1b6afc04-06e6-32af-af61-11c319d602ab"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:81:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_2c81d871 = [ Id = "GPU-2c81d871"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "2c81d871-da6b-745d-3df4-68b33c12656b"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:41:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_46674791 = [ Id = "GPU-46674791"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "46674791-21a2-bf27-ff8f-c9102b0db719"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:22:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_77388151 = [ Id = "GPU-77388151"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "77388151-2a6f-8d06-caac-10c1bf7546c1"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:C1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_79ae9915 = [ Id = "GPU-79ae9915"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "79ae9915-144a-3090-3cf1-42ca87fadde0"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:E1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b635bb5d = [ Id = "GPU-b635bb5d"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "b635bb5d-be43-0cb2-9c7d-a87b6815b4fb"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:A1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+006 (47554.000.000) 2025-10-24 22:27:47 Image size of job updated: 92
+	1  -  MemoryUsage of job (MB)
+	92  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-24 22:32:47 Image size of job updated: 1642688
+	7  -  MemoryUsage of job (MB)
+	7164  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-24 22:37:47 Image size of job updated: 10284072
+	7  -  MemoryUsage of job (MB)
+	7164  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-24 22:42:48 Image size of job updated: 10284072
+	9973  -  MemoryUsage of job (MB)
+	10211344  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-24 23:32:51 Image size of job updated: 10284072
+	9995  -  MemoryUsage of job (MB)
+	10234276  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-24 23:37:51 Image size of job updated: 10284072
+	10002  -  MemoryUsage of job (MB)
+	10241724  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 00:53:00 Image size of job updated: 12586908
+	10002  -  MemoryUsage of job (MB)
+	10241724  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 01:03:00 Image size of job updated: 12913368
+	10002  -  MemoryUsage of job (MB)
+	10241724  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:13:07 Image size of job updated: 12913368
+	10013  -  MemoryUsage of job (MB)
+	10252672  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:18:07 Image size of job updated: 12913368
+	10027  -  MemoryUsage of job (MB)
+	10267628  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:23:08 Image size of job updated: 12913368
+	10069  -  MemoryUsage of job (MB)
+	10309772  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:28:09 Image size of job updated: 12913368
+	10106  -  MemoryUsage of job (MB)
+	10348416  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:33:09 Image size of job updated: 12913368
+	10121  -  MemoryUsage of job (MB)
+	10363672  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:38:10 Image size of job updated: 12913368
+	10168  -  MemoryUsage of job (MB)
+	10411284  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:43:10 Image size of job updated: 12913368
+	10199  -  MemoryUsage of job (MB)
+	10443660  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 02:48:11 Image size of job updated: 12913368
+	10220  -  MemoryUsage of job (MB)
+	10464648  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 03:58:17 Image size of job updated: 12913368
+	10233  -  MemoryUsage of job (MB)
+	10478144  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:03:17 Image size of job updated: 12913368
+	10267  -  MemoryUsage of job (MB)
+	10512568  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:08:18 Image size of job updated: 12913368
+	10295  -  MemoryUsage of job (MB)
+	10541236  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:13:19 Image size of job updated: 12913368
+	10322  -  MemoryUsage of job (MB)
+	10569716  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:18:19 Image size of job updated: 12913368
+	10356  -  MemoryUsage of job (MB)
+	10604312  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:23:20 Image size of job updated: 12913368
+	10389  -  MemoryUsage of job (MB)
+	10637852  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:28:20 Image size of job updated: 12913368
+	10413  -  MemoryUsage of job (MB)
+	10662608  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:33:21 Image size of job updated: 12913368
+	10455  -  MemoryUsage of job (MB)
+	10705672  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:38:21 Image size of job updated: 12913368
+	10487  -  MemoryUsage of job (MB)
+	10737924  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:43:21 Image size of job updated: 12913368
+	10508  -  MemoryUsage of job (MB)
+	10760144  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:48:22 Image size of job updated: 12913368
+	10560  -  MemoryUsage of job (MB)
+	10812916  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:53:23 Image size of job updated: 12913368
+	10594  -  MemoryUsage of job (MB)
+	10848216  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 04:58:23 Image size of job updated: 12913368
+	10603  -  MemoryUsage of job (MB)
+	10856504  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 05:03:24 Image size of job updated: 12913368
+	10651  -  MemoryUsage of job (MB)
+	10905660  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 05:08:24 Image size of job updated: 12913368
+	10688  -  MemoryUsage of job (MB)
+	10944196  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 05:13:25 Image size of job updated: 12913368
+	10707  -  MemoryUsage of job (MB)
+	10963888  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 05:18:25 Image size of job updated: 12913368
+	10749  -  MemoryUsage of job (MB)
+	11006716  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 05:23:25 Image size of job updated: 12913368
+	10774  -  MemoryUsage of job (MB)
+	11031764  -  ResidentSetSize of job (KB)
+...
+006 (47554.000.000) 2025-10-25 05:38:27 Image size of job updated: 12913368
+	10774  -  MemoryUsage of job (MB)
+	11031768  -  ResidentSetSize of job (KB)
+...
+021 (47554.000.000) 2025-10-25 22:27:42 Error from starter on slot1_1@tony-3.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (47554.000.000) 2025-10-25 22:27:42 Job was evicted.
+	(0) CPU times
+		Usr 2 05:09:50, Sys 0 00:32:32  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	94215  -  Run Bytes Received By Job
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :      Usage  Request Allocated Assigned
+	   Cpus                 :       0          64        64 
+	   Disk (KB)            : 9316485         100      2048 
+	   GPUs                 :       1.38        8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   GpusMemory (MB)      :    1973                       
+	   Memory (MB)          :   10774      245760    245760 
+	   TimeExecute (s)      :   31189                       
+	   TimeSlotBusy (s)     :   86405                       
+...
+012 (47554.000.000) 2025-10-25 22:27:42 Job was held.
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+013 (47554.000.000) 2025-11-06 18:31:02 Job was released.
+	via condor_release (by user plintilhac)
+...
+040 (47554.000.000) 2025-11-06 18:33:29 Started transferring input files
+	Transferring to host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=slot1_1_5242_368e_1456>
+...
+040 (47554.000.000) 2025-11-06 18:33:30 Finished transferring input files
+...
+001 (47554.000.000) 2025-11-06 18:33:31 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
+	SlotName: slot1_1@tony-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_141edc3b,GPUs_GPU_1b6afc04,GPUs_GPU_2c81d871,GPUs_GPU_46674791,GPUs_GPU_77388151,GPUs_GPU_79ae9915,GPUs_GPU_b635bb5d,GPUs_GPU_f9e3f28e }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3639730"
+	Cpus = 64
+	Disk = 10001408
+	GPUs = 8
+	GPUs_GPU_141edc3b = [ Id = "GPU-141edc3b"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "141edc3b-a53b-b27a-0b17-e788ea510d5e"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:61:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_1b6afc04 = [ Id = "GPU-1b6afc04"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "1b6afc04-06e6-32af-af61-11c319d602ab"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:81:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_2c81d871 = [ Id = "GPU-2c81d871"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "2c81d871-da6b-745d-3df4-68b33c12656b"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:41:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_46674791 = [ Id = "GPU-46674791"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "46674791-21a2-bf27-ff8f-c9102b0db719"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:22:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_77388151 = [ Id = "GPU-77388151"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "77388151-2a6f-8d06-caac-10c1bf7546c1"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:C1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_79ae9915 = [ Id = "GPU-79ae9915"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "79ae9915-144a-3090-3cf1-42ca87fadde0"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:E1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b635bb5d = [ Id = "GPU-b635bb5d"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "b635bb5d-be43-0cb2-9c7d-a87b6815b4fb"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:A1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
