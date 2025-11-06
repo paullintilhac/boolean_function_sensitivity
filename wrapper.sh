@@ -23,7 +23,7 @@ fi
 # Use PCI bus order so indices are stable and match NCCL expectations
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-python3 exp_refactor2.py  --N 20 \
+python3 exp_refactor.py  --N 20 \
  --dim 2 \
      --h 1 \
        --f 128 \
@@ -34,7 +34,7 @@ python3 exp_refactor2.py  --N 20 \
              --lr "4e-3" \
              --dropout 0.1 \
              --wd .0001 \
-             --world_size 4 \
+             --world_size 8 \
               --backend nccl \
               --stop_loss .02 \
               --save_every 10 \

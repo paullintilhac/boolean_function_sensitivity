@@ -108,16 +108,6 @@ def _graceful_exit(signum, frame):
 signal.signal(signal.SIGINT, _graceful_exit)
 signal.signal(signal.SIGTERM, _graceful_exit)
 
-# also wrap your training entrypoint:
-try:
-    train()
-except KeyboardInterrupt:
-    pass
-finally:
-    with contextlib.suppress(Exception):
-        if dist.is_initialized():
-            dist.destroy_process_group()
-
 if mps_avail:
   device = torch.device("mps")
 elif cuda_avail:
@@ -643,16 +633,16 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS19"
+    main_dir = f"HESSIAN_CALCS20"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
     for i in range(10):
-        for deg in [4]:
+        for deg in [5]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [20]:
+            for width in [20,14,7,1]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
