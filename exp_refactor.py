@@ -640,11 +640,11 @@ if __name__ == "__main__":
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in range(1):
-        for deg in [1]:
+    for i in range(2,12):
+        for deg in [5,4,3,2,1]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [14,7,1]:
+            for width in [20,14,7,1]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
