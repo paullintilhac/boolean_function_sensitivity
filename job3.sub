@@ -7,7 +7,7 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 should_transfer_files = YES
 #when_to_transfer_output = ON_EXIT
 transfer_output_files = summary*
-#transfer_input_files = watch_job.sh, exp_refactor.py, wrapper.sh, install_requirements.sh, updated_transformer.py, hardcoded_transformer.py
+transfer_input_files = wrapper.sh
 
 request_cpus          = 64
 request_memory        = 240G
