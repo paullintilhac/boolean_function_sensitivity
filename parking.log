@@ -1024,3 +1024,31 @@
 	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
 	Memory = 245760
 ...
+006 (47554.000.000) 2025-11-06 21:03:53 Image size of job updated: 23108696
+	12208  -  MemoryUsage of job (MB)
+	12500000  -  ResidentSetSize of job (KB)
+...
+021 (47554.000.000) 2025-11-07 18:33:30 Error from starter on slot1_1@tony-3.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (47554.000.000) 2025-11-07 18:33:31 Job was evicted.
+	(0) CPU times
+		Usr 4 12:33:44, Sys 0 01:01:09  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	94215  -  Run Bytes Received By Job
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :      Usage  Request Allocated Assigned
+	   Cpus                 :       0          64        64 
+	   Disk (KB)            : 9433258    10000000  10001408 
+	   GPUs                 :       2.65        8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   GpusMemory (MB)      :    1576                       
+	   Memory (MB)          :   12208      245760    245760 
+	   TimeExecute (s)      :   54962                       
+	   TimeSlotBusy (s)     :   86401                       
+...
+012 (47554.000.000) 2025-11-07 18:33:31 Job was held.
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...

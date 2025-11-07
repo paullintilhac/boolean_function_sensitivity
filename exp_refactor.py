@@ -28,7 +28,9 @@ from collections import OrderedDict
 import numpy as np
 import contextlib
 
-
+import time
+timestr = time.strftime("%Y%m%d-%H%M%S")
+print timestr
 class SAM(torch.optim.Optimizer):
     """SAM wrapper around a base optimizer (e.g., AdamW)."""
     def __init__(self, params, base_optimizer, rho=0.05, adaptive=True):
@@ -386,7 +388,7 @@ class Trainer:
                                       }
                
 
-                self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
+                self.summary.to_csv(f"{self.dir_name}/summary"+timestr+".csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
             flag = torch.zeros(1).to(self.gpu_id)
             if epoch_loss<self.stop_loss:
