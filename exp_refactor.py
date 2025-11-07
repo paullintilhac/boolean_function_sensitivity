@@ -30,7 +30,7 @@ import contextlib
 
 import time
 timestr = time.strftime("%Y%m%d-%H%M%S")
-print timestr
+print("time at start of job: "+timestr)
 class SAM(torch.optim.Optimizer):
     """SAM wrapper around a base optimizer (e.g., AdamW)."""
     def __init__(self, params, base_optimizer, rho=0.05, adaptive=True):
