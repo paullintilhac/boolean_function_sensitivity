@@ -6,7 +6,7 @@ arguments             = "8640000"
 when_to_transfer_output = ON_EXIT_OR_EVICT
 should_transfer_files = YES
 #when_to_transfer_output = ON_EXIT
-transfer_output_files = summary*
+transfer_output_files = boolean_function_sensitivity/HESSIAN_CALCS21/summary*
 transfer_input_files = wrapper.sh
 
 request_cpus          = 64
