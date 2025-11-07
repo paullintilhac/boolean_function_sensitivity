@@ -194,6 +194,7 @@ class HardCodedTransformer(nn.Module):
         self.nonrep_mask = float(nonrep_mask)
         self.coefs = torch.as_tensor(coefs).float().cpu()
         if not (self.coefs > 0).all():
+            print("coeffs in transformer:  " + str(self.coefs))
             raise ValueError("All Fourier coefficients must be positive for this initializer.")
 
         self.rep_idx = self._choose_unique_reps(self.combs, self.N)
