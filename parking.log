@@ -1052,3 +1052,168 @@
 	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
 	Code 21 Subcode 0
 ...
+013 (47554.000.000) 2025-11-07 19:00:46 Job was released.
+	via condor_release (by user plintilhac)
+...
+040 (47554.000.000) 2025-11-07 19:00:47 Started transferring input files
+	Transferring to host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=slot1_1_5242_368e_1457>
+...
+040 (47554.000.000) 2025-11-07 19:00:47 Finished transferring input files
+...
+001 (47554.000.000) 2025-11-07 19:00:48 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
+	SlotName: slot1_1@tony-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_141edc3b,GPUs_GPU_1b6afc04,GPUs_GPU_2c81d871,GPUs_GPU_46674791,GPUs_GPU_77388151,GPUs_GPU_79ae9915,GPUs_GPU_b635bb5d,GPUs_GPU_f9e3f28e }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3722540"
+	Cpus = 64
+	Disk = 10001408
+	GPUs = 8
+	GPUs_GPU_141edc3b = [ Id = "GPU-141edc3b"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "141edc3b-a53b-b27a-0b17-e788ea510d5e"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:61:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_1b6afc04 = [ Id = "GPU-1b6afc04"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "1b6afc04-06e6-32af-af61-11c319d602ab"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:81:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_2c81d871 = [ Id = "GPU-2c81d871"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "2c81d871-da6b-745d-3df4-68b33c12656b"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:41:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_46674791 = [ Id = "GPU-46674791"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "46674791-21a2-bf27-ff8f-c9102b0db719"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:22:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_77388151 = [ Id = "GPU-77388151"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "77388151-2a6f-8d06-caac-10c1bf7546c1"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:C1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_79ae9915 = [ Id = "GPU-79ae9915"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "79ae9915-144a-3090-3cf1-42ca87fadde0"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:E1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b635bb5d = [ Id = "GPU-b635bb5d"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "b635bb5d-be43-0cb2-9c7d-a87b6815b4fb"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:A1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+040 (47554.000.000) 2025-11-07 19:04:20 Started transferring output files
+...
+040 (47554.000.000) 2025-11-07 19:04:20 Finished transferring output files
+...
+004 (47554.000.000) 2025-11-07 19:04:20 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	17  -  Run Bytes Sent By Job
+	94190  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       64        64 
+	   Disk (KB)            :      119 10000000  10001408 
+	   GPUs                 :        0        8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   GpusMemory (MB)      :      770                    
+	   Memory (MB)          :    12208   245760    245760 
+	   TimeExecute (s)      :      212                    
+	   TimeSlotBusy (s)     :      213                    
+...
+009 (47554.000.000) 2025-11-07 19:04:20 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (49468.000.000) 2025-11-07 19:04:44 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (49468.000.000) 2025-11-07 19:04:45 Started transferring input files
+	Transferring to host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=slot1_1_5242_368e_1458>
+...
+001 (49468.000.000) 2025-11-07 19:04:45 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
+	SlotName: slot1_1@tony-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_141edc3b,GPUs_GPU_1b6afc04,GPUs_GPU_2c81d871,GPUs_GPU_46674791,GPUs_GPU_77388151,GPUs_GPU_79ae9915,GPUs_GPU_b635bb5d,GPUs_GPU_f9e3f28e }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3722620"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_141edc3b = [ Id = "GPU-141edc3b"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "141edc3b-a53b-b27a-0b17-e788ea510d5e"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:61:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_1b6afc04 = [ Id = "GPU-1b6afc04"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "1b6afc04-06e6-32af-af61-11c319d602ab"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:81:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_2c81d871 = [ Id = "GPU-2c81d871"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "2c81d871-da6b-745d-3df4-68b33c12656b"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:41:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_46674791 = [ Id = "GPU-46674791"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "46674791-21a2-bf27-ff8f-c9102b0db719"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:22:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_77388151 = [ Id = "GPU-77388151"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "77388151-2a6f-8d06-caac-10c1bf7546c1"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:C1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_79ae9915 = [ Id = "GPU-79ae9915"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "79ae9915-144a-3090-3cf1-42ca87fadde0"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:E1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b635bb5d = [ Id = "GPU-b635bb5d"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "b635bb5d-be43-0cb2-9c7d-a87b6815b4fb"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:A1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+040 (49468.000.000) 2025-11-07 19:04:45 Finished transferring input files
+...
+006 (49468.000.000) 2025-11-07 19:04:53 Image size of job updated: 92
+	1  -  MemoryUsage of job (MB)
+	92  -  ResidentSetSize of job (KB)
+...
+006 (49468.000.000) 2025-11-07 19:06:57 Image size of job updated: 3392
+	1  -  MemoryUsage of job (MB)
+	92  -  ResidentSetSize of job (KB)
+...
+040 (49468.000.000) 2025-11-07 19:06:57 Started transferring output files
+...
+040 (49468.000.000) 2025-11-07 19:06:57 Finished transferring output files
+...
+021 (49468.000.000) 2025-11-07 19:06:57 Error from starter on slot1_1@tony-3.coli.uni-saarland.de:
+	STARTER at 134.96.105.141 failed to send file(s) to <134.96.104.7:9618>: |Error: reading from file /var/lib/condor/execute/dir_3722620/summary*: (errno 2) No such file or directory; SHADOW failed to receive file(s) from <134.96.105.141:42371>
+	Code 13 Subcode 2
+...
+004 (49468.000.000) 2025-11-07 19:06:57 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	36520  -  Run Bytes Received By Job
+	Transfer output files failure at execution point slot1_1@tony-3.coli.uni-saarland.de while sending files to access point submit. Details: reading from file /var/lib/condor/execute/dir_3722620/summary*: (errno 2) No such file or directory
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                64        64 
+	   Disk (KB)            :       50       37      2048 
+	   GPUs                 :                 8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   Memory (MB)          :        1   245760    245760 
+	   TimeExecute (s)      :      132                    
+	   TimeSlotBusy (s)     :      133                    
+...
+009 (49468.000.000) 2025-11-07 19:06:57 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
+000 (49470.000.000) 2025-11-07 19:13:02 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+040 (49470.000.000) 2025-11-07 19:17:05 Started transferring input files
+	Transferring to host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=slot1_1_5242_368e_1459>
+...
+001 (49470.000.000) 2025-11-07 19:17:05 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
+	SlotName: slot1_1@tony-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_141edc3b,GPUs_GPU_1b6afc04,GPUs_GPU_2c81d871,GPUs_GPU_46674791,GPUs_GPU_77388151,GPUs_GPU_79ae9915,GPUs_GPU_b635bb5d,GPUs_GPU_f9e3f28e }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3722716"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_141edc3b = [ Id = "GPU-141edc3b"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "141edc3b-a53b-b27a-0b17-e788ea510d5e"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:61:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_1b6afc04 = [ Id = "GPU-1b6afc04"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "1b6afc04-06e6-32af-af61-11c319d602ab"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:81:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_2c81d871 = [ Id = "GPU-2c81d871"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "2c81d871-da6b-745d-3df4-68b33c12656b"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:41:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_46674791 = [ Id = "GPU-46674791"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "46674791-21a2-bf27-ff8f-c9102b0db719"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:22:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_77388151 = [ Id = "GPU-77388151"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "77388151-2a6f-8d06-caac-10c1bf7546c1"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:C1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_79ae9915 = [ Id = "GPU-79ae9915"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "79ae9915-144a-3090-3cf1-42ca87fadde0"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:E1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b635bb5d = [ Id = "GPU-b635bb5d"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "b635bb5d-be43-0cb2-9c7d-a87b6815b4fb"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:A1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+040 (49470.000.000) 2025-11-07 19:17:05 Finished transferring input files
+...
+006 (49470.000.000) 2025-11-07 19:17:08 Image size of job updated: 148
+	0  -  MemoryUsage of job (MB)
+	0  -  ResidentSetSize of job (KB)
+...
+040 (49470.000.000) 2025-11-07 19:17:08 Started transferring output files
+...
+040 (49470.000.000) 2025-11-07 19:17:08 Finished transferring output files
+...
+021 (49470.000.000) 2025-11-07 19:17:09 Error from starter on slot1_1@tony-3.coli.uni-saarland.de:
+	STARTER at 134.96.105.141 failed to send file(s) to <134.96.104.7:9618>: |Error: reading from file /var/lib/condor/execute/dir_3722716/summary*: (errno 2) No such file or directory; SHADOW failed to receive file(s) from <134.96.105.141:36061>
+	Code 13 Subcode 2
+...
+004 (49470.000.000) 2025-11-07 19:17:09 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:02, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	1790  -  Run Bytes Sent By Job
+	1740  -  Run Bytes Received By Job
+	Transfer output files failure at execution point slot1_1@tony-3.coli.uni-saarland.de while sending files to access point submit. Details: reading from file /var/lib/condor/execute/dir_3722716/summary*: (errno 2) No such file or directory
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       64        64 
+	   Disk (KB)            :   122437        2      2048 
+	   GPUs                 :                 8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   Memory (MB)          :        0   245760    245760 
+	   TimeExecute (s)      :        3                    
+	   TimeSlotBusy (s)     :        3                    
+...
+012 (49470.000.000) 2025-11-07 19:17:09 Job was held.
+	Transfer output files failure at execution point slot1_1@tony-3.coli.uni-saarland.de while sending files to access point submit. Details: reading from file /var/lib/condor/execute/dir_3722716/summary*: (errno 2) No such file or directory
+	Code 12 Subcode 2
+...
+009 (49470.000.000) 2025-11-07 20:18:43 Job was aborted.
+	via condor_rm (by user plintilhac)
+
+	Job terminated by itself at 2025-11-07T18:17:08Z (using method 0: OF_ITS_OWN_ACCORD).
+...

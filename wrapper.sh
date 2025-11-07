@@ -23,6 +23,12 @@ fi
 # Use PCI bus order so indices are stable and match NCCL expectations
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
+python3 -m ensurepip --default-pip
+python3 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+python3 -m pip install pyhessian pandas
+git clone https://github.com/paullintilhac/boolean_function_sensitivity.git
+cd boolean_function_sensitivity
+
 python3 exp_refactor.py  --N 20 \
  --dim 2 \
      --h 1 \
@@ -39,5 +45,5 @@ python3 exp_refactor.py  --N 20 \
               --stop_loss .02 \
               --save_every 10 \
               # --sam \
-watch -n 1 nvidia-smi
+#watch -n 1 nvidia-smi
 
