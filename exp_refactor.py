@@ -640,7 +640,7 @@ if __name__ == "__main__":
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in range(2,12):
+    for i in range(3,12):
         for deg in [5,4,3,2,1]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
