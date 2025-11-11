@@ -29,8 +29,6 @@ import numpy as np
 import contextlib
 
 import time
-timestr = time.strftime("%Y%m%d-%H%M%S")
-print("time at start of job: "+timestr)
 class SAM(torch.optim.Optimizer):
     """SAM wrapper around a base optimizer (e.g., AdamW)."""
     def __init__(self, params, base_optimizer, rho=0.05, adaptive=True):
@@ -182,6 +180,7 @@ class Trainer:
             h: int,
             dropout: float,
             wd: float,
+            run_id: float
     ) -> None:
         self.gpu_id = gpu_id
         torch.cuda.set_device(self.gpu_id)                # <- pin the process
@@ -245,7 +244,8 @@ class Trainer:
         )
         self.backend = backend
         #self.func.to(gpu_id)
-        
+        self.run_id=run_id
+
     def func_batch(self, x):
         # x: 1D tensor of integers (can be on any device)
         x = torch.as_tensor(x, dtype=torch.long, device=self.gpu_id)
@@ -388,7 +388,7 @@ class Trainer:
                                       }
                
 
-                self.summary.to_csv(f"{self.dir_name}/summary"+timestr+".csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
+                self.summary.to_csv(f"{self.dir_name}/summary_{self.run_id}.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
             flag = torch.zeros(1).to(self.gpu_id)
             if epoch_loss<self.stop_loss:
@@ -525,7 +525,7 @@ def parse_args():
     parser.add_argument('--asam', action='store_true')
     return parser.parse_args()
 
-def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
+def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i,run_id):
       if "CUDA_VISIBLE_DEVICES" in os.environ:
         # rank becomes local index within the visible set
         torch.cuda.set_device(rank)
@@ -587,7 +587,8 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         f=args.f,
                         h=args.h,
                         dropout=args.dropout,
-                        wd=args.wd
+                        wd=args.wd,
+                        run_id=run_id
                         )
 
       # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
@@ -632,10 +633,12 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
 if __name__ == "__main__":
     arguments = parse_args()
     arguments.save_checkpoints = False
+    run_id = time.strftime("%Y%m%d-%H%M%S")
+    print("time at start of job: "+timestr)
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS21"
+    main_dir = f"/scratch/plintilhac/HESSIAN_CALCS21"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
@@ -658,7 +661,7 @@ if __name__ == "__main__":
                 mp.set_start_method('spawn',force = True)
 
                 torch.set_num_threads(1)
-                mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size,join=True)
+                mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,run_id),nprocs=arguments.world_size,join=True)
                 print("returned from mp.spwan")
                 end_time = time.time()
         
