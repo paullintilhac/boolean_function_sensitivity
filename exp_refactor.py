@@ -638,7 +638,7 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"/scratch/plintilhac/HESSIAN_CALCS21"
+    main_dir = f"/scratch/plintilhac/HESSIAN_CALCS22"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
