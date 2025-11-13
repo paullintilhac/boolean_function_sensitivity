@@ -1,6 +1,10 @@
 #!/bin/bash
 # --- Normalize CUDA visibility (fix truncated UUIDs from scheduler) ---
 # If CUDA_VISIBLE_DEVICES contains GPU UUIDs (possibly truncated), map them to indices.
+
+echo "job_wrapper.sh starting on $(hostname) at $(date)"
+echo "PWD: $(pwd)"
+
 if [ -n "${CUDA_VISIBLE_DEVICES:-}" ] && echo "$CUDA_VISIBLE_DEVICES" | grep -q 'GPU-'; then
   echo "Normalizing CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
   MAP="$(nvidia-smi --query-gpu=uuid,index --format=csv,noheader)"

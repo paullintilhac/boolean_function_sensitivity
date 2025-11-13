@@ -1,9 +1,9 @@
-000 (50356.000.000) 2025-11-13 20:24:13 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+000 (50359.000.000) 2025-11-13 20:53:17 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
 ...
-001 (50356.000.000) 2025-11-13 20:25:13 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
+001 (50359.000.000) 2025-11-13 20:53:17 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
 	SlotName: slot1_1@tony-3.coli.uni-saarland.de
 	AvailableGPUs = { GPUs_GPU_141edc3b,GPUs_GPU_1b6afc04,GPUs_GPU_2c81d871,GPUs_GPU_46674791,GPUs_GPU_77388151,GPUs_GPU_79ae9915,GPUs_GPU_b635bb5d,GPUs_GPU_f9e3f28e }
-	CondorScratchDir = "/var/lib/condor/execute/dir_4146460"
+	CondorScratchDir = "/var/lib/condor/execute/dir_4147845"
 	Cpus = 64
 	Disk = 2048
 	GPUs = 8
@@ -17,33 +17,15 @@
 	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
 	Memory = 245760
 ...
-006 (50356.000.000) 2025-11-13 20:25:22 Image size of job updated: 200828
-	197  -  MemoryUsage of job (MB)
-	200828  -  ResidentSetSize of job (KB)
+006 (50359.000.000) 2025-11-13 20:53:26 Image size of job updated: 112
+	1  -  MemoryUsage of job (MB)
+	112  -  ResidentSetSize of job (KB)
 ...
-006 (50356.000.000) 2025-11-13 20:30:23 Image size of job updated: 10209596
-	9967  -  MemoryUsage of job (MB)
-	10206156  -  ResidentSetSize of job (KB)
+006 (50359.000.000) 2025-11-13 20:58:27 Image size of job updated: 3564
+	4  -  MemoryUsage of job (MB)
+	3564  -  ResidentSetSize of job (KB)
 ...
-006 (50356.000.000) 2025-11-13 20:43:33 Image size of job updated: 10213228
-	9967  -  MemoryUsage of job (MB)
-	10206156  -  ResidentSetSize of job (KB)
-...
-004 (50356.000.000) 2025-11-13 20:43:33 Job was evicted.
-	(0) CPU times
-		Usr 0 02:17:13, Sys 0 00:01:13  -  Run Remote Usage
-		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
-	0  -  Run Bytes Sent By Job
-	0  -  Run Bytes Received By Job
-	Partitionable Resources :    Usage  Request Allocated Assigned
-	   Cpus                 :     7.98       64        64 
-	   Disk (KB)            :     3           3      2048 
-	   GPUs                 :     7.17        8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
-	   GpusMemory (MB)      :  1554                       
-	   Memory (MB)          :  9967      245760    245760 
-	   TimeExecute (s)      :  1100                       
-	   TimeSlotBusy (s)     :  1100                       
-...
-009 (50356.000.000) 2025-11-13 20:43:33 Job was aborted.
-	via condor_rm (by user plintilhac)
+006 (50359.000.000) 2025-11-13 21:03:28 Image size of job updated: 6736
+	4  -  MemoryUsage of job (MB)
+	3568  -  ResidentSetSize of job (KB)
 ...

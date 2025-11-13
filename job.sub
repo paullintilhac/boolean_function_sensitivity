@@ -42,9 +42,8 @@ requirements                = (GPUs_Capability >= 7) && (GPUs_GlobalMemoryMb >= 
 # requirements              = (CUDACapability >= 7.0) && (CUDAGlobalMemoryMb >= 50000)
 
 # --- Logs ---
-log                         = parking.log
-output                      = parking.out
-error                       = parking.err
-
+output = parking.$(Cluster).$(ProcId).out
+error  = parking.$(Cluster).$(ProcId).err
+log    = parking.$(Cluster).log
 queue 1
 
