@@ -634,7 +634,7 @@ if __name__ == "__main__":
     arguments = parse_args()
     arguments.save_checkpoints = False
     run_id = time.strftime("%Y%m%d-%H%M%S")
-    print("time at start of job: "+timestr)
+    print("time at start of job: "+run_id)
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
