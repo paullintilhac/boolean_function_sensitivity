@@ -2,9 +2,9 @@
 
 # --- Core ---
 universe                    = vanilla
-executable                  = /bin/sleep
+executable                  = job_wrapper.sh
 # If your wrapper needs args, set them here:
-arguments                 = "1000000"
+#arguments                 = "1000000"
 
 # Make the job ssh-able via condor_ssh_to_job
 +WantIOProxy                = TRUE
@@ -42,8 +42,8 @@ requirements                = (GPUs_Capability >= 7) && (GPUs_GlobalMemoryMb >= 
 # requirements              = (CUDACapability >= 7.0) && (CUDAGlobalMemoryMb >= 50000)
 
 # --- Logs ---
-output = parking.$(Cluster).$(ProcId).out
-error  = parking.$(Cluster).$(ProcId).err
-log    = parking.$(Cluster).log
+output = condor_output/parking.$(Cluster).$(ProcId).out
+error  = condor_output/parking.$(Cluster).$(ProcId).err
+log    = condor_output/parking.$(Cluster).log
 queue 1
 

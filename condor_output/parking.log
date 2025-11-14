@@ -29,3 +29,25 @@
 	4  -  MemoryUsage of job (MB)
 	3568  -  ResidentSetSize of job (KB)
 ...
+006 (50359.000.000) 2025-11-13 21:23:30 Image size of job updated: 7228
+	4  -  MemoryUsage of job (MB)
+	3568  -  ResidentSetSize of job (KB)
+...
+004 (50359.000.000) 2025-11-13 21:23:30 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:03  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0       64        64 
+	   Disk (KB)            :       37       37      2048 
+	   GPUs                 :        0        8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   GpusMemory (MB)      :      770                    
+	   Memory (MB)          :        4   245760    245760 
+	   TimeExecute (s)      :     1813                    
+	   TimeSlotBusy (s)     :     1813                    
+...
+009 (50359.000.000) 2025-11-13 21:23:30 Job was aborted.
+	via condor_rm (by user plintilhac)
+...

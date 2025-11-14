@@ -30,13 +30,13 @@ import contextlib
 
 import time
 class SAM(torch.optim.Optimizer):
-    """SAM wrapper around a base optimizer (e.g., AdamW)."""
     def __init__(self, params, base_optimizer, rho=0.05, adaptive=True):
         if rho <= 0.0:
             raise ValueError("rho must be > 0")
         defaults = dict(rho=rho, adaptive=adaptive)
         super().__init__(params, defaults)
         self.base_optimizer = base_optimizer
+
     @torch.no_grad()
     def _grad_norm(self):
         eps = 1e-12
@@ -44,35 +44,49 @@ class SAM(torch.optim.Optimizer):
         for group in self.param_groups:
             adaptive = group['adaptive']
             for p in group['params']:
-                if p.grad is None: continue
+                if p.grad is None: 
+                    continue
                 g = p.grad
                 w = p.abs() if adaptive else 1.0
                 norms.append((w * g).norm(p=2))
         if not norms:
-            dev = self.param_groups[0]['params'][0].device
-            return torch.tensor(0.0, device=dev) + eps
+            # no gradients: treat as "skip step"
+            return None
         return torch.norm(torch.stack(norms), p=2) + eps
+
     @torch.no_grad()
     def first_step(self, zero_grad=True):
-        scale = self.param_groups[0]['rho'] / self._grad_norm()
+        norm = self._grad_norm()
+        if norm is None:
+            # nothing to do; skip this SAM step
+            return
+        scale = self.param_groups[0]['rho'] / norm
         for group in self.param_groups:
             adaptive = group['adaptive']
             for p in group['params']:
-                if p.grad is None: continue
+                if p.grad is None:
+                    continue
                 e = (p.abs() if adaptive else 1.0) * p.grad * scale
                 p.add_(e)
                 self.state[p]['e_w'] = e
-        if zero_grad: self.zero_grad()
+        if zero_grad:
+            self.zero_grad()
+
     @torch.no_grad()
     def second_step(self, zero_grad=True):
         for group in self.param_groups:
             for p in group['params']:
-                if p.grad is None: continue
+                if p.grad is None:
+                    continue
+                if 'e_w' not in self.state[p]:
+                    continue   # skipped first_step: nothing to undo
                 p.sub_(self.state[p]['e_w'])
         self.base_optimizer.step()
-        if zero_grad: self.zero_grad()
-    def zero_grad(self): self.base_optimizer.zero_grad()
-    def step(self): raise NotImplementedError("Use first_step() and second_step()")
+        if zero_grad:
+            self.zero_grad()
+
+    def zero_grad(self):
+        self.base_optimizer.zero_grad()
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning,
@@ -263,37 +277,34 @@ class Trainer:
 
         
     def _run_batch(self, inputs, targets):
-        # Same loss as elsewhere
-        # loss_fn = lambda out, tgt: (out - tgt).pow(2).mean()
         loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
 
-        # ---- SAM path ----
         if hasattr(self.optimizer, "base_optimizer"):
-            # 1) Compute grads at w and take the SAM ascent step to w~
-            #    Use no_sync() to avoid an extra all-reduce in DDP on the first backward.
+            # SAM branch
+            self.optimizer.zero_grad()
+            # 1. ascent step, unsynced
             with self.model.no_sync():
                 out = self.model(inputs)
                 loss = loss_fn(out, targets)
                 loss.backward()
             self.optimizer.first_step(zero_grad=True)
-    
-            # 2) Compute grads at w~ and take the descent step (restoring weights)
+
+            # 2. descent step, synced
             out = self.model(inputs)
             loss_perturbed = loss_fn(out, targets)
             loss_perturbed.backward()
             self.optimizer.second_step(zero_grad=True)
-    
-            # Return the original (unperturbed) loss for logging/averaging
+
             return loss.detach()
-    
-        # ---- Standard optimizer path ----
+
+        # normal branch
         out = self.model(inputs)
         loss = loss_fn(out, targets)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         return loss.detach()
-    
+
     def _run_epoch(self,epoch):
         
         b_sz = len(next(iter(self.train_data)))
@@ -302,12 +313,13 @@ class Trainer:
         start_time = time.time()
         
         for idx, inputs in enumerate(self.train_data):
-          #inputs.to(self.gpu_id)    
-          targets =self.func_batch(inputs).to(self.gpu_id)
-          batch_loss = self._run_batch(inputs, targets)
-          epoch_loss+=batch_loss*float(len(inputs))
-          total_records+=len(inputs)
-          iteration = epoch*len(self.train_data)+idx+1
+            inputs = inputs.to(self.gpu_id, non_blocking=True)
+            targets = self.func_batch(inputs)  # func_batch already puts on gpu_id
+            batch_loss = self._run_batch(inputs, targets)
+
+            epoch_loss+=batch_loss*float(len(inputs))
+            total_records+=len(inputs)
+            iteration = epoch*len(self.train_data)+idx+1
             
         epoch_loss/=float(total_records)
         
