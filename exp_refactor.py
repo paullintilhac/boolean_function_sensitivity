@@ -30,6 +30,12 @@ import contextlib
 
 import time
 class SAM(torch.optim.Optimizer):
+    """Sharpness-Aware Minimization (SAM) wrapper around a base optimizer.
+
+    Usage:
+        base_opt = torch.optim.AdamW(model.parameters(), lr=...)
+        opt = SAM(model.parameters(), base_optimizer=base_opt, rho=0.05, adaptive=True)
+    """
     def __init__(self, params, base_optimizer, rho=0.05, adaptive=True):
         if rho <= 0.0:
             raise ValueError("rho must be > 0")
@@ -39,55 +45,66 @@ class SAM(torch.optim.Optimizer):
 
     @torch.no_grad()
     def _grad_norm(self):
+        """Compute ||w * g||_2 across all parameters.
+
+        Returns:
+            None if there are no gradients (e.g. this step did nothing),
+            otherwise a scalar tensor.
+        """
         eps = 1e-12
         norms = []
         for group in self.param_groups:
-            adaptive = group['adaptive']
-            for p in group['params']:
-                if p.grad is None: 
+            adaptive = group["adaptive"]
+            for p in group["params"]:
+                if p.grad is None:
                     continue
                 g = p.grad
                 w = p.abs() if adaptive else 1.0
-                norms.append((w * g).norm(p=2))
+                n = (w * g).norm(p=2)
+                if torch.isnan(n) or torch.isinf(n):
+                    raise RuntimeError("SAM grad norm is NaN/inf")
+                norms.append(n)
         if not norms:
             # no gradients: treat as "skip step"
             return None
         return torch.norm(torch.stack(norms), p=2) + eps
 
     @torch.no_grad()
-    def first_step(self, zero_grad=True):
+    def first_step(self, zero_grad: bool = True):
+        """Ascent step: w <- w + e_w."""
         norm = self._grad_norm()
         if norm is None:
             # nothing to do; skip this SAM step
             return
-        scale = self.param_groups[0]['rho'] / norm
+        scale = self.param_groups[0]["rho"] / norm
         for group in self.param_groups:
-            adaptive = group['adaptive']
-            for p in group['params']:
+            adaptive = group["adaptive"]
+            for p in group["params"]:
                 if p.grad is None:
                     continue
                 e = (p.abs() if adaptive else 1.0) * p.grad * scale
                 p.add_(e)
-                self.state[p]['e_w'] = e
+                self.state[p]["e_w"] = e
         if zero_grad:
             self.zero_grad()
 
     @torch.no_grad()
-    def second_step(self, zero_grad=True):
+    def second_step(self, zero_grad: bool = True):
+        """Descent step: restore w and apply base optimizer step."""
         for group in self.param_groups:
-            for p in group['params']:
+            for p in group["params"]:
                 if p.grad is None:
                     continue
-                if 'e_w' not in self.state[p]:
+                state = self.state.get(p, None)
+                if not state or "e_w" not in state:
                     continue   # skipped first_step: nothing to undo
-                p.sub_(self.state[p]['e_w'])
+                p.sub_(state["e_w"])
         self.base_optimizer.step()
         if zero_grad:
             self.zero_grad()
 
     def zero_grad(self):
         self.base_optimizer.zero_grad()
-
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning,
                         module=r"torch\.distributed\.distributed_c10d")
@@ -277,19 +294,23 @@ class Trainer:
 
         
     def _run_batch(self, inputs, targets):
+        """Run one optimization step on a single batch.
+
+        Handles both SAM and non-SAM optimizers.
+        """
         loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
 
         if hasattr(self.optimizer, "base_optimizer"):
             # SAM branch
+            # 1) Ascent step at w, unsynced (no allreduce of grads)
             self.optimizer.zero_grad()
-            # 1. ascent step, unsynced
             with self.model.no_sync():
                 out = self.model(inputs)
                 loss = loss_fn(out, targets)
                 loss.backward()
             self.optimizer.first_step(zero_grad=True)
 
-            # 2. descent step, synced
+            # 2) Descent step at w~, synced (grads are allreduced)
             out = self.model(inputs)
             loss_perturbed = loss_fn(out, targets)
             loss_perturbed.backward()
@@ -297,38 +318,41 @@ class Trainer:
 
             return loss.detach()
 
-        # normal branch
+        # ---- normal optimizer branch ----
+        self.optimizer.zero_grad()
         out = self.model(inputs)
         loss = loss_fn(out, targets)
-        self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         return loss.detach()
 
-    def _run_epoch(self,epoch):
-        
+    def _run_epoch(self, epoch: int):
+        """Run one epoch of training and return mean loss."""
+        # If we have a DistributedSampler, set the epoch for deterministic shuffling.
+        sampler = getattr(self.train_data, "sampler", None)
+        if isinstance(sampler, DistributedSampler):
+            sampler.set_epoch(epoch)
+
+        # You compute b_sz but don't use it; keep it if you want, it's harmless.
         b_sz = len(next(iter(self.train_data)))
-        epoch_loss = 0
+        epoch_loss = 0.0
         total_records = 0
         start_time = time.time()
-        
+
         for idx, inputs in enumerate(self.train_data):
+            # Make sure inputs are on the correct device
             inputs = inputs.to(self.gpu_id, non_blocking=True)
-            targets = self.func_batch(inputs)  # func_batch already puts on gpu_id
+            # func_batch uses self.gpu_id internally and returns on the right device
+            targets = self.func_batch(inputs)
             batch_loss = self._run_batch(inputs, targets)
 
-            epoch_loss+=batch_loss*float(len(inputs))
-            total_records+=len(inputs)
-            iteration = epoch*len(self.train_data)+idx+1
-            
-        epoch_loss/=float(total_records)
-        
+            epoch_loss += batch_loss * float(len(inputs))
+            total_records += len(inputs)
+
+        epoch_loss /= float(total_records)
         end_time = time.time()
-        
         elapsed_time = end_time - start_time
-        #print(f"Epoch time: {elapsed_time:.3f} seconds.")
-        time_per_record_ms = float(elapsed_time*100)/float(total_records)
-        #print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (ms): {time_per_record_ms: .3f}")
+        # time_per_record_ms = float(elapsed_time * 1000) / float(total_records)
         return epoch_loss
 
     def save_checkpoint(self,epoch,model_name):
@@ -341,76 +365,103 @@ class Trainer:
 
         print(f"Epoch {epoch} | Training checkpoint saved at model_{epoch}.pt")
 
-    def train(self,epochs: int):
+    def train(self, epochs: int):
+        """Main training loop."""
         self.model.train()
-        
         start_time = time.time()
 
         for epoch in range(epochs):
+            print(f"[RANK {self.gpu_id}] starting epoch {epoch}", flush=True)
             epoch_loss = self._run_epoch(epoch)
-            
-            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
-            # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
+            print(f"[RANK {self.gpu_id}] finished _run_epoch({epoch}), loss={epoch_loss}", flush=True)
 
-                #print("inside conditional")
+            if ((epoch % self.save_every) == 0 and self.gpu_id == 0) or (epoch_loss < self.stop_loss):
+                # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
+
                 if self.save_checkpoints:
-                    self.save_checkpoint(epoch,"degree-"+str(self.deg)+"/width-"+str(self.width)+"/func-"+str(self.func))
+                    self.save_checkpoint(epoch, f"degree-{self.deg}/width-{self.width}/func-{self.func}")
                 end_time = time.time()
-                elapsed_time = round((end_time - start_time)/60,3) 
+                elapsed_time = round((end_time - start_time) / 60, 3)
 
-                #print("self.func: " + str(self.func))
-                val_loss = self.validate(1000,self.model) 
-                loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+                val_loss = self.validate(1000, self.model)
+                loss_fn = lambda result, targets: (result - targets).pow(2).mean()
+
                 start_time_hessian = time.time()
-                top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
-                top_eig_train, trace_train = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id, use_train=True)
-                #weight_norm = 0
-                weight_norm = get_weight_norm(self.model.module)
-                #weight_norm = torch.linalg.norm(self.model.weight)
-                #top_eig=0
-                #trace = 0
-                end_time_hessian = time.time()
-                elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
-                print("elapsed time norm: " + str(elapsed_time_hessian))
-                self.summary.loc[0] = {"deg":self.deg,
-                                       "width":self.width,
-                                       "func":self.func,
-                                       "epoch":epoch,
-                                       "train_loss":epoch_loss.cpu(),
-                                       "val_loss":val_loss.cpu(),
-                                      "batch_size": self.batch_size,
-                                      "lr":self.lr,
-                                      "n_samples":self.n_samples,
-                                      "func_val_test":self.func_batch([2]).cpu(),
-                                      "time_elapsed":elapsed_time,
-                                      "backend":self.backend,
-                                      "top_eig":top_eig,
-                                      "trace":trace,
-                                       "top_eig_train": top_eig_train,
-                                       "trace_train": trace_train,
-                                      "stop_loss": self.stop_loss,
-                                      "ln_eps": self.ln_eps,
-                                      "ln": self.ln,
-                                      "weight_norm": weight_norm,
-                                       "d":self.d,
-                                       "f":self.f,
-                                       "h":self.h,
-                                       "dropout":self.dropout,
-                                       "wd":self.wd
-                                      }
-               
+                top_eig, trace = self.calc_hessian(
+                    copy.deepcopy(self.model.module),
+                    loss_fn=loss_fn,
+                    num_samples=1000,
+                    device_id=self.gpu_id,
+                )
+                top_eig_train, trace_train = self.calc_hessian(
+                    copy.deepcopy(self.model.module),
+                    loss_fn=loss_fn,
+                    num_samples=1000,
+                    device_id=self.gpu_id,
+                    use_train=True,
+                )
 
-                self.summary.to_csv(f"{self.dir_name}/summary_{self.run_id}.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
-                print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
-            flag = torch.zeros(1).to(self.gpu_id)
-            if epoch_loss<self.stop_loss:
-                 flag += 1
+                weight_norm = get_weight_norm(self.model.module)
+
+                end_time_hessian = time.time()
+                elapsed_time_hessian = round((end_time_hessian - start_time_hessian) / 60, 3)
+                print(f"[RANK {self.gpu_id}] elapsed time hessian: {elapsed_time_hessian}", flush=True)
+
+                self.summary.loc[0] = {
+                    "deg": self.deg,
+                    "width": self.width,
+                    "func": self.func,
+                    "epoch": epoch,
+                    "train_loss": epoch_loss.cpu(),
+                    "val_loss": val_loss.cpu(),
+                    "batch_size": self.batch_size,
+                    "lr": self.lr,
+                    "n_samples": self.n_samples,
+                    "func_val_test": self.func_batch([2]).cpu(),
+                    "time_elapsed": elapsed_time,
+                    "backend": self.backend,
+                    "top_eig": top_eig,
+                    "trace": trace,
+                    "top_eig_train": top_eig_train,
+                    "trace_train": trace_train,
+                    "stop_loss": self.stop_loss,
+                    "ln_eps": self.ln_eps,
+                    "ln": self.ln,
+                    "weight_norm": weight_norm,
+                    "d": self.d,
+                    "f": self.f,
+                    "h": self.h,
+                    "dropout": self.dropout,
+                    "wd": self.wd,
+                }
+
+                self.summary.to_csv(
+                    f"{self.dir_name}/summary_{self.run_id}.csv",
+                    mode="a",
+                    header=not os.path.exists(f"{self.dir_name}/summary.csv"),
+                    index=False,
+                )
+                print(
+                    f"[RANK {self.gpu_id}] Epoch: {epoch}, "
+                    f"TimeElapsed: {elapsed_time}, "
+                    f"EpochLoss: {epoch_loss:.3f}, "
+                    f"ValidationLoss: {val_loss:.3f}",
+                    flush=True,
+                )
+
+            # ---- your sync logic, unchanged ----
+            flag = torch.zeros(1, device=self.gpu_id)
+            if epoch_loss < self.stop_loss:
+                flag += 1
+            print(f"[RANK {self.gpu_id}] about to all_reduce(flag) at epoch {epoch}", flush=True)
             all_reduce(flag, op=ReduceOp.SUM)
+            print(f"[RANK {self.gpu_id}] finished all_reduce(flag={flag.item()}) at epoch {epoch}", flush=True)
             if flag > 0:
                 break
+            print(f"[RANK {self.gpu_id}] about to barrier at epoch {epoch}", flush=True)
             barrier()
-        # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-        # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
+            print(f"[RANK {self.gpu_id}] passed barrier at epoch {epoch}", flush=True)
+
         return
 
     # def validate(self, num_samples,test_model):
