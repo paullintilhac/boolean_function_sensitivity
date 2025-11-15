@@ -2,9 +2,9 @@
 
 # --- Core ---
 universe                    = vanilla
-executable                  = job_wrapper.sh
+executable                  = /bin/sleep
 # If your wrapper needs args, set them here:
-#arguments                 = "1000000"
+arguments                 = "1000000"
 
 # Make the job ssh-able via condor_ssh_to_job
 +WantIOProxy                = TRUE

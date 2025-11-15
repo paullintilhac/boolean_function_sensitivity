@@ -46,9 +46,9 @@ python3 exp_refactor.py  --N 20 \
  --dim 2 \
      --h 1 \
        --f 128 \
-        --bs 64  \
+        --bs 128  \
          --epochs 100000 \
-           --num_samples 8192  \
+           --num_samples 32768 \
              --repeat 1 \
              --lr "4e-3" \
              --dropout 0.1 \
