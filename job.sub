@@ -2,12 +2,13 @@
 
 # --- Core ---
 universe                    = vanilla
-executable                  = /bin/sleep
+#executable                  = /bin/sleep
+executable                  = job_wrapper.sh
 # If your wrapper needs args, set them here:
-arguments                 = "1000000"
+#arguments                 = "1000000"
 
 # Make the job ssh-able via condor_ssh_to_job
-+WantIOProxy                = TRUE
+#+WantIOProxy                = TRUE
 
 # Inherit your submit-side env (PATH, proxies, etc.). Remove if you prefer a clean env.
 getenv                      = True

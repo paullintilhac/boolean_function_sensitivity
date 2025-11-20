@@ -755,7 +755,7 @@ if __name__ == "__main__":
     main_dir = f"/scratch/plintilhac/HESSIAN_CALCS22"
     os.makedirs(main_dir, exist_ok=True)
 
-    for i in range(3, 12):
+    for i in range(5, 12):
         for deg in [5, 4, 3, 2, 1]:
             losses[deg] = []
             for width in [20, 14, 7, 1]:

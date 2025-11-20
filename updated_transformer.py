@@ -92,10 +92,32 @@ class Transformer(torch.nn.Module):
         
         
     def makeBitTensor(self, x, N):
-        y = format(x, "b")
-        y = ("0"*(N-len(y))) + y
-        return [int(z) for z in list(y)]
-    
+        """
+        Accepts either:
+          - a scalar integer / 0-D tensor  -> converts to N-bit vector
+          - a 1-D tensor of length N with 0/1 entries -> returns it as a Python list
+        """
+        if isinstance(x, torch.Tensor):
+            # Case 1: scalar tensor (e.g. one element of a 1D int batch)
+            if x.dim() == 0:
+                val = int(x.item())
+                y = format(val, "b")
+                y = ("0" * (N - len(y))) + y
+                return [int(z) for z in y]
+
+            # Case 2: already a bit vector of length N: [0,1,...]
+            if x.dim() == 1 and x.numel() == N:
+                return [int(v) for v in x.tolist()]
+
+            # Anything else is unexpected – make it obvious if it ever happens
+            raise ValueError(f"makeBitTensor: unexpected tensor shape {tuple(x.shape)}")
+        else:
+            # Plain Python int
+            val = int(x)
+            y = format(val, "b")
+            y = ("0" * (N - len(y))) + y
+            return [int(z) for z in y]
+   
     
     def forward(self, x):    
 
