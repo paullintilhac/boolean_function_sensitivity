@@ -460,7 +460,7 @@ class Trainer:
                 self.summary.to_csv(
                     f"{self.dir_name}/summary_{self.run_id}.csv",
                     mode="a",
-                    header=not os.path.exists(f"{self.dir_name}/summary.csv"),
+                    header=not os.path.exists(f"{self.dir_name}/summary_{self.run_id}.csv"),
                     index=False,
                 )
                 print(
