@@ -1,0 +1,245 @@
+000 (50842.000.000) 2025-11-18 19:19:04 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_910_c345>
+...
+001 (50842.000.000) 2025-11-18 19:19:04 Job executing on host: <134.96.105.141:9618?addrs=134.96.105.141-9618&alias=tony-3.coli.uni-saarland.de&noUDP&sock=startd_5208_d552>
+	SlotName: slot1_1@tony-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_141edc3b,GPUs_GPU_1b6afc04,GPUs_GPU_2c81d871,GPUs_GPU_46674791,GPUs_GPU_77388151,GPUs_GPU_79ae9915,GPUs_GPU_b635bb5d,GPUs_GPU_f9e3f28e }
+	CondorScratchDir = "/var/lib/condor/execute/dir_42603"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_141edc3b = [ Id = "GPU-141edc3b"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "141edc3b-a53b-b27a-0b17-e788ea510d5e"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:61:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_1b6afc04 = [ Id = "GPU-1b6afc04"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "1b6afc04-06e6-32af-af61-11c319d602ab"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:81:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_2c81d871 = [ Id = "GPU-2c81d871"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "2c81d871-da6b-745d-3df4-68b33c12656b"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:41:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_46674791 = [ Id = "GPU-46674791"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "46674791-21a2-bf27-ff8f-c9102b0db719"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:22:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_77388151 = [ Id = "GPU-77388151"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "77388151-2a6f-8d06-caac-10c1bf7546c1"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:C1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_79ae9915 = [ Id = "GPU-79ae9915"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "79ae9915-144a-3090-3cf1-42ca87fadde0"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:E1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b635bb5d = [ Id = "GPU-b635bb5d"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "b635bb5d-be43-0cb2-9c7d-a87b6815b4fb"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:A1:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f9e3f28e = [ Id = "GPU-f9e3f28e"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100 80GB PCIe"; DeviceUuid = "f9e3f28e-7c13-7410-a3f7-763625cee600"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.8; DevicePciBusId = "0000:01:00.0"; GlobalMemoryMb = 81154; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+006 (50842.000.000) 2025-11-18 19:19:13 Image size of job updated: 204660
+	200  -  MemoryUsage of job (MB)
+	204660  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:24:14 Image size of job updated: 10210216
+	9971  -  MemoryUsage of job (MB)
+	10210216  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:29:14 Image size of job updated: 10210896
+	9972  -  MemoryUsage of job (MB)
+	10210896  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:34:15 Image size of job updated: 10211136
+	9972  -  MemoryUsage of job (MB)
+	10211136  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:39:15 Image size of job updated: 10211460
+	9973  -  MemoryUsage of job (MB)
+	10211460  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:44:15 Image size of job updated: 10211528
+	9973  -  MemoryUsage of job (MB)
+	10211528  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:49:16 Image size of job updated: 10211580
+	9973  -  MemoryUsage of job (MB)
+	10211580  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:54:16 Image size of job updated: 10211620
+	9973  -  MemoryUsage of job (MB)
+	10211620  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 19:59:16 Image size of job updated: 10211668
+	9973  -  MemoryUsage of job (MB)
+	10211668  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:04:17 Image size of job updated: 10211712
+	9973  -  MemoryUsage of job (MB)
+	10211712  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:09:17 Image size of job updated: 10211756
+	9973  -  MemoryUsage of job (MB)
+	10211756  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:14:17 Image size of job updated: 10211808
+	9973  -  MemoryUsage of job (MB)
+	10211808  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:19:18 Image size of job updated: 10220408
+	9981  -  MemoryUsage of job (MB)
+	10220408  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:24:18 Image size of job updated: 10242180
+	10003  -  MemoryUsage of job (MB)
+	10242180  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:29:18 Image size of job updated: 10286636
+	10046  -  MemoryUsage of job (MB)
+	10286636  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:34:19 Image size of job updated: 10328452
+	10087  -  MemoryUsage of job (MB)
+	10328452  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:39:19 Image size of job updated: 10341720
+	10100  -  MemoryUsage of job (MB)
+	10341720  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:44:19 Image size of job updated: 10389064
+	10146  -  MemoryUsage of job (MB)
+	10389064  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:49:20 Image size of job updated: 10425748
+	10182  -  MemoryUsage of job (MB)
+	10425748  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:54:20 Image size of job updated: 10435508
+	10191  -  MemoryUsage of job (MB)
+	10435508  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 20:59:20 Image size of job updated: 10465980
+	10221  -  MemoryUsage of job (MB)
+	10465980  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:04:21 Image size of job updated: 10493344
+	10248  -  MemoryUsage of job (MB)
+	10493344  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:09:21 Image size of job updated: 10526036
+	10280  -  MemoryUsage of job (MB)
+	10526036  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:14:21 Image size of job updated: 10561504
+	10314  -  MemoryUsage of job (MB)
+	10561504  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:19:22 Image size of job updated: 10589948
+	10342  -  MemoryUsage of job (MB)
+	10589948  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:24:22 Image size of job updated: 10620224
+	10372  -  MemoryUsage of job (MB)
+	10620224  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:29:22 Image size of job updated: 10653576
+	10404  -  MemoryUsage of job (MB)
+	10653576  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:34:23 Image size of job updated: 10684392
+	10434  -  MemoryUsage of job (MB)
+	10684392  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 21:39:23 Image size of job updated: 10708660
+	10458  -  MemoryUsage of job (MB)
+	10708660  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 22:59:31 Image size of job updated: 10716468
+	10466  -  MemoryUsage of job (MB)
+	10716468  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:04:32 Image size of job updated: 10752408
+	10501  -  MemoryUsage of job (MB)
+	10752408  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:09:32 Image size of job updated: 10766908
+	10515  -  MemoryUsage of job (MB)
+	10766908  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:14:33 Image size of job updated: 10814340
+	10561  -  MemoryUsage of job (MB)
+	10814340  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:19:34 Image size of job updated: 10853396
+	10600  -  MemoryUsage of job (MB)
+	10853396  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:24:34 Image size of job updated: 10867600
+	10613  -  MemoryUsage of job (MB)
+	10867600  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:29:35 Image size of job updated: 10907884
+	10653  -  MemoryUsage of job (MB)
+	10907884  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:34:35 Image size of job updated: 10930988
+	10675  -  MemoryUsage of job (MB)
+	10930988  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:39:36 Image size of job updated: 10931036
+	10675  -  MemoryUsage of job (MB)
+	10931036  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:44:37 Image size of job updated: 10931076
+	10675  -  MemoryUsage of job (MB)
+	10931076  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-18 23:49:37 Image size of job updated: 10931116
+	10675  -  MemoryUsage of job (MB)
+	10931116  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 00:04:39 Image size of job updated: 10931124
+	10675  -  MemoryUsage of job (MB)
+	10931124  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 00:09:41 Image size of job updated: 10931132
+	10675  -  MemoryUsage of job (MB)
+	10931132  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 02:29:52 Image size of job updated: 10971112
+	10714  -  MemoryUsage of job (MB)
+	10971112  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 02:34:53 Image size of job updated: 10992416
+	10735  -  MemoryUsage of job (MB)
+	10992416  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 02:39:54 Image size of job updated: 10992420
+	10735  -  MemoryUsage of job (MB)
+	10992416  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 07:10:20 Image size of job updated: 11009016
+	10751  -  MemoryUsage of job (MB)
+	11009016  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 07:15:20 Image size of job updated: 11009020
+	10751  -  MemoryUsage of job (MB)
+	11009020  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 07:20:21 Image size of job updated: 11009024
+	10751  -  MemoryUsage of job (MB)
+	11009024  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 07:25:21 Image size of job updated: 11009032
+	10752  -  MemoryUsage of job (MB)
+	11009032  -  ResidentSetSize of job (KB)
+...
+006 (50842.000.000) 2025-11-19 07:30:22 Image size of job updated: 11009040
+	10752  -  MemoryUsage of job (MB)
+	11009040  -  ResidentSetSize of job (KB)
+...
+021 (50842.000.000) 2025-11-19 19:19:07 Error from starter on slot1_1@tony-3.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (50842.000.000) 2025-11-19 19:19:07 Job was evicted.
+	(0) CPU times
+		Usr 7 19:13:25, Sys 0 01:04:24  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     7.94       64        64 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     4.60        8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   GpusMemory (MB)      :  1556                       
+	   Memory (MB)          : 10752      245760    245760 
+	   TimeSlotBusy (s)     : 86403                       
+...
+012 (50842.000.000) 2025-11-19 19:19:07 Job was held.
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+009 (50842.000.000) 2025-11-20 02:56:42 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
