@@ -423,8 +423,7 @@ def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,co
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
         hardcoded_models=[]
         for mode in ["original", "mlp_soft", "balanced"]:
-            hardcoded_model=(HardCodedTransformer(N, combs, coefs, aggregator_idx=N-1,
-                                         nonrep_mask=-40.0, mode=mode, mlp_soft_factor=0.25))
+            hardcoded_model=(HardCodedTransformer(N, combs, coefs, aggregator_idx=N-1, mode=mode, mlp_soft_factor=0.25))
             hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
             #print(model)
             print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
@@ -587,7 +586,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           }])
           _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-      trainer.train(args.epochs)
+      #trainer.train(args.epochs)
       barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
@@ -606,7 +605,7 @@ if __name__ == "__main__":
     #   f.write("------------------------------------------\n")
 
     for i in range(10):
-        for deg in [4]:
+        for deg in range(1,6):
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
             for width in [1,7,14,20]:

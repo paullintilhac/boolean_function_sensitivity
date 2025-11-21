@@ -9,11 +9,23 @@ import torch.nn.functional as F
 # =============================================================
 # Custom single-head MHA (no W_o), explicit Q/K/V splits
 # =============================================================
+
 class CustomMHA(nn.MultiheadAttention):
-    def __init__(self, embed_dim, num_heads=1, bias=True, batch_first=True, dropout=0.0):
-        super().__init__(embed_dim=embed_dim, num_heads=num_heads, bias=bias,
-                         batch_first=batch_first, dropout=dropout)
-        # ensure no out-proj is used
+    """
+    Single-head multihead attention where we expose Q/K/V via
+    in_proj_weight/in_proj_bias and *do not* apply an output projection.
+
+    We also do *not* apply the usual 1/sqrt(d) scaling in the attention
+    logits, to keep the behavior aligned with the theoretical construction.
+    """
+    def __init__(self, embed_dim, num_heads=1, bias=True,
+                 batch_first=True, dropout=0.0):
+        super().__init__(embed_dim=embed_dim,
+                         num_heads=num_heads,
+                         bias=bias,
+                         batch_first=batch_first,
+                         dropout=dropout)
+        # Ensure no out-projection
         self.out_proj = None
 
     def forward(self, query, key, value):
@@ -34,9 +46,11 @@ class CustomMHA(nn.MultiheadAttention):
             embed_dim_to_check=self.embed_dim,
             in_proj_weight=self.in_proj_weight,
             in_proj_bias=self.in_proj_bias,
-            dropout_p=self.dropout, training=self.training,
-            need_weights=True
+            dropout_p=self.dropout,
+            training=self.training,
+            need_weights=True,
         )
+
         if self.batch_first and is_batched:
             return attn_out.transpose(1, 0), attn_w
         else:
@@ -44,13 +58,15 @@ class CustomMHA(nn.MultiheadAttention):
 
 
 def _mha_forward_no_wo(query, key, value, num_heads, embed_dim_to_check,
-                       in_proj_weight, in_proj_bias, dropout_p=0.0, training=True,
-                       need_weights=True):
+                       in_proj_weight, in_proj_bias,
+                       dropout_p=0.0, training=True, need_weights=True):
     # Shapes: (L,B,E)
     Lq, B, E = query.shape
     Lk, Bk, Ek = key.shape
     Lv, Bv, Ev = value.shape
-    assert B == Bk == Bv and E == Ek == Ev == embed_dim_to_check and Lk == Lv
+    assert B == Bk == Bv
+    assert E == Ek == Ev == embed_dim_to_check
+    assert Lk == Lv
     head_dim = E // num_heads
     assert head_dim * num_heads == E
 
@@ -58,11 +74,11 @@ def _mha_forward_no_wo(query, key, value, num_heads, embed_dim_to_check,
     if in_proj_bias is None:
         q = F.linear(query, in_proj_weight[0:E, :], None)
         k = F.linear(key,   in_proj_weight[E:2*E, :], None)
-        v = F.linear(value, in_proj_weight[2*E: , :], None)
+        v = F.linear(value, in_proj_weight[2*E:, :], None)
     else:
         q = F.linear(query, in_proj_weight[0:E, :],    in_proj_bias[0:E])
         k = F.linear(key,   in_proj_weight[E:2*E, :],  in_proj_bias[E:2*E])
-        v = F.linear(value, in_proj_weight[2*E: , :],  in_proj_bias[2*E:])
+        v = F.linear(value, in_proj_weight[2*E:, :],   in_proj_bias[2*E:])
 
     q = q.reshape(Lq, B * num_heads, head_dim).transpose(0, 1)  # (B*H, Lq, D)
     k = k.reshape(Lk, B * num_heads, head_dim).transpose(0, 1)  # (B*H, Lk, D)
@@ -71,7 +87,7 @@ def _mha_forward_no_wo(query, key, value, num_heads, embed_dim_to_check,
     if not training:
         dropout_p = 0.0
 
-    # no 1/sqrt(d) scaling to match your working construction
+    # NOTE: no 1/sqrt(d) scaling — matches the theoretical construction
     attn_w = torch.bmm(q, k.transpose(-2, -1))                  # (B*H, Lq, Lk)
     attn_w = F.softmax(attn_w, dim=-1)
     if dropout_p > 0.0:
@@ -91,6 +107,7 @@ def _mha_forward_no_wo(query, key, value, num_heads, embed_dim_to_check,
 # =============================================================
 # Integer-Count Parity MLP (exact at integer counts)
 # =============================================================
+
 class IntCountParityMLP(nn.Module):
     """
     COUNT channel holds integer k in [0..D].
@@ -103,11 +120,14 @@ class IntCountParityMLP(nn.Module):
         self.E, self.D = embed_dim, int(D)
         self.count_idx, self.parity_idx = count_idx, parity_idx
 
-        vals = torch.tensor([1.0 if ((self.D - k) % 2 == 0) else -1.0 for k in range(self.D + 1)],
-                            dtype=torch.float32)
+        vals = torch.tensor(
+            [1.0 if ((self.D - k) % 2 == 0) else -1.0 for k in range(self.D + 1)],
+            dtype=torch.float32,
+        )
         self.register_buffer("grid_vals", vals)
 
-        self.t_list = list(range(-1, self.D + 2))  # -1,0,...,D,D+1
+        # t in {-1, 0, 1, ..., D, D+1}
+        self.t_list = list(range(-1, self.D + 2))
         H = len(self.t_list)
 
         self.fc1 = nn.Linear(self.E, H, bias=True)
@@ -118,22 +138,26 @@ class IntCountParityMLP(nn.Module):
     def _init_weights(self):
         with torch.no_grad():
             # ramps along COUNT
-            self.fc1.weight.zero_(); self.fc1.bias.zero_()
+            self.fc1.weight.zero_()
+            self.fc1.bias.zero_()
             for h, t in enumerate(self.t_list):
                 self.fc1.weight[h, self.count_idx] = 1.0
                 self.fc1.bias[h] = -float(t)
 
             # second difference with v_k
-            self.fc2.weight.zero_(); self.fc2.bias.zero_()
+            self.fc2.weight.zero_()
+            self.fc2.bias.zero_()
             index = {t: i for i, t in enumerate(self.t_list)}
             for k in range(self.D + 1):
                 v_k = float(self.grid_vals[k])
-                i_m1 = index[k - 1]; i_0 = index[k]; i_p1 = index[k + 1]
+                i_m1 = index[k - 1]
+                i_0  = index[k]
+                i_p1 = index[k + 1]
                 self.fc2.weight[0, i_m1] += +1.0 * v_k
-                self.fc2.weight[0, i_0 ] += -2.0 * v_k
+                self.fc2.weight[0, i_0]  += -2.0 * v_k
                 self.fc2.weight[0, i_p1] += +1.0 * v_k
 
-            # write only to PARITY
+            # write only to PARITY channel
             self.fc_out.weight.zero_()
             self.fc_out.weight[self.parity_idx, 0] = 1.0
 
@@ -149,27 +173,38 @@ class IntCountParityMLP(nn.Module):
         """
         Multiply the COUNT slope inside fc1 by 's' (<1 softens, >1 sharpens),
         while dividing fc2.weight by 's' so the *integer* outputs remain exact.
-        This keeps hinge locations (x=t) fixed and preserves parity amplitude.
+        Hinges stay at the same integer locations.
         """
-        # scale count column + matching bias to keep hinges at integers
+        # scale count column of fc1, keep hinges at integers via bias
         self.fc1.weight[:, :] *= 1.0
         self.fc1.weight[:, self.count_idx] *= s
-        self.fc1.bias[:] *= 0.0  # we’ll re-set biases to keep hinges at integers
+        self.fc1.bias[:] *= 0.0
         for h, t in enumerate(self.t_list):
-            self.fc1.bias[h] = -float(t) * s  # hinge at x=t unchanged
+            self.fc1.bias[h] = -float(t) * s
 
-        # scale fc2 weights inversely to preserve integer outputs
+        # scale fc2 weights inversely
         self.fc2.weight[:] /= s
 
 
 # =============================================================
-# HardCodedTransformer with three modes:
-#   - "original": exact construction (baseline)
-#   - "mlp_soft": soften MLP slopes by factor s<1, preserving exactness at integers
-#   - "balanced": mlp_soft + Q/K norm balancing that preserves logits
+# HardCodedTransformer (rewritten to avoid giant negative masks)
 # =============================================================
+
 class HardCodedTransformer(nn.Module):
-    def __init__(self, N, combs, coefs, aggregator_idx=None, nonrep_mask=-40.0,
+    """
+    Hard-coded transformer that implements a parity-based Fourier construction.
+
+    This version is modified to more closely match the theoretical construction
+    in which:
+      - background logits are 0
+      - active logits in layer 1 are 2*log(T)
+      - active logits in layer 2 are log(c_t) + 2*log(T)
+
+    There is NO large negative "nonrep_mask" in Q anymore, so the Frobenius
+    norms stay moderate and grow more naturally with degree/width.
+    """
+    def __init__(self, N, combs, coefs, aggregator_idx=None,
+                 nonrep_mask=0.0,  # kept for API compatibility, not used
                  mode="original", mlp_soft_factor=0.25):
         """
         mode:
@@ -183,7 +218,8 @@ class HardCodedTransformer(nn.Module):
         self.mode = mode
         self.soft_s = float(mlp_soft_factor)
 
-        self.N = int(N); self.L = int(N)
+        self.N = int(N)
+        self.L = int(N)          # sequence length = N (no explicit CLS token here)
         # combs → python lists
         if isinstance(combs, torch.Tensor):
             self.combs = [list(map(int, row.tolist())) for row in combs]
@@ -191,45 +227,44 @@ class HardCodedTransformer(nn.Module):
             self.combs = [list(map(int, row)) for row in combs]
         self.D = max((len(c) for c in self.combs), default=0)
 
-        self.nonrep_mask = float(nonrep_mask)
+        # store positive Fourier coefficients
         self.coefs = torch.as_tensor(coefs).float().cpu()
         if not (self.coefs > 0).all():
             raise ValueError("All Fourier coefficients must be positive for this initializer.")
 
+        # allocate unique representative positions for each component
         self.rep_idx = self._choose_unique_reps(self.combs, self.N)
         self.aggregator_idx = int(self.L - 1 if aggregator_idx is None else aggregator_idx)
         self.Z = float(self.coefs.sum().item())
 
         # channel indices
-        self.bit_idx   = self.L
-        self.count_idx = self.L + 1
-        self.parity_idx= self.L + 2
-        self.agg_idx   = self.L + 3
-        self.E = self.L + 4
+        self.bit_idx    = self.L      # original construction: bit z_t
+        self.count_idx  = self.L + 1  # stores integer count k
+        self.parity_idx = self.L + 2  # stores parity(k)
+        self.agg_idx    = self.L + 3  # aggregator channel
+        self.E = self.L + 4           # total embedding dim
 
-        # Embeddings (trainable but initialized to desired values)
+        # Embeddings: position one-hot + bit embedding
         self.bit_embed = nn.Embedding(2, 1)
         self.pos_embed = nn.Embedding(self.L, self.L)
         with torch.no_grad():
-            self.bit_embed.weight.copy_(torch.tensor([[0.0],[1.0]], dtype=torch.float32))
+            self.bit_embed.weight.copy_(torch.tensor([[0.0], [1.0]], dtype=torch.float32))
             self.pos_embed.weight.copy_(torch.eye(self.L, dtype=torch.float32))
         self.register_buffer("pos_idx_base", torch.arange(self.L, dtype=torch.long))
 
         # Layers
         self.attn1 = CustomMHA(embed_dim=self.E, num_heads=1, batch_first=True)
         self.attn2 = CustomMHA(embed_dim=self.E, num_heads=1, batch_first=True)
-        self.mlp = IntCountParityMLP(self.E, self.D, self.count_idx, self.parity_idx)
+        self.mlp   = IntCountParityMLP(self.E, self.D, self.count_idx, self.parity_idx)
 
-        # initialize attention kernels
+        # initialize attention kernels to match the construction (no negative mask)
         self._init_attn1()
         self._init_attn2()
 
-        # optional softening / balancing
+        # optional softening / rebalancing
         if self.mode in ("mlp_soft", "balanced"):
-            # exact-preserving slope softening
             self.mlp.soften_slopes(self.soft_s)
         if self.mode == "balanced":
-            # rebalance Q/K in both layers while *preserving* logits
             self._rebalance_qk(self.attn1)
             self._rebalance_qk(self.attn2)
 
@@ -240,27 +275,51 @@ class HardCodedTransformer(nn.Module):
             chosen = None
             for idx in comp:
                 if idx not in used:
-                    chosen = idx; break
+                    chosen = idx
+                    break
             if chosen is None:
                 for idx in range(N):
                     if idx not in used:
-                        chosen = idx; break
+                        chosen = idx
+                        break
             used.add(chosen)
             reps.append(chosen)
         return reps
 
     def _init_attn1(self):
+        """
+        First attention layer:
+
+        - Keys K are just positional one-hots (pass-through on the first N channels).
+        - Values V add the bit channel into COUNT, scaled by D, so after averaging
+          over a component we get k/D in COUNT.
+        - Queries Q implement the logit pattern:
+
+              a_{i,j} = 2 log(N)   if j in S_i
+                      = 0          otherwise
+
+          (plus whatever approximation errors are introduced by the projection
+           and extra channels).
+        """
         E, N = self.E, self.N
+
         # K: pass-through of position one-hot
-        Wk = torch.zeros(E, E); Wk[:N, :N] = torch.eye(N)
-        # V: add BIT into COUNT scaled by D -> COUNT = integer k after averaging
-        Wv = torch.zeros(E, E); Wv[self.count_idx, self.bit_idx] = float(self.D)
-        # Q: mask non-members, enable members for each representative
-        Wq = torch.full((E, E), self.nonrep_mask)
+        Wk = torch.zeros(E, E)
+        Wk[:N, :N] = torch.eye(N)
+
+        # V: add BIT into COUNT scaled by D -> COUNT ≈ k after averaging
+        Wv = torch.zeros(E, E)
+        Wv[self.count_idx, self.bit_idx] = float(self.D)
+
+        # Q: *no* global negative mask; background logits = 0.
+        # For each component S (combs), we pick a representative position t and
+        # set Q so that query at t and keys in S_i get logit 2 log(N).
+        Wq = torch.zeros(E, E)
         scale = 2.0 * math.log(max(2, N))
         for comp, t in zip(self.combs, self.rep_idx):
             for j in comp:
-                Wq[j, t] = scale  # row=key j, col=query-pos t
+                # row = key-position j, col = query-position t
+                Wq[j, t] = scale
 
         with torch.no_grad():
             self.attn1.in_proj_weight.zero_()
@@ -271,13 +330,31 @@ class HardCodedTransformer(nn.Module):
                 self.attn1.in_proj_bias.zero_()
 
     def _init_attn2(self):
+        """
+        Second attention layer:
+
+        - Keys K are again positional one-hots.
+        - Values V send PARITY into AGG, scaled by Z = sum c_i so that the
+          softmax-weighted sum recovers sum c_i * parity_i.
+        - Queries Q implement the logit pattern:
+
+              a_{CLS,t} = log(c_t) + 2 log(N)    for representative t
+                         = 0                     otherwise
+
+          i.e. softmax over representatives approximates c_t / sum c_l.
+        """
         E, N = self.E, self.N
+
         # K: pass-through of position one-hot
-        Wk = torch.zeros(E, E); Wk[:N, :N] = torch.eye(N)
-        # V: send PARITY into AGG scaled by Z to cancel softmax
-        Wv = torch.zeros(E, E); Wv[self.agg_idx, self.parity_idx] = self.Z
-        # Q: aggregator queries each representative with log(ci)+2logN, others masked
-        Wq = torch.full((E, E), self.nonrep_mask)
+        Wk = torch.zeros(E, E)
+        Wk[:N, :N] = torch.eye(N)
+
+        # V: send PARITY into AGG scaled by Z to cancel softmax denominator
+        Wv = torch.zeros(E, E)
+        Wv[self.agg_idx, self.parity_idx] = self.Z
+
+        # Q: background 0; aggregator queries each representative.
+        Wq = torch.zeros(E, E)
         base = 2.0 * math.log(max(2, N))
         for ci, t in zip(self.coefs, self.rep_idx):
             Wq[t, self.aggregator_idx] = math.log(max(float(ci), 1e-12)) + base
@@ -301,14 +378,15 @@ class HardCodedTransformer(nn.Module):
         x_ints = x_ints.to(dev)
         B = x_ints.shape[0]
 
-        bits = self._ints_to_bits(x_ints, self.N)                # (B,N)
+        # bits: (B,N) in {0,1}
+        bits = self._ints_to_bits(x_ints, self.N)
         dat_bits = self.bit_embed(bits)                          # (B,N,1)
-        pos_idx  = self.pos_idx_base.unsqueeze(0).expand(B, -1)  # (B,N)
+        pos_idx = self.pos_idx_base.unsqueeze(0).expand(B, -1)   # (B,N)
         pos_vecs = self.pos_embed(pos_idx)                       # (B,N,N)
         zeros = torch.zeros(B, self.N, 3, device=dev)            # COUNT, PARITY, AGG
         X0 = torch.cat([pos_vecs, dat_bits, zeros], dim=-1)      # (B,N,E)
 
-        # attn1 (residual): COUNT = integer k at reps
+        # attn1 (residual): COUNT accumulates integer k at representatives
         Y1, _ = self.attn1(X0, X0, X0)
         X1 = X0 + Y1
 
@@ -319,17 +397,21 @@ class HardCodedTransformer(nn.Module):
         Y2, _ = self.attn2(X2, X2, X2)
         X3 = Y2
 
+        # read from aggregator position + channel
         return X3[:, self.aggregator_idx, self.agg_idx].unsqueeze(-1)
 
     # ---------------- Q/K rebalancing that PRESERVES logits ----------------
     @torch.no_grad()
     def _rebalance_qk(self, mha: CustomMHA):
+        """
+        Rescale Q and K so that ||Q|| and ||K|| are balanced, without changing
+        the logits Q K^T. This only adjusts norms, not behavior.
+        """
         W = mha.in_proj_weight
         E = mha.embed_dim
         Wq = W[:E, :]
         Wk = W[E:2*E, :]
 
-        # minimize ||a Wq||^2 + ||(1/a) Wk||^2  -> a = (||Wk||^2 / ||Wq||^2)^(1/4)
         Aq = float((Wq**2).sum().item()) + 1e-12
         Ak = float((Wk**2).sum().item()) + 1e-12
         a = (Ak / Aq) ** 0.25
@@ -337,10 +419,12 @@ class HardCodedTransformer(nn.Module):
         Wq.mul_(a)      # Q <- a Q
         Wk.mul_(1.0/a)  # K <- (1/a) K
         # logits ~ (aQ)·((K)/a)^T == Q·K^T  (unchanged)
-        # No need to touch V or biases
+
+
 # =============================================================
-# Utilities + smoke test
+# Utilities + simple smoke test
 # =============================================================
+
 def rboolf(N, width, deg, seed=None):
     if seed is not None:
         torch.manual_seed(seed)
@@ -361,7 +445,9 @@ def func_batch(x, coeffs, combs, N):
 
 if __name__ == "__main__":
     torch.manual_seed(0)
-    N = 12; deg = 3; width = 3
+    N = 12
+    deg = 3
+    width = 3
     num_samples = 128
 
     coeffs, combs = rboolf(N, width, deg)
@@ -369,9 +455,17 @@ if __name__ == "__main__":
     xs = torch.randint(0, 2**N, (num_samples,), device=dev)
 
     for mode in ["original", "mlp_soft", "balanced"]:
-        model = HardCodedTransformer(N, combs, coeffs, aggregator_idx=N-1,
-                                     nonrep_mask=-40.0, mode=mode, mlp_soft_factor=0.25).to(dev).eval()
+        model = HardCodedTransformer(
+            N, combs, coeffs,
+            aggregator_idx=N-1,
+            nonrep_mask=0.0,
+            mode=mode,
+            mlp_soft_factor=0.25,
+        ).to(dev).eval()
+
         targets = func_batch(xs.cpu().tolist(), coeffs.cpu(), combs.cpu(), N).to(dev)
         out = model(xs).squeeze(-1)
         loss = (out - targets).pow(2).mean().item()
-        print(f"[{mode}] loss: {loss:.3e}")
+        frob = sum(p.detach().norm().item()**2 for p in model.parameters()) ** 0.5
+        print(f"[{mode}] loss: {loss:.3e} | Frobenius weight norm: {frob:.3f}")
+
