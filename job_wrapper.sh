@@ -41,7 +41,7 @@ else
     git fetch
     git checkout hardcoded
 fi
-python3 exp_refactor_new.py  --N 20 \
+python3 exp_refactor.py  --N 20 \
  --dim 2 \
  --h 1 \
  --f 128 \
@@ -52,7 +52,7 @@ python3 exp_refactor_new.py  --N 20 \
  --lr "4e-3" \
  --dropout 0.1 \
  --wd .0001 \
- --world_size 1 \
+ --world_size 8 \
  --backend nccl \
  --stop_loss .02 \
  --save_every 10 \

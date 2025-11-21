@@ -401,7 +401,7 @@ class Trainer:
                 end_time = time.time()
                 elapsed_time = round((end_time - start_time) / 60, 3)
 
-                val_loss = self.validate(1000, self.model)
+                val_loss = self.validate(1000, self.model.module)
                 loss_fn = lambda result, targets: (result - targets).pow(2).mean()
 
                 start_time_hessian = time.time()
@@ -482,10 +482,12 @@ class Trainer:
 
     def validate(self, num_samples, test_model):
         test_model.eval()
-        inputs = torch.randint(0, 2 ** self.N, (num_samples,), device=self.gpu_id)
-        targets = self.func_batch(inputs)  # (B,)
-        result = test_model(inputs).squeeze(-1)  # (B,)
-        return (result - targets).pow(2).mean().detach().cpu()
+        with torch.no_grad():
+            inputs = torch.randint(0, 2 ** self.N, (num_samples,), device=self.gpu_id)
+            targets = self.func_batch(inputs)  # (B,)
+            result = test_model(inputs).squeeze(-1)  # (B,)
+            loss = (result - targets).pow(2).mean()
+        return loss.detach().cpu()
 
     def calc_hessian(self, model, loss_fn, num_samples, device_id, use_train=False):
         dev = torch.device(
