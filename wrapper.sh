@@ -39,7 +39,7 @@ python exp_refactor.py  --N 20 \
      --h 1 \
        --f 128 \
         --bs 128  \
-         --epochs 1500 \
+         --epochs 100000 \
            --num_samples 8192  \
              --repeat 1 \
              --lr "4e-3" \

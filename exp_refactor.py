@@ -635,7 +635,7 @@ class Trainer:
                 elapsed_time = round((end_time - start_time)/60,3) 
 
                 #print("self.func: " + str(self.func))
-                val_loss = self.validate(1000,model) 
+                val_loss = self.validate(1000,self.model) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
@@ -734,7 +734,7 @@ class Trainer:
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
-        hardcoded_model = HardCodedTransformer(N, combs, coefs,nonrep_mask = -40, mode="original", mlp_soft_factor=0.25)
+        hardcoded_model = HardCodedTransformer(N, combs, coefs,nonrep_mask = 0, mode="original", mlp_soft_factor=0.25)
         model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
         #print(model)
@@ -959,7 +959,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       }])
       _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-      #trainer.train(args.epochs)
+      trainer.train(args.epochs)
       barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
@@ -972,16 +972,16 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS12"
+    main_dir = f"NEURIPS_CAMERA"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
     for i in range(1):
-        for deg in range(1,5):
+        for deg in [5]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [1,2,3,4,5]:
+            for width in [20,14,7,1]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
