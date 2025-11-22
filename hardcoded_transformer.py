@@ -293,8 +293,11 @@ class HardCodedTransformer(nn.Module):
     @staticmethod
     def _ints_to_bits(x: torch.Tensor, N: int) -> torch.Tensor:
         device = x.device
-        shifts = torch.arange(N, device=device, dtype=torch.long)  # LSB-first
-        return ((x.unsqueeze(-1) >> shifts) & 1).long()
+        # MPS doesn't support right shift, do bit manipulation on CPU
+        x_cpu = x.cpu() if device.type == 'mps' else x
+        shifts = torch.arange(N, device=x_cpu.device, dtype=torch.long)  # LSB-first
+        bits = ((x_cpu.unsqueeze(-1) >> shifts) & 1).long()
+        return bits.to(device)  # Move back to original device
 
     def forward(self, x_ints: torch.Tensor) -> torch.Tensor:
         dev = next(self.parameters()).device
@@ -351,8 +354,9 @@ def rboolf(N, width, deg, seed=None):
     return coeffs, combs
 
 def func_batch(x, coeffs, combs, N):
-    x = torch.as_tensor(x, dtype=torch.long)
-    shifts = torch.arange(N, dtype=torch.long)      # LSB-first
+    # Ensure bit manipulation happens on CPU (MPS doesn't support right shift)
+    x = torch.as_tensor(x, dtype=torch.long, device='cpu')
+    shifts = torch.arange(N, dtype=torch.long, device='cpu')      # LSB-first
     bits01 = ((x.unsqueeze(-1) >> shifts) & 1).float()
     bin_pm = (bits01 - 0.5) * 2.0
     comps = [bin_pm[:, tuple(elem.long().tolist())].prod(dim=1) for elem in combs]
