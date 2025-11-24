@@ -38,15 +38,15 @@ python exp_refactor.py  --N 20 \
  --dim 2 \
      --h 1 \
        --f 128 \
-        --bs 128  \
-         --epochs 1500 \
+        --bs 64  \
+         --epochs 100000 \
            --num_samples 8192  \
              --repeat 1 \
-             --lr "4e-3" \
+             --lr "1e-3" \
              --dropout 0.1 \
              --wd .0001 \
              --world_size 1 \
               --backend nccl \
-              --stop_loss .0002 \
-              --save_every 10 \
-              --sam \
+              --stop_loss .02 \
+              --save_every 10
+              #--sam \

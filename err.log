@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "/dartfs/rc/lab/C/CybenkoG/new_bool_sens/boolean_function_sensitivity/exp_refactor2.py", line 997, in <module>
+    mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size,join=True)
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 282, in spawn
+    return start_processes(fn, args, nprocs, join, daemon, start_method="spawn")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 238, in start_processes
+    while not context.join():
+              ^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 189, in join
+    raise ProcessRaisedException(msg, error_index, failed_process.pid)
+torch.multiprocessing.spawn.ProcessRaisedException: 
+
+-- Process 0 terminated with the following error:
+Traceback (most recent call last):
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 76, in _wrap
+    fn(i, *args)
+  File "/dartfs/rc/lab/C/CybenkoG/new_bool_sens/boolean_function_sensitivity/exp_refactor2.py", line 810, in main
+    ddp_setup(rank,world_size,args.backend)
+  File "/dartfs/rc/lab/C/CybenkoG/new_bool_sens/boolean_function_sensitivity/exp_refactor2.py", line 442, in ddp_setup
+    init_process_group(backend="nccl",
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 79, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 93, in wrapper
+    func_return = func(*args, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1361, in init_process_group
+    store, rank, world_size = next(rendezvous_iterator)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 258, in _env_rendezvous_handler
+    store = _create_c10d_store(master_addr, master_port, rank, world_size, timeout, use_libuv)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/dartfs/rc/lab/C/CybenkoG/Miniconda3/envs/M4I/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 185, in _create_c10d_store
+    return TCPStore(
+           ^^^^^^^^^
+RuntimeError: The server socket has failed to listen on any local network address. useIpv6: 0, code: -98, name: EADDRINUSE, message: address already in use
+

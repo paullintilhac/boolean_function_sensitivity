@@ -16,6 +16,8 @@ from hardcoded_transformer import HardCodedTransformer
 from updated_transformer import Transformer as Transformer
 import math
 
+
+
 # ===== hessian_probe.py (refactored, single HVP) =====
 import math
 import torch
@@ -231,11 +233,8 @@ def attention_diag_stats(model, inputs):
 
     x_ints = inputs.to(device)
     N = model.N; E = model.E
-    # MPS doesn't support right shift, do bit manipulation on CPU
-    x_ints_cpu = x_ints.cpu() if device.type == 'mps' else x_ints
-    shifts = torch.arange(N, device=x_ints_cpu.device, dtype=torch.long)
-    bits = ((x_ints_cpu.unsqueeze(-1) >> shifts) & 1).long()
-    bits = bits.to(device)  # Move back to device
+    shifts = torch.arange(N, device=device, dtype=torch.long)
+    bits = ((x_ints.unsqueeze(-1) >> shifts) & 1).long()
     dat_bits = model.bit_embed(bits)
     pos_idx = model.pos_idx_base.unsqueeze(0).expand(x_ints.shape[0], -1)
     pos_vecs = model.pos_embed(pos_idx)
@@ -407,15 +406,6 @@ elif cuda_avail:
   device = torch.device("cuda")
 else:
   device = torch.device("cpu")
-
-def get_device_from_rank(rank):
-    """Convert rank (int) to appropriate device object."""
-    if mps_avail:
-        return torch.device("mps")
-    elif cuda_avail:
-        return torch.device(f"cuda:{rank}")
-    else:
-        return torch.device("cpu")
     
 def get_weight_norm(model):
        total_norm = 0.0
@@ -439,11 +429,6 @@ def rboolf(N, width, deg,seed=None):
     return (coefficients, combs)
 
 def ddp_setup(rank, world_size,backend):
-    """Setup distributed training. Skip if using MPS (not supported)."""
-    if mps_avail:
-        # MPS doesn't support distributed training
-        print(f"[MPS] Skipping DDP setup - MPS doesn't support distributed training")
-        return
     os.environ["MASTER_ADDR"]="localhost"
     os.environ["MASTER_PORT"]= "23456"
     if backend == "gloo":
@@ -488,13 +473,8 @@ class Trainer:
             wd: float,
     ) -> None:
         self.gpu_id = gpu_id
-        self.device = get_device_from_rank(gpu_id)
-        # MPS doesn't support DDP, so skip it
-        if mps_avail:
-            self.model = model
-        else:
-            self.model = DDP(model, device_ids=[self.gpu_id])
-        self.model.to(self.device)
+        self.model = DDP(model,device_ids=[self.gpu_id])
+        self.model.to(self.gpu_id)
         self.train_data=train_data
         self.optimizer = optimizer
         self.save_every=save_every
@@ -535,8 +515,8 @@ class Trainer:
         self.epoch_loss = 0
         self.N = N
         self.func = func
-        self.coeffs = coeffs.to(self.device)
-        self.combs = combs.to(self.device)
+        self.coeffs = coeffs.to(gpu_id)
+        self.combs = combs.to(gpu_id)
         self.width=width
         self.deg = deg
         self.n_samples = n_samples
@@ -556,16 +536,12 @@ class Trainer:
         
     def func_batch(self, x):
         # x: 1D tensor of integers (can be on any device)
-        # MPS doesn't support right shift, so do bit manipulation on CPU
-        x_cpu = torch.as_tensor(x, dtype=torch.long, device='cpu')
-        shifts = torch.arange(self.N, device='cpu')          # 0..N-1, LSB-first
-        bits01 = ((x_cpu.unsqueeze(-1) >> shifts) & 1).float()         # (B, N) in {0,1}
+        x = torch.as_tensor(x, dtype=torch.long, device=self.gpu_id)
+        shifts = torch.arange(self.N, device=self.gpu_id)          # 0..N-1, LSB-first
+        bits01 = ((x.unsqueeze(-1) >> shifts) & 1).float()         # (B, N) in {0,1}
         bin_pm = (bits01 - 0.5) * 2.0                              # {-1,+1}
-        
-        # Move to device for the rest of the computation
-        bin_pm = bin_pm.to(self.device)
     
-        # self.combs is shape (width, deg) on device already
+        # self.combs is shape (width, deg) on gpu_id already
         idx = self.combs.long()                                     # (W, D)
         # Gather (B, W, D) and product over D -> (B, W)
         comps = bin_pm[:, idx]                                      # advanced indexing
@@ -582,17 +558,11 @@ class Trainer:
         # ---- SAM path ----
         if hasattr(self.optimizer, "base_optimizer"):
             # 1) Compute grads at w and take the SAM ascent step to w~
-            #    Use no_sync() to avoid an extra all-reduce in DDP on the first backward (skip for MPS).
-            if mps_avail:
-                # MPS doesn't support DDP, so no no_sync() needed
+            #    Use no_sync() to avoid an extra all-reduce in DDP on the first backward.
+            with self.model.no_sync():
                 out = self.model(inputs)
                 loss = loss_fn(out, targets)
                 loss.backward()
-            else:
-                with self.model.no_sync():
-                    out = self.model(inputs)
-                    loss = loss_fn(out, targets)
-                    loss.backward()
             self.optimizer.first_step(zero_grad=True)
     
             # 2) Compute grads at w~ and take the descent step (restoring weights)
@@ -620,8 +590,8 @@ class Trainer:
         start_time = time.time()
         
         for idx, inputs in enumerate(self.train_data):
-          #inputs.to(self.device)    
-          targets =self.func_batch(inputs).to(self.device)
+          #inputs.to(self.gpu_id)    
+          targets =self.func_batch(inputs).to(self.gpu_id)
           batch_loss = self._run_batch(inputs, targets)
           epoch_loss+=batch_loss*float(len(inputs))
           total_records+=len(inputs)
@@ -640,9 +610,8 @@ class Trainer:
     def save_checkpoint(self,epoch,model_name):
         os.makedirs(os.path.join(self.dir_name, model_name), exist_ok=True)
         full_model_name = model_name+"/epoch-"+str(epoch)+".pt"
-        # Handle both DDP-wrapped and non-wrapped models
-        model_state = self.model.module.state_dict() if hasattr(self.model, 'module') else self.model.state_dict()
-        torch.save(model_state,os.path.join(self.dir_name, full_model_name))
+        ckp = self.model.module.state_dict()
+        torch.save(ckp,os.path.join(self.dir_name, full_model_name))
         # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
 
@@ -656,9 +625,7 @@ class Trainer:
         for epoch in range(epochs):
             epoch_loss = self._run_epoch(epoch)
             
-            # For MPS, always save (no rank 0 check needed since no DDP)
-            should_save = (mps_avail or self.gpu_id == 0) and ((epoch % self.save_every)==0 or epoch_loss < self.stop_loss)
-            if should_save:
+            if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
             # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
 
                 #print("inside conditional")
@@ -668,15 +635,13 @@ class Trainer:
                 elapsed_time = round((end_time - start_time)/60,3) 
 
                 #print("self.func: " + str(self.func))
-                # Get model module if DDP wrapped, otherwise use model directly
-                model_for_eval = self.model.module if hasattr(self.model, 'module') else self.model
-                val_loss = self.validate(1000, model_for_eval) 
+                val_loss = self.validate(1000,self.model) 
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
-                top_eig, trace = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device)
-                top_eig_train, trace_train = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device, use_train=True)
+                top_eig, trace = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id)
+                top_eig_train, trace_train = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000,device_id = self.gpu_id, use_train=True)
                 #weight_norm = 0
-                weight_norm = get_weight_norm(model_for_eval)
+                weight_norm = get_weight_norm(self.model.module)
                 #weight_norm = torch.linalg.norm(self.model.weight)
                 #top_eig=0
                 #trace = 0
@@ -713,17 +678,13 @@ class Trainer:
 
                 self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
-            # Skip distributed ops for MPS
-            if not mps_avail:
-                flag = torch.zeros(1).to(self.device)
-                if epoch_loss<self.stop_loss:
-                     flag += 1
-                all_reduce(flag, op=ReduceOp.SUM)
-                if flag > 0:
-                    break
-                barrier()
-            elif epoch_loss < self.stop_loss:
+            flag = torch.zeros(1).to(self.gpu_id)
+            if epoch_loss<self.stop_loss:
+                 flag += 1
+            all_reduce(flag, op=ReduceOp.SUM)
+            if flag > 0:
                 break
+            barrier()
         # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
         # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
@@ -738,17 +699,17 @@ class Trainer:
 
     def validate(self, num_samples, test_model):
         test_model.eval()
-        inputs  = torch.randint(0, 2**self.N, (num_samples,), device=self.device)
+        inputs  = torch.randint(0, 2**self.N, (num_samples,), device=self.gpu_id)
         targets = self.func_batch(inputs)                 # (B,)
         result  = test_model(inputs).squeeze(-1)          # (B,)
         return (result - targets).pow(2).mean().detach().cpu()
         
     def calc_hessian(self, model, loss_fn, num_samples,device_id, use_train=False):
-        model.eval().to(device_id)
+        model.eval().to(self.gpu_id)
         if use_train:
             ds = getattr(self.train_data, "dataset", None)
             if isinstance(ds, torch.Tensor):
-                inputs = ds[:min(num_samples, ds.shape[0])].to(device_id)
+                inputs = ds[:min(num_samples, ds.shape[0])].to(self.gpu_id)
             else:
                 collected, total = [], 0
                 for batch in self.train_data:
@@ -757,153 +718,24 @@ class Trainer:
                     collected.append(batch_inputs[:take])
                     total += take
                     if total >= num_samples: break
-                inputs = torch.cat(collected, dim=0).to(device_id)
+                inputs = torch.cat(collected, dim=0).to(self.gpu_id)
         else:
-            inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(device_id)
-        targets = self.func_batch(inputs).to(device_id)
+            inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
+        targets = self.func_batch(inputs).to(self.gpu_id)
         data = (inputs, targets)
-        
-        # Monkey-patch .cuda(), .to(), and torch factory functions to work with MPS if needed
-        if device_id.type == 'mps':
-            # Save original methods
-            original_cuda = torch.Tensor.cuda
-            original_to = torch.Tensor.to
-            original_randint_like = torch.randint_like
-            original_randn = torch.randn
-            original_randn_like = torch.randn_like
-            original_zeros = torch.zeros
-            original_ones = torch.ones
-            original_empty = torch.empty
-            original_empty_like = torch.empty_like
-            
-            # Helper to convert CUDA device to MPS
-            def convert_cuda_device(device_arg):
-                if isinstance(device_arg, str) and (device_arg == 'cuda' or device_arg.startswith('cuda:')):
-                    return device_id
-                if isinstance(device_arg, torch.device) and device_arg.type == 'cuda':
-                    return device_id
-                return device_arg
-            
-            # Create patches that redirect CUDA calls to MPS
-            def mps_cuda_patch(tensor_self, device=None):
-                return tensor_self.to(device_id)
-            
-            def mps_to_patch(tensor_self, device=None, *args, **kwargs):
-                device = convert_cuda_device(device)
-                return original_to(tensor_self, device, *args, **kwargs)
-            
-            def mps_randint_like(input, high, device=None, **kwargs):
-                # Handle device from both positional and keyword args
-                if 'device' in kwargs:
-                    kwargs['device'] = convert_cuda_device(kwargs['device'])
-                else:
-                    device = convert_cuda_device(device)
-                    kwargs['device'] = device
-                return original_randint_like(input, high, **kwargs)
-            
-            def mps_randn(*size, device=None, **kwargs):
-                # Handle device from both positional and keyword args
-                if 'device' in kwargs:
-                    kwargs['device'] = convert_cuda_device(kwargs['device'])
-                elif device is not None:
-                    kwargs['device'] = convert_cuda_device(device)
-                return original_randn(*size, **kwargs)
-            
-            def mps_randn_like(input, device=None, **kwargs):
-                # Handle device from both positional and keyword args
-                if 'device' in kwargs:
-                    kwargs['device'] = convert_cuda_device(kwargs['device'])
-                else:
-                    device = convert_cuda_device(device)
-                    kwargs['device'] = device
-                return original_randn_like(input, **kwargs)
-            
-            def mps_zeros(*size, device=None, **kwargs):
-                # Handle device from both positional and keyword args
-                if 'device' in kwargs:
-                    kwargs['device'] = convert_cuda_device(kwargs['device'])
-                elif device is not None:
-                    kwargs['device'] = convert_cuda_device(device)
-                return original_zeros(*size, **kwargs)
-            
-            def mps_ones(*size, device=None, **kwargs):
-                # Handle device from both positional and keyword args
-                if 'device' in kwargs:
-                    kwargs['device'] = convert_cuda_device(kwargs['device'])
-                elif device is not None:
-                    kwargs['device'] = convert_cuda_device(device)
-                return original_ones(*size, **kwargs)
-            
-            def mps_empty(*size, device=None, **kwargs):
-                # Handle device from both positional and keyword args
-                if 'device' in kwargs:
-                    kwargs['device'] = convert_cuda_device(kwargs['device'])
-                elif device is not None:
-                    kwargs['device'] = convert_cuda_device(device)
-                return original_empty(*size, **kwargs)
-            
-            def mps_empty_like(input, device=None, **kwargs):
-                # Handle device from both positional and keyword args
-                if 'device' in kwargs:
-                    kwargs['device'] = convert_cuda_device(kwargs['device'])
-                else:
-                    device = convert_cuda_device(device)
-                    kwargs['device'] = device
-                return original_empty_like(input, **kwargs)
-            
-            # Apply the patches
-            torch.Tensor.cuda = mps_cuda_patch
-            torch.Tensor.to = mps_to_patch
-            torch.randint_like = mps_randint_like
-            torch.randn = mps_randn
-            torch.randn_like = mps_randn_like
-            torch.zeros = mps_zeros
-            torch.ones = mps_ones
-            torch.empty = mps_empty
-            torch.empty_like = mps_empty_like
-            
-            try:
-                # Pass cuda=True so pyhessian thinks we're using CUDA, but methods will redirect to MPS
-                hess_mod = hessian(model, loss_fn, data, cuda=True)
-                for param in model.parameters(): param.grad = None
-                # Keep patches active during eigenvalues and trace computation
-                top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-                top_eig = top_eigs[0]
-                trace = hess_mod.trace()
-            finally:
-                # Always restore the original methods
-                torch.Tensor.cuda = original_cuda
-                torch.Tensor.to = original_to
-                torch.randint_like = original_randint_like
-                torch.randn = original_randn
-                torch.randn_like = original_randn_like
-                torch.zeros = original_zeros
-                torch.ones = original_ones
-                torch.empty = original_empty
-                torch.empty_like = original_empty_like
-            return top_eig, np.mean(trace)
-        elif device_id.type == 'cuda':
-            hess_mod = hessian(model, loss_fn, data, cuda=True)
-            for param in model.parameters(): param.grad = None
-            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-            top_eig = top_eigs[0]
-            trace = hess_mod.trace()
-            return top_eig, np.mean(trace)
-        else:
-            hess_mod = hessian(model, loss_fn, data, cuda=False)
-            for param in model.parameters(): param.grad = None
-            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-            top_eig = top_eigs[0]
-            trace = hess_mod.trace()
-            return top_eig, np.mean(trace)
+        hess_mod = hessian(model, loss_fn, data)
+        for param in model.parameters(): param.grad = None
+        top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
+        top_eig = top_eigs[0]
+        trace = hess_mod.trace()
+        return top_eig, np.mean(trace)
 
 
     
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
-        device_obj = get_device_from_rank(rank)
-        train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(device_obj)
+        train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
         hardcoded_model = HardCodedTransformer(N, combs, coefs,nonrep_mask = 0, mode="original", mlp_soft_factor=0.25)
-        model = Transformer(dropout,N, dim, h, f, ln_eps, device_obj, ln)
+        model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
         #print(model)
         print("Trainable Model Parameter Count: " + str(total_params))
@@ -996,24 +828,15 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                                                   sam_rho=args.sam_rho,
                                                   asam=args.asam
                                                   )
-      device_obj = get_device_from_rank(rank)
-      model.to(device_obj)
-      hardcoded_model.to(device_obj)
+      model.to(rank)
+      hardcoded_model.to(rank)
    
-      # MPS doesn't support DistributedSampler
-      if mps_avail:
-          train_loader = DataLoader(
-              train_set,
-              shuffle=True,
-              batch_size=args.bs
-          )
-      else:
-          train_loader = DataLoader(
-              train_set,
-              shuffle=False,
-              batch_size=args.bs,
-              sampler = DistributedSampler(train_set)
-          )
+      train_loader = DataLoader(
+          train_set,
+          shuffle=False,
+          batch_size=args.bs,
+          sampler = DistributedSampler(train_set)
+      )
          
       trainer = Trainer(coefs,combs, model,
                         train_loader,
@@ -1065,9 +888,8 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       hardcoded_model.eval()
       print("hardcoded model: " + str(hardcoded_model))
       #addGaussianNoise(hardcoded_model, .1)
-      device_obj = get_device_from_rank(rank)
-      hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj)
-      hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj, use_train=True)
+      hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank)
+      hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank, use_train=True)
       weight_norm = get_weight_norm(hardcoded_model)
       hardcoded_loss = trainer.validate(1000,hardcoded_model)
       print("hardcoded loss: " + str(hardcoded_loss))
@@ -1079,12 +901,9 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       xs = torch.randint(0, 2**args.N, (Bprobe,), device=device)
       # IMPORTANT: build targets with **same LSB-first convention** as the model:
       def targets_lsb(x_long):
-        # MPS doesn't support right shift, do bit manipulation on CPU
-        x_long_cpu = x_long.cpu() if device.type == 'mps' else x_long
-        shifts = torch.arange(args.N, device=x_long_cpu.device)
-        bits01 = ((x_long_cpu.unsqueeze(-1) >> shifts) & 1).float()
+        shifts = torch.arange(args.N, device=device)
+        bits01 = ((x_long.unsqueeze(-1) >> shifts) & 1).float()
         bin_pm = (bits01 - 0.5) * 2.0
-        bin_pm = bin_pm.to(device)  # Move back to device
         idx = combs.long().to(device)         # (width, D)
         comps = bin_pm[:, idx].prod(dim=2)    # (B, width)
         return comps @ coefs.to(device)
@@ -1141,12 +960,10 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
       trainer.train(args.epochs)
-      # Skip barrier and destroy_process_group for MPS
-      if not mps_avail:
-          barrier()
-          print("finished training, cleaning up process group...")
-          destroy_process_group()
-          print("finished cleaning up process group")
+      barrier()
+      print("finished training, cleaning up process group...")
+      destroy_process_group()
+      print("finished cleaning up process group")
       return
 
 if __name__ == "__main__":
@@ -1155,17 +972,16 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"NEURIPS_CAMERA_NOSAM_FINAL"
+    main_dir = f"NEURIPS_CAMERA"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-
-    for i in range(1,5):
-        for deg in [4,3,2,1]:
+    for i in range(1):
+        for deg in [5]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [1,7,14,20]:
+            for width in [20,14,7,1]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
@@ -1175,14 +991,10 @@ if __name__ == "__main__":
                 torch.save(coefs,os.path.join(main_dir, f"coefs_func{i}_deg{deg}_width{width}.pt"))
                 torch.save(combs,os.path.join(main_dir, f"combs_func{i}_deg{deg}_width{width}.pt"))
                 
-                # MPS doesn't support multiprocessing spawn, use single process
-                if mps_avail:
-                    print("[MPS] Running in single process mode (MPS doesn't support multiprocessing)")
-                    main(0, arguments, 1, coefs, combs, main_dir, deg, width, i)
-                else:
-                    mp.set_start_method('spawn',force = True)
-                    torch.set_num_threads(1)
-                    mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size,join=True)
+                mp.set_start_method('spawn',force = True)
+
+                torch.set_num_threads(1)
+                mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size,join=True)
                 print("returned from mp.spwan")
                 end_time = time.time()
         
