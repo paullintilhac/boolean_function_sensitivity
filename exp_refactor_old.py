@@ -402,11 +402,11 @@ cuda_avail = torch.cuda.is_available()
 #from functools import partial
 
 if mps_avail:
-    device = torch.device("mps")
+  device = torch.device("mps")
 elif cuda_avail:
-    device = torch.device("cuda")
+  device = torch.device("cuda")
 else:
-    device = torch.device("cpu")
+  device = torch.device("cpu")
 
 def get_device_from_rank(rank):
     """Convert rank (int) to appropriate device object."""
@@ -418,58 +418,54 @@ def get_device_from_rank(rank):
         return torch.device("cpu")
     
 def get_weight_norm(model):
-    total_norm = 0.0
-    for p in model.parameters():
-        if p.requires_grad:
-            param_norm = p.data.norm(2)
-            total_norm += param_norm.item() ** 2
-    return total_norm ** 0.5
+       total_norm = 0.0
+       for p in model.parameters():
+           if p.requires_grad:
+               param_norm = p.data.norm(2)
+               total_norm += param_norm.item() ** 2
+       return total_norm ** 0.5
     
-def rboolf(N, width, deg, seed=None):
+def rboolf(N, width, deg,seed=None):
     if seed:
         torch.manual_seed(seed)
-    # Create coefficients & combs on CPU; they will be moved to devices later
-    coefficients = torch.randn(width).abs()
+    coefficients = torch.randn(width).abs().to(device)
+    #print("coefficients initial shape: " + str(coefficients.shape) + ", width: " + str(width))
     coefficients = (coefficients)/coefficients.pow(2).sum().sqrt()
     
-    combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg)))
+    combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg))).to(device)
     combs = combs[torch.randperm(len(combs))][:width] # Shuffled
     print("coefficients: "  + str(coefficients))
     print("combs: "  + str(combs))
     return (coefficients, combs)
 
-def ddp_setup(rank, world_size, backend):
+def ddp_setup(rank, world_size,backend):
     """Setup distributed training. Skip if using MPS (not supported)."""
     if mps_avail:
         # MPS doesn't support distributed training
         print(f"[MPS] Skipping DDP setup - MPS doesn't support distributed training")
         return
-    os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "23456"
-    if cuda_avail:
-        torch.cuda.set_device(rank) 
+    os.environ["MASTER_ADDR"]="localhost"
+    os.environ["MASTER_PORT"]= "23456"
     if backend == "gloo":
-        init_process_group(
-            backend="gloo",
-            init_method='tcp://127.0.0.1:23456',
-            rank=rank,
-            world_size=world_size,
-            timeout=datetime.timedelta(seconds=5400)
-        )
+        init_process_group(backend="gloo",
+                       init_method='tcp://127.0.0.1:23456',
+                       rank=rank,
+                       world_size=world_size,
+                       timeout=datetime.timedelta(seconds=5400)
+                      )
     else:
-        init_process_group(
-            backend="nccl",
-            rank=rank,
-            world_size=world_size,
-            timeout=datetime.timedelta(seconds=5400)
-        )        
+        init_process_group(backend="nccl",
+                       rank=rank,
+                       world_size=world_size,
+                       timeout=datetime.timedelta(seconds=5400)
+                      )        
 
 class Trainer:
     def __init__(
             self,
             coeffs: torch.FloatTensor,
             combs: torch.FloatTensor,
-            model: torch.nn.Module,
+            model:torch.nn.Module,
             train_data: DataLoader,
             optimizer: torch.optim.Optimizer,
             gpu_id: int,
@@ -480,10 +476,10 @@ class Trainer:
             func: int,
             N: int,
             n_samples: int,
-            backend: str,
-            stop_loss: float,
-            ln_eps: float,
-            ln: bool,
+            backend:str,
+            stop_loss:float,
+            ln_eps:float,
+            ln:bool,
             save_checkpoints: bool,
             f: float,
             d: int,
@@ -499,10 +495,10 @@ class Trainer:
         else:
             self.model = DDP(model, device_ids=[self.gpu_id])
         self.model.to(self.device)
-        self.train_data = train_data
+        self.train_data=train_data
         self.optimizer = optimizer
-        self.save_every = save_every
-        self.ln_eps = ln_eps
+        self.save_every=save_every
+        self.ln_eps=ln_eps
         self.ln = ln
         self.wd = wd
         self.dir_name = dir_name  
@@ -529,7 +525,7 @@ class Trainer:
                                  "ln_eps",
                                  "ln",
                                  "weight_norm",
-                                 "l",
+                                  "l",
                                  "d",
                                  "f",
                                  "h",
@@ -541,7 +537,7 @@ class Trainer:
         self.func = func
         self.coeffs = coeffs.to(self.device)
         self.combs = combs.to(self.device)
-        self.width = width
+        self.width=width
         self.deg = deg
         self.n_samples = n_samples
         self.d = d
@@ -556,37 +552,31 @@ class Trainer:
             else optimizer.param_groups[-1]['lr']
         )
         self.backend = backend
+        #self.func.to(gpu_id)
         
-    def func_batch(self, x, device_override=None):
-        """
-        Compute f(x) for a batch of integer inputs.
-
-        x: 1D tensor of ints (any device)
-        device_override: if not None, force computation on this device
-                         (used by calc_hessian for CPU).
-        """
-        dev = device_override if device_override is not None else self.device
-
-        # bit operations on CPU
+    def func_batch(self, x):
+        # x: 1D tensor of integers (can be on any device)
+        # MPS doesn't support right shift, so do bit manipulation on CPU
         x_cpu = torch.as_tensor(x, dtype=torch.long, device='cpu')
-        shifts = torch.arange(self.N, device='cpu')
-        bits01 = ((x_cpu.unsqueeze(-1) >> shifts) & 1).float()
-        bin_pm = (bits01 - 0.5) * 2.0
+        shifts = torch.arange(self.N, device='cpu')          # 0..N-1, LSB-first
+        bits01 = ((x_cpu.unsqueeze(-1) >> shifts) & 1).float()         # (B, N) in {0,1}
+        bin_pm = (bits01 - 0.5) * 2.0                              # {-1,+1}
+        
+        # Move to device for the rest of the computation
+        bin_pm = bin_pm.to(self.device)
+    
+        # self.combs is shape (width, deg) on device already
+        idx = self.combs.long()                                     # (W, D)
+        # Gather (B, W, D) and product over D -> (B, W)
+        comps = bin_pm[:, idx]                                      # advanced indexing
+        comps = comps.prod(dim=2)                                   # (B, width)
+    
+        return comps @ self.coeffs                                  # (B,)
 
-        # move to chosen device
-        bin_pm = bin_pm.to(dev)
-
-        idx = self.combs.long().to(dev)      # (width, deg)
-        comps = bin_pm[:, idx].prod(dim=2)   # (B, width)
-
-        return comps @ self.coeffs.to(dev)   # (B,)
-
+        
     def _run_batch(self, inputs, targets):
-        # Ensure inputs/targets are on the right device
-        inputs = inputs.to(self.device)
-        targets = targets.to(self.device)
-
         # Same loss as elsewhere
+        # loss_fn = lambda out, tgt: (out - tgt).pow(2).mean()
         loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
 
         # ---- SAM path ----
@@ -622,37 +612,43 @@ class Trainer:
         self.optimizer.step()
         return loss.detach()
     
-    def _run_epoch(self, epoch):
+    def _run_epoch(self,epoch):
+        
         b_sz = len(next(iter(self.train_data)))
         epoch_loss = 0
         total_records = 0
         start_time = time.time()
         
         for idx, inputs in enumerate(self.train_data):
-            # targets on the trainer's device
-            targets = self.func_batch(inputs)
-            batch_loss = self._run_batch(inputs, targets)
-            epoch_loss += batch_loss * float(len(inputs))
-            total_records += len(inputs)
-            iteration = epoch*len(self.train_data)+idx+1
+          #inputs.to(self.device)    
+          targets =self.func_batch(inputs).to(self.device)
+          batch_loss = self._run_batch(inputs, targets)
+          epoch_loss+=batch_loss*float(len(inputs))
+          total_records+=len(inputs)
+          iteration = epoch*len(self.train_data)+idx+1
             
-        epoch_loss /= float(total_records)
+        epoch_loss/=float(total_records)
         
         end_time = time.time()
+        
         elapsed_time = end_time - start_time
+        #print(f"Epoch time: {elapsed_time:.3f} seconds.")
         time_per_record_ms = float(elapsed_time*100)/float(total_records)
+        #print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (ms): {time_per_record_ms: .3f}")
         return epoch_loss
 
-    def save_checkpoint(self, epoch, model_name):
+    def save_checkpoint(self,epoch,model_name):
         os.makedirs(os.path.join(self.dir_name, model_name), exist_ok=True)
         full_model_name = model_name+"/epoch-"+str(epoch)+".pt"
         # Handle both DDP-wrapped and non-wrapped models
         model_state = self.model.module.state_dict() if hasattr(self.model, 'module') else self.model.state_dict()
-        torch.save(model_state, os.path.join(self.dir_name, full_model_name))
+        torch.save(model_state,os.path.join(self.dir_name, full_model_name))
+        # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+        loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
 
         print(f"Epoch {epoch} | Training checkpoint saved at model_{epoch}.pt")
 
-    def train(self, epochs: int):
+    def train(self,epochs: int):
         self.model.train()
         
         start_time = time.time()
@@ -663,85 +659,82 @@ class Trainer:
             # For MPS, always save (no rank 0 check needed since no DDP)
             should_save = (mps_avail or self.gpu_id == 0) and ((epoch % self.save_every)==0 or epoch_loss < self.stop_loss)
             if should_save:
-                if self.save_checkpoints:
-                    self.save_checkpoint(epoch, "degree-"+str(self.deg)+"/width-"+str(self.width)+"/func-"+str(self.func))
-                end_time = time.time()
-                elapsed_time = round((end_time - start_time)/60, 3) 
+            # if ((((epoch+1) % self.save_every)==0 or epoch==0) and self.gpu_id==0):
 
+                #print("inside conditional")
+                if self.save_checkpoints:
+                    self.save_checkpoint(epoch,"degree-"+str(self.deg)+"/width-"+str(self.width)+"/func-"+str(self.func))
+                end_time = time.time()
+                elapsed_time = round((end_time - start_time)/60,3) 
+
+                #print("self.func: " + str(self.func))
+                # Get model module if DDP wrapped, otherwise use model directly
                 model_for_eval = self.model.module if hasattr(self.model, 'module') else self.model
                 val_loss = self.validate(1000, model_for_eval) 
-
-                def loss_fn(out, tgt):
-                    out = out.squeeze(-1)
-                    tgt = tgt.to(out.device)
-                    return (out - tgt).pow(2).mean()
-
+                loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
-                top_eig, trace = self.calc_hessian(
-                    copy.deepcopy(model_for_eval),
-                    loss_fn=loss_fn,
-                    num_samples=1000,
-                    device_id=self.device,
-                )
-                top_eig_train, trace_train = self.calc_hessian(
-                    copy.deepcopy(model_for_eval),
-                    loss_fn=loss_fn,
-                    num_samples=1000,
-                    device_id=self.device,
-                    use_train=True
-                )
+                top_eig, trace = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device)
+                top_eig_train, trace_train = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device, use_train=True)
+                #weight_norm = 0
                 weight_norm = get_weight_norm(model_for_eval)
+                #weight_norm = torch.linalg.norm(self.model.weight)
+                #top_eig=0
+                #trace = 0
                 end_time_hessian = time.time()
-                elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60, 3) 
+                elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
                 print("elapsed time norm: " + str(elapsed_time_hessian))
-                self.summary.loc[0] = {
-                    "deg": self.deg,
-                    "width": self.width,
-                    "func": self.func,
-                    "epoch": epoch,
-                    "train_loss": epoch_loss.cpu(),
-                    "val_loss": val_loss.cpu(),
-                    "batch_size": self.batch_size,
-                    "lr": self.lr,
-                    "n_samples": self.n_samples,
-                    "func_val_test": self.func_batch([2]).cpu(),
-                    "time_elapsed": elapsed_time,
-                    "backend": self.backend,
-                    "top_eig": top_eig,
-                    "trace": trace,
-                    "top_eig_train": top_eig_train,
-                    "trace_train": trace_train,
-                    "stop_loss": self.stop_loss,
-                    "ln_eps": self.ln_eps,
-                    "ln": self.ln,
-                    "weight_norm": weight_norm,
-                    "d": self.d,
-                    "f": self.f,
-                    "h": self.h,
-                    "dropout": self.dropout,
-                    "wd": self.wd
-                }
+                self.summary.loc[0] = {"deg":self.deg,
+                                       "width":self.width,
+                                       "func":self.func,
+                                       "epoch":epoch,
+                                       "train_loss":epoch_loss.cpu(),
+                                       "val_loss":val_loss.cpu(),
+                                      "batch_size": self.batch_size,
+                                      "lr":self.lr,
+                                      "n_samples":self.n_samples,
+                                      "func_val_test":self.func_batch([2]).cpu(),
+                                      "time_elapsed":elapsed_time,
+                                      "backend":self.backend,
+                                      "top_eig":top_eig,
+                                      "trace":trace,
+                                       "top_eig_train": top_eig_train,
+                                       "trace_train": trace_train,
+                                      "stop_loss": self.stop_loss,
+                                      "ln_eps": self.ln_eps,
+                                      "ln": self.ln,
+                                      "weight_norm": weight_norm,
+                                       "d":self.d,
+                                       "f":self.f,
+                                       "h":self.h,
+                                       "dropout":self.dropout,
+                                       "wd":self.wd
+                                      }
+               
 
-                self.summary.to_csv(
-                    f"{self.dir_name}/summary.csv",
-                    mode='a',
-                    header=not os.path.exists(f"{self.dir_name}/summary.csv"),
-                    index=False
-                )
+                self.summary.to_csv(f"{self.dir_name}/summary.csv",mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
-
             # Skip distributed ops for MPS
             if not mps_avail:
                 flag = torch.zeros(1).to(self.device)
-                if epoch_loss < self.stop_loss:
-                    flag += 1
+                if epoch_loss<self.stop_loss:
+                     flag += 1
                 all_reduce(flag, op=ReduceOp.SUM)
                 if flag > 0:
                     break
                 barrier()
             elif epoch_loss < self.stop_loss:
                 break
+        # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+        # top_eig = self.calc_hessian(copy.deepcopy(self.model.module), loss_fn=loss_fn, num_samples= 1000) 
         return
+
+    # def validate(self, num_samples,test_model):
+    #   test_model.eval()
+    #   inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(self.gpu_id)
+    #   targets = self.func_batch(inputs).to(self.gpu_id)
+    #   result = test_model(inputs).to(self.gpu_id)
+    #   loss = (result - targets).pow(2).mean()
+    #   return loss.detach().cpu()
 
     def validate(self, num_samples, test_model):
         test_model.eval()
@@ -750,74 +743,176 @@ class Trainer:
         result  = test_model(inputs).squeeze(-1)          # (B,)
         return (result - targets).pow(2).mean().detach().cpu()
         
-    def calc_hessian(self, model, loss_fn, num_samples, device_id, use_train=False):
-        """
-        Run pyhessian purely on CPU to avoid mixed CPU/CUDA graphs.
-        Models are small, so CPU is fine.
-        """
-        cpu = torch.device('cpu')
-
-        # 1) Work on a CPU copy
-        model_cpu = copy.deepcopy(model).to(cpu).eval()
-
-        # IMPORTANT: updated_transformer stores a device in `self.rank` (and maybe `self.device`).
-        # When we move the model to CPU, we must also update those attributes,
-        # otherwise forward() will still create CUDA tensors inside.
-        if hasattr(model_cpu, "rank"):
-            model_cpu.rank = cpu
-        if hasattr(model_cpu, "device"):
-            model_cpu.device = cpu
-
-        # 2) Build inputs on CPU
+    def calc_hessian(self, model, loss_fn, num_samples,device_id, use_train=False):
+        model.eval().to(device_id)
         if use_train:
             ds = getattr(self.train_data, "dataset", None)
             if isinstance(ds, torch.Tensor):
-                n = min(num_samples, ds.shape[0])
-                inputs_cpu = ds[:n].to(cpu)
+                inputs = ds[:min(num_samples, ds.shape[0])].to(device_id)
             else:
-                collected = []
-                total = 0
+                collected, total = [], 0
                 for batch in self.train_data:
                     batch_inputs = batch[0] if isinstance(batch, (list, tuple)) else batch
                     take = min(batch_inputs.shape[0], num_samples - total)
-                    collected.append(batch_inputs[:take].to(cpu))
+                    collected.append(batch_inputs[:take])
                     total += take
-                    if total >= num_samples:
-                        break
-                inputs_cpu = torch.cat(collected, dim=0)
+                    if total >= num_samples: break
+                inputs = torch.cat(collected, dim=0).to(device_id)
         else:
-            inputs_cpu = torch.randint(0, 2**self.N, (num_samples,), device=cpu)
+            inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(device_id)
+        targets = self.func_batch(inputs).to(device_id)
+        data = (inputs, targets)
+        
+        # Monkey-patch .cuda(), .to(), and torch factory functions to work with MPS if needed
+        if device_id.type == 'mps':
+            # Save original methods
+            original_cuda = torch.Tensor.cuda
+            original_to = torch.Tensor.to
+            original_randint_like = torch.randint_like
+            original_randn = torch.randn
+            original_randn_like = torch.randn_like
+            original_zeros = torch.zeros
+            original_ones = torch.ones
+            original_empty = torch.empty
+            original_empty_like = torch.empty_like
+            
+            # Helper to convert CUDA device to MPS
+            def convert_cuda_device(device_arg):
+                if isinstance(device_arg, str) and (device_arg == 'cuda' or device_arg.startswith('cuda:')):
+                    return device_id
+                if isinstance(device_arg, torch.device) and device_arg.type == 'cuda':
+                    return device_id
+                return device_arg
+            
+            # Create patches that redirect CUDA calls to MPS
+            def mps_cuda_patch(tensor_self, device=None):
+                return tensor_self.to(device_id)
+            
+            def mps_to_patch(tensor_self, device=None, *args, **kwargs):
+                device = convert_cuda_device(device)
+                return original_to(tensor_self, device, *args, **kwargs)
+            
+            def mps_randint_like(input, high, device=None, **kwargs):
+                # Handle device from both positional and keyword args
+                if 'device' in kwargs:
+                    kwargs['device'] = convert_cuda_device(kwargs['device'])
+                else:
+                    device = convert_cuda_device(device)
+                    kwargs['device'] = device
+                return original_randint_like(input, high, **kwargs)
+            
+            def mps_randn(*size, device=None, **kwargs):
+                # Handle device from both positional and keyword args
+                if 'device' in kwargs:
+                    kwargs['device'] = convert_cuda_device(kwargs['device'])
+                elif device is not None:
+                    kwargs['device'] = convert_cuda_device(device)
+                return original_randn(*size, **kwargs)
+            
+            def mps_randn_like(input, device=None, **kwargs):
+                # Handle device from both positional and keyword args
+                if 'device' in kwargs:
+                    kwargs['device'] = convert_cuda_device(kwargs['device'])
+                else:
+                    device = convert_cuda_device(device)
+                    kwargs['device'] = device
+                return original_randn_like(input, **kwargs)
+            
+            def mps_zeros(*size, device=None, **kwargs):
+                # Handle device from both positional and keyword args
+                if 'device' in kwargs:
+                    kwargs['device'] = convert_cuda_device(kwargs['device'])
+                elif device is not None:
+                    kwargs['device'] = convert_cuda_device(device)
+                return original_zeros(*size, **kwargs)
+            
+            def mps_ones(*size, device=None, **kwargs):
+                # Handle device from both positional and keyword args
+                if 'device' in kwargs:
+                    kwargs['device'] = convert_cuda_device(kwargs['device'])
+                elif device is not None:
+                    kwargs['device'] = convert_cuda_device(device)
+                return original_ones(*size, **kwargs)
+            
+            def mps_empty(*size, device=None, **kwargs):
+                # Handle device from both positional and keyword args
+                if 'device' in kwargs:
+                    kwargs['device'] = convert_cuda_device(kwargs['device'])
+                elif device is not None:
+                    kwargs['device'] = convert_cuda_device(device)
+                return original_empty(*size, **kwargs)
+            
+            def mps_empty_like(input, device=None, **kwargs):
+                # Handle device from both positional and keyword args
+                if 'device' in kwargs:
+                    kwargs['device'] = convert_cuda_device(kwargs['device'])
+                else:
+                    device = convert_cuda_device(device)
+                    kwargs['device'] = device
+                return original_empty_like(input, **kwargs)
+            
+            # Apply the patches
+            torch.Tensor.cuda = mps_cuda_patch
+            torch.Tensor.to = mps_to_patch
+            torch.randint_like = mps_randint_like
+            torch.randn = mps_randn
+            torch.randn_like = mps_randn_like
+            torch.zeros = mps_zeros
+            torch.ones = mps_ones
+            torch.empty = mps_empty
+            torch.empty_like = mps_empty_like
+            
+            try:
+                # Pass cuda=True so pyhessian thinks we're using CUDA, but methods will redirect to MPS
+                hess_mod = hessian(model, loss_fn, data, cuda=True)
+                for param in model.parameters(): param.grad = None
+                # Keep patches active during eigenvalues and trace computation
+                top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
+                top_eig = top_eigs[0]
+                trace = hess_mod.trace()
+            finally:
+                # Always restore the original methods
+                torch.Tensor.cuda = original_cuda
+                torch.Tensor.to = original_to
+                torch.randint_like = original_randint_like
+                torch.randn = original_randn
+                torch.randn_like = original_randn_like
+                torch.zeros = original_zeros
+                torch.ones = original_ones
+                torch.empty = original_empty
+                torch.empty_like = original_empty_like
+            return top_eig, np.mean(trace)
+        elif device_id.type == 'cuda':
+            hess_mod = hessian(model, loss_fn, data, cuda=True)
+            for param in model.parameters(): param.grad = None
+            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
+            top_eig = top_eigs[0]
+            trace = hess_mod.trace()
+            return top_eig, np.mean(trace)
+        else:
+            hess_mod = hessian(model, loss_fn, data, cuda=False)
+            for param in model.parameters(): param.grad = None
+            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
+            top_eig = top_eigs[0]
+            trace = hess_mod.trace()
+            return top_eig, np.mean(trace)
 
-        # 3) Targets on CPU using the same Boolean driver
-        targets_cpu = self.func_batch(inputs_cpu, device_override=cpu)
-        data_cpu = (inputs_cpu, targets_cpu)
 
-        # 4) Keep everything on CPU in pyhessian
-        hess_mod = hessian(model_cpu, loss_fn, data_cpu, cuda=False)
-
-        # break any grad cycles
-        for p in model_cpu.parameters():
-            p.grad = None
-
-        # 5) Top eigenvalue + trace
-        top_eigs, _ = hess_mod.eigenvalues(maxIter=200)
-        top_eig = top_eigs[0]
-        trace = hess_mod.trace()
-
-        return top_eig, np.mean(trace)
     
-def load_train_objs(wd, dropout, lr, num_samples, N, dim, h, f, rank, ln_eps, ln, coefs, combs, sam=False, sam_rho=0.05, asam=False):
-    device_obj = get_device_from_rank(rank)
-    train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(device_obj)
-    hardcoded_model = HardCodedTransformer(N, combs, coefs, nonrep_mask=0, mode="original", mlp_soft_factor=0.25)
-    model = Transformer(dropout, N, dim, h, f, ln_eps, device_obj, ln)
-    total_params = sum(p.numel() for p in model.parameters())
-    print("Trainable Model Parameter Count: " + str(total_params))
-    hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
-    print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
-    base_opt = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
-    optimizer = SAM(model.parameters(), base_optimizer=base_opt, rho=sam_rho, adaptive=asam) if sam else base_opt
-    return train_set, model, optimizer, hardcoded_model                
+def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
+        device_obj = get_device_from_rank(rank)
+        train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(device_obj)
+        hardcoded_model = HardCodedTransformer(N, combs, coefs,nonrep_mask = 0, mode="original", mlp_soft_factor=0.25)
+        model = Transformer(dropout,N, dim, h, f, ln_eps, device_obj, ln)
+        total_params = sum(p.numel() for p in model.parameters())
+        #print(model)
+        print("Trainable Model Parameter Count: " + str(total_params))
+        hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
+        #print(model)
+        print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
+        base_opt = torch.optim.AdamW(model.parameters(), lr=float(lr), weight_decay=wd)
+        optimizer = SAM(model.parameters(), base_optimizer=base_opt, rho=sam_rho, adaptive=asam) if sam else base_opt
+        return train_set, model, optimizer, hardcoded_model                
 
 def addGaussianNoise(model, sigma, as_variance=True, skip_frozen=True, include_bias=True, seed=None):
     """
@@ -833,6 +928,7 @@ def addGaussianNoise(model, sigma, as_variance=True, skip_frozen=True, include_b
     """
     std = math.sqrt(sigma) if as_variance else float(sigma)
     if seed is not None:
+        # Use device-aware generator so CUDA noise is deterministic too
         device = next(model.parameters()).device
         g = torch.Generator(device=device).manual_seed(seed)
     else:
@@ -864,12 +960,12 @@ def parse_args():
     parser.add_argument('--repeat', type=int, default=1)
     parser.add_argument('--save_every', type=int, default=200)
     parser.add_argument('--num_samples', type=int, default=100000)
-    parser.add_argument('--lr', type=str, default="1e-5")
-    parser.add_argument('--wd', type=float, default=.1)
-    parser.add_argument('--dropout', type=float, default=.2)
-    parser.add_argument('--backend', type=str, default="gloo")
-    parser.add_argument('--stop_loss', type=float, default=.02)
-    parser.add_argument('--ln_eps', type=float, default=1e-5)
+    parser.add_argument('--lr', type=str,default = "1e-5")
+    parser.add_argument('--wd', type=float,default = .1)
+    parser.add_argument('--dropout', type=float,default = .2)
+    parser.add_argument('--backend',type=str, default = "gloo")
+    parser.add_argument('--stop_loss', type=float,default = .02)
+    parser.add_argument('--ln_eps', type=float,default = 1e-5)
     parser.add_argument('--ln', action='store_true')
     parser.add_argument('--save_checkpoints', action='store_true')
     parser.add_argument('--sam', action='store_true')
@@ -877,199 +973,181 @@ def parse_args():
     parser.add_argument('--asam', action='store_true')
     return parser.parse_args()
 
-def main(rank, args, world_size, coefs, combs, main_dir, deg, width, i):
-    ddp_setup(rank, world_size, args.backend)
+def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
+      #print("func in main: " + str(func))
+      ddp_setup(rank,world_size,args.backend)
+      # Create new directory to save results for the particular function
+      #dir_name = os.path.join(main_dir, f"deg{deg}_width{width}_func{i}")
+      #os.makedirs(dir_name, exist_ok=True)
         
-    train_set, model, optimizer, hardcoded_model = load_train_objs(
-        args.dropout,
-        args.wd,
-        args.lr,
-        args.num_samples,
-        args.N,
-        args.dim,
-        args.h,
-        args.f,
-        rank,
-        args.ln_eps,
-        args.ln,
-        coefs,
-        combs,
-        sam=args.sam,
-        sam_rho=args.sam_rho,
-        asam=args.asam
-    )
-    device_obj = get_device_from_rank(rank)
-    model.to(device_obj)
-    hardcoded_model.to(device_obj)
+      train_set,model,optimizer,hardcoded_model = load_train_objs(args.dropout,
+                                                  args.wd,args.lr,
+                                                  args.num_samples,
+                                                  args.N,
+                                                  args.dim,
+                                                  args.h,
+                                                  args.f,
+                                                  rank,
+                                                  args.ln_eps,
+                                                  args.ln,
+                                                  coefs,
+                                                  combs,
+                                                  sam=args.sam,
+                                                  sam_rho=args.sam_rho,
+                                                  asam=args.asam
+                                                  )
+      device_obj = get_device_from_rank(rank)
+      model.to(device_obj)
+      hardcoded_model.to(device_obj)
    
-    # MPS doesn't support DistributedSampler
-    if mps_avail:
-        train_loader = DataLoader(
-            train_set,
-            shuffle=True,
-            batch_size=args.bs
-        )
-    else:
-        train_loader = DataLoader(
-            train_set,
-            shuffle=False,
-            batch_size=args.bs,
-            sampler=DistributedSampler(train_set)
-        )
+      # MPS doesn't support DistributedSampler
+      if mps_avail:
+          train_loader = DataLoader(
+              train_set,
+              shuffle=True,
+              batch_size=args.bs
+          )
+      else:
+          train_loader = DataLoader(
+              train_set,
+              shuffle=False,
+              batch_size=args.bs,
+              sampler = DistributedSampler(train_set)
+          )
          
-    trainer = Trainer(
-        coefs, combs, model,
-        train_loader,
-        optimizer,
-        gpu_id=rank,
-        save_every=args.save_every,
-        dir_name=main_dir,
-        width=width,
-        deg=deg,
-        func=i,
-        N=args.N,
-        n_samples=args.num_samples,
-        backend=args.backend,
-        stop_loss=args.stop_loss,
-        ln_eps=args.ln_eps,
-        ln=args.ln,
-        save_checkpoints=args.save_checkpoints,
-        d=args.dim,
-        f=args.f,
-        h=args.h,
-        dropout=args.dropout,
-        wd=args.wd
-    )
+      trainer = Trainer(coefs,combs, model,
+                        train_loader,
+                        optimizer,
+                        gpu_id=rank,
+                        save_every=args.save_every,
+                        dir_name= main_dir,
+                        width=width,
+                        deg=deg,
+                        func=i,
+                        N=args.N,
+                        n_samples = args.num_samples,
+                        backend = args.backend,
+                        stop_loss = args.stop_loss,
+                        ln_eps = args.ln_eps,
+                        ln = args.ln,
+                        save_checkpoints=args.save_checkpoints,
+                        d=args.dim,
+                        f=args.f,
+                        h=args.h,
+                        dropout=args.dropout,
+                        wd=args.wd
+                        )
 
-    if rank == 0:
-        # Hutchinson / GN on hardcoded model
-        params = collect_hardcoded_params(hardcoded_model, include_bias=True)
+    
+      params = collect_hardcoded_params(hardcoded_model, include_bias=True)
+    
+      # (2) Build a small probe batch (same as you already do)
+      xs = torch.randint(0, 2**args.N, (512,), device=device)
+      with torch.no_grad():
+        ys = trainer.func_batch(xs).to(device)
+    
+      # (3) If loss is near zero, use Gauss–Newton trace:
+      hardcoded_model.eval()
+      with torch.no_grad():
+        out = hardcoded_model(xs)
+        loss_probe = ((out.squeeze(-1) - ys)**2).mean().item()
+      print(f"[CHECK] Probe MSE(model vs driver targets): {loss_probe}")
+    
+      if loss_probe < 1e-8:
+        tr_est = gauss_newton_trace_mse(hardcoded_model, xs, params, n_samples=64, seed=0, scale=2.0)
+        print("Gauss–Newton trace estimate (perfect-fit):", tr_est)
+      else:
+        tr_est = hutchinson_trace(hardcoded_model, xs, ys, params, n_samples=64, seed=0)
+        print("Hutchinson trace estimate:", tr_est)
+       
+      # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+      loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
+      hardcoded_model.eval()
+      print("hardcoded model: " + str(hardcoded_model))
+      #addGaussianNoise(hardcoded_model, .1)
+      device_obj = get_device_from_rank(rank)
+      hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj)
+      hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj, use_train=True)
+      weight_norm = get_weight_norm(hardcoded_model)
+      hardcoded_loss = trainer.validate(1000,hardcoded_model)
+      print("hardcoded loss: " + str(hardcoded_loss))
+      print("frobenius weight norm: " + str(weight_norm)) 
+      print("hardcoded hessian stats: " + str(hardcoded_hessian))
+      
+      # Build a small probe batch
+      Bprobe = 256
+      xs = torch.randint(0, 2**args.N, (Bprobe,), device=device)
+      # IMPORTANT: build targets with **same LSB-first convention** as the model:
+      def targets_lsb(x_long):
+        # MPS doesn't support right shift, do bit manipulation on CPU
+        x_long_cpu = x_long.cpu() if device.type == 'mps' else x_long
+        shifts = torch.arange(args.N, device=x_long_cpu.device)
+        bits01 = ((x_long_cpu.unsqueeze(-1) >> shifts) & 1).float()
+        bin_pm = (bits01 - 0.5) * 2.0
+        bin_pm = bin_pm.to(device)  # Move back to device
+        idx = combs.long().to(device)         # (width, D)
+        comps = bin_pm[:, idx].prod(dim=2)    # (B, width)
+        return comps @ coefs.to(device)
+      ys = targets_lsb(xs)
+    
+      # 1) Quick attention stats
+      attention_diag_stats(hardcoded_model, xs)
+    
+      # 2) Blockwise traces + top eigenvalues
+      analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=64, top_iters=60)
+      def _normalize_rows(rows):
+        # Accept float, list of floats, list of (label, val), or list of dicts
+        if isinstance(rows, (float, int)):
+            return [("total", float(rows))]
+        if isinstance(rows, list) and rows:
+            if isinstance(rows[0], (float, int)):
+                # list of floats
+                return [(f"part{i}", float(v)) for i, v in enumerate(rows)]
+            if isinstance(rows[0], dict):
+                # list of dicts with a 'trace' field
+                return [(d.get("name", f"part{i}"), float(d["trace"])) for i, d in enumerate(rows)]
+            if isinstance(rows[0], (list, tuple)) and len(rows[0]) == 2:
+                # already (label, value)
+                return [(str(a), float(b)) for a, b in rows]
+        # empty or unknown -> safe default
+        return []
 
-        # Build a small probe batch
-        xs_probe = torch.randint(0, 2**args.N, (512,), device=device_obj)
-        with torch.no_grad():
-            ys_probe = trainer.func_batch(xs_probe)  # already on trainer.device
-
-        hardcoded_model.eval()
-        with torch.no_grad():
-            out_probe = hardcoded_model(xs_probe)
-            loss_probe = ((out_probe.squeeze(-1) - ys_probe)**2).mean().item()
-        print(f"[CHECK] Probe MSE(model vs driver targets): {loss_probe}")
-
-        if loss_probe < 1e-8:
-            tr_est = gauss_newton_trace_mse(hardcoded_model, xs_probe, params, n_samples=64, seed=0, scale=2.0)
-            print("Gauss–Newton trace estimate (perfect-fit):", tr_est)
-        else:
-            tr_est = hutchinson_trace(hardcoded_model, xs_probe, ys_probe, params, n_samples=64, seed=0)
-            print("Hutchinson trace estimate:", tr_est)
-
-        def loss_fn(out, tgt):
-            out = out.squeeze(-1)
-            # Make sure targets live on the same device as outputs
-            tgt = tgt.to(out.device)
-            return (out - tgt).pow(2).mean()
-
-        hardcoded_model.eval()
-        print("hardcoded model: " + str(hardcoded_model))
-        hardcoded_hessian = trainer.calc_hessian(
-            hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj
-        )
-        hardcoded_hessian_train = trainer.calc_hessian(
-            hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj, use_train=True
-        )
-
-        weight_norm = get_weight_norm(hardcoded_model)
-        hardcoded_loss = trainer.validate(1000, hardcoded_model)
-        print("hardcoded loss: " + str(hardcoded_loss))
-        print("frobenius weight norm: " + str(weight_norm))
-        print("hardcoded hessian stats: " + str(hardcoded_hessian))
-
-        # Second probe for attention / scaling experiments
-        Bprobe = 256
-        xs = torch.randint(0, 2**args.N, (Bprobe,), device=device_obj)
-
-        def targets_lsb(x_long):
-            dev = x_long.device
-            # MPS doesn't support right shift, do bit manipulation on CPU
-            x_long_cpu = x_long.cpu() if dev.type == 'mps' else x_long
-            shifts = torch.arange(args.N, device=x_long_cpu.device)
-            bits01 = ((x_long_cpu.unsqueeze(-1) >> shifts) & 1).float()
-            bin_pm = (bits01 - 0.5) * 2.0
-            bin_pm = bin_pm.to(dev)  # Move back to local device
-            idx = combs.long().to(dev)         # (width, D)
-            comps = bin_pm[:, idx].prod(dim=2)    # (B, width)
-            return comps @ coefs.to(dev)
-
-        ys = targets_lsb(xs)
-        
-        # 1) Quick attention stats
-        attention_diag_stats(hardcoded_model, xs)
-        
-        # 2) Blockwise traces + top eigenvalues
-        def _normalize_rows(rows):
-            # Accept float, list of floats, list of (label, val), or list of dicts
-            if isinstance(rows, (float, int)):
-                return [("total", float(rows))]
-            if isinstance(rows, list) and rows:
-                if isinstance(rows[0], (float, int)):
-                    # list of floats
-                    return [(f"part{i}", float(v)) for i, v in enumerate(rows)]
-                if isinstance(rows[0], dict):
-                    # list of dicts with a 'trace' field
-                    return [(d.get("name", f"part{i}"), float(d["trace"])) for i, d in enumerate(rows)]
-                if isinstance(rows[0], (list, tuple)) and len(rows[0]) == 2:
-                    # already (label, value)
-                    return [(str(a), float(b)) for a, b in rows]
-            # empty or unknown -> safe default
-            return []
-
-        rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=64, top_iters=60)
-        rows = _normalize_rows(rows)
-
-        # 3) Scaling experiments:
-        for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
-            with scale_queries(hardcoded_model, which=("attn1","attn2"), factor=s):
-                rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
-                rows = _normalize_rows(rows)
-                tot_trace = sum(val for _, val in rows)
-                print(f"[scale_queries factor={s}] total_trace ≈ {tot_trace:.1f}")
-        
-        for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
-            with scale_mlp_slopes(hardcoded_model, factor=s):
-                rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
-                rows = _normalize_rows(rows)
-                tot_trace = sum(val for _, val in rows)
-                print(f"[scale_mlp_slopes factor={s}] total_trace ≈ {tot_trace:.1f}")
-
-        _hc_df = pd.DataFrame([{
-            "deg": trainer.deg,
-            "width": trainer.width,
-            "func": trainer.func,
-            "top_eig": hardcoded_hessian[0],
-            "trace": hardcoded_hessian[1],
-            "top_eig_train": hardcoded_hessian_train[0],
-            "trace_train": hardcoded_hessian_train[1],
-            "frobenius_weight_norm": weight_norm,
-            "test_loss": hardcoded_loss
-        }])
-        _hc_df.to_csv(
-            f"{trainer.dir_name}/hardcoded_hessian.csv",
-            index=False,
-            mode='a',
-            header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv")
-        )
-        print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-
-    # Training (all ranks)
-    trainer.train(args.epochs)
-
-    # Skip barrier and destroy_process_group for MPS
-    if not mps_avail:
-        barrier()
-        print("finished training, cleaning up process group...")
-        destroy_process_group()
-        print("finished cleaning up process group")
-    return
+      
+      # 3) Scaling experiments:
+      for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
+        with scale_queries(hardcoded_model, which=("attn1","attn2"), factor=s):
+            rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
+            rows = _normalize_rows(rows)
+            tot_trace = sum(val for _, val in rows)
+            print(f"[scale_queries factor={s}] total_trace ≈ {tot_trace:.1f}")
+    
+      for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
+        with scale_mlp_slopes(hardcoded_model, factor=s):
+            rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
+            rows = _normalize_rows(rows)
+            tot_trace = sum(val for _, val in rows)
+            print(f"[scale_mlp_slopes factor={s}] total_trace ≈ {tot_trace:.1f}")
+      _hc_df = pd.DataFrame([{
+          "deg": trainer.deg,
+          "width": trainer.width,
+          "func": trainer.func,
+          "top_eig": hardcoded_hessian[0],
+          "trace": hardcoded_hessian[1],
+          "top_eig_train": hardcoded_hessian_train[0],
+          "trace_train": hardcoded_hessian_train[1],
+          "frobenius_weight_norm": weight_norm,
+          "test_loss": hardcoded_loss
+      }])
+      _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
+      print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
+      trainer.train(args.epochs)
+      # Skip barrier and destroy_process_group for MPS
+      if not mps_avail:
+          barrier()
+          print("finished training, cleaning up process group...")
+          destroy_process_group()
+          print("finished cleaning up process group")
+      return
 
 if __name__ == "__main__":
     arguments = parse_args()
@@ -1079,34 +1157,34 @@ if __name__ == "__main__":
     func_per_deg = arguments.repeat
     main_dir = f"NEURIPS_CAMERA_NOSAM_FINAL"
     os.makedirs(main_dir, exist_ok=True)
+    # with open("logs_width.txt", "a") as f:
+    #   f.write("------------------------------------------\n")
 
-    for i in range(1, 5):
-        for deg in [4, 3, 2, 1]:
+
+    for i in range(1,5):
+        for deg in [4,3,2,1]:
             losses[deg] = []
-            for width in [20,14,7,1]:
+            #for width in range(1, arguments.N, 5):
+            for width in [1,7,14,20]:
                 start_time = time.time()
+                #world_size = torch.cuda.device_count()
+                #args["world_size"]=world_size 
                 print(f"Generating: func {i}, deg {deg}, width {width}")
-                seedNum = int(str(i) + str(deg) + str(width))
-                (coefs, combs) = rboolf(arguments.N, width, deg, seed=seedNum)
-                torch.save(coefs, os.path.join(main_dir, f"coefs_func{i}_deg{deg}_width{width}.pt"))
-                torch.save(combs, os.path.join(main_dir, f"combs_func{i}_deg{deg}_width{width}.pt"))
+                seedNum = int(str(i)+str(deg)+str(width))
+                (coefs, combs) = rboolf(arguments.N, width, deg,seed=seedNum)
+                torch.save(coefs,os.path.join(main_dir, f"coefs_func{i}_deg{deg}_width{width}.pt"))
+                torch.save(combs,os.path.join(main_dir, f"combs_func{i}_deg{deg}_width{width}.pt"))
                 
                 # MPS doesn't support multiprocessing spawn, use single process
                 if mps_avail:
                     print("[MPS] Running in single process mode (MPS doesn't support multiprocessing)")
                     main(0, arguments, 1, coefs, combs, main_dir, deg, width, i)
                 else:
-                    mp.set_start_method('spawn', force=True)
+                    mp.set_start_method('spawn',force = True)
                     torch.set_num_threads(1)
-                    mp.spawn(
-                        main,
-                        args=(arguments, arguments.world_size, coefs, combs, main_dir, deg, width, i,),
-                        nprocs=arguments.world_size,
-                        join=True
-                    )
-                print("returned from mp.spawn")
+                    mp.spawn(main,args=(arguments,arguments.world_size,coefs,combs,main_dir,deg,width,i,),nprocs=arguments.world_size,join=True)
+                print("returned from mp.spwan")
                 end_time = time.time()
         
-                elapsed_time = round((end_time - start_time)/60, 3)
+                elapsed_time = round((end_time - start_time)/60,3)
                 print("elapsed time for whole training process: " + str(elapsed_time))
-

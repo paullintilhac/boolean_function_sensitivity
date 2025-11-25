@@ -261,3 +261,6 @@
 	10700  -  MemoryUsage of job (MB)
 	10956700  -  ResidentSetSize of job (KB)
 ...
+009 (51713.000.000) 2025-11-25 00:41:09 Job was aborted.
+	via condor_rm (by user plintilhac)
+...

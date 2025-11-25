@@ -446,8 +446,6 @@ def ddp_setup(rank, world_size, backend):
         return
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "23456"
-    if cuda_avail:
-        torch.cuda.set_device(rank) 
     if backend == "gloo":
         init_process_group(
             backend="gloo",
@@ -627,11 +625,10 @@ class Trainer:
         epoch_loss = 0
         total_records = 0
         start_time = time.time()
-        
         for idx, inputs in enumerate(self.train_data):
-            # targets on the trainer's device
-            targets = self.func_batch(inputs)
+            targets = self.func_batch(inputs)  # use self.device by default
             batch_loss = self._run_batch(inputs, targets)
+ 
             epoch_loss += batch_loss * float(len(inputs))
             total_records += len(inputs)
             iteration = epoch*len(self.train_data)+idx+1
@@ -683,13 +680,7 @@ class Trainer:
                     num_samples=1000,
                     device_id=self.device,
                 )
-                top_eig_train, trace_train = self.calc_hessian(
-                    copy.deepcopy(model_for_eval),
-                    loss_fn=loss_fn,
-                    num_samples=1000,
-                    device_id=self.device,
-                    use_train=True
-                )
+                top_eig_train, trace_train = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples=1000, device_id=self.device, use_train=True)
                 weight_norm = get_weight_norm(model_for_eval)
                 end_time_hessian = time.time()
                 elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60, 3) 
@@ -722,12 +713,7 @@ class Trainer:
                     "wd": self.wd
                 }
 
-                self.summary.to_csv(
-                    f"{self.dir_name}/summary.csv",
-                    mode='a',
-                    header=not os.path.exists(f"{self.dir_name}/summary.csv"),
-                    index=False
-                )
+                self.summary.to_csv(f"{self.dir_name}/summary.csv", mode='a', header=not os.path.exists(f"{self.dir_name}/summary.csv"), index=False)
                 print(f" Epoch: {epoch}, TimeElapsed: {elapsed_time}, EpochLoss: {epoch_loss:.3f}, ValidationLoss: {val_loss:.3f}")
 
             # Skip distributed ops for MPS
@@ -753,20 +739,12 @@ class Trainer:
     def calc_hessian(self, model, loss_fn, num_samples, device_id, use_train=False):
         """
         Run pyhessian purely on CPU to avoid mixed CPU/CUDA graphs.
-        Models are small, so CPU is fine.
+        Models here are tiny, so CPU is fine.
         """
         cpu = torch.device('cpu')
 
         # 1) Work on a CPU copy
         model_cpu = copy.deepcopy(model).to(cpu).eval()
-
-        # IMPORTANT: updated_transformer stores a device in `self.rank` (and maybe `self.device`).
-        # When we move the model to CPU, we must also update those attributes,
-        # otherwise forward() will still create CUDA tensors inside.
-        if hasattr(model_cpu, "rank"):
-            model_cpu.rank = cpu
-        if hasattr(model_cpu, "device"):
-            model_cpu.device = cpu
 
         # 2) Build inputs on CPU
         if use_train:
@@ -795,17 +773,15 @@ class Trainer:
         # 4) Keep everything on CPU in pyhessian
         hess_mod = hessian(model_cpu, loss_fn, data_cpu, cuda=False)
 
-        # break any grad cycles
         for p in model_cpu.parameters():
             p.grad = None
 
-        # 5) Top eigenvalue + trace
         top_eigs, _ = hess_mod.eigenvalues(maxIter=200)
         top_eig = top_eigs[0]
         trace = hess_mod.trace()
 
         return top_eig, np.mean(trace)
-    
+        
 def load_train_objs(wd, dropout, lr, num_samples, N, dim, h, f, rank, ln_eps, ln, coefs, combs, sam=False, sam_rho=0.05, asam=False):
     device_obj = get_device_from_rank(rank)
     train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(device_obj)
@@ -942,25 +918,24 @@ def main(rank, args, world_size, coefs, combs, main_dir, deg, width, i):
     )
 
     if rank == 0:
-        # Hutchinson / GN on hardcoded model
         params = collect_hardcoded_params(hardcoded_model, include_bias=True)
 
         # Build a small probe batch
-        xs_probe = torch.randint(0, 2**args.N, (512,), device=device_obj)
+        xs = torch.randint(0, 2**args.N, (512,), device=device_obj)
         with torch.no_grad():
-            ys_probe = trainer.func_batch(xs_probe)  # already on trainer.device
+            ys = trainer.func_batch(xs)  # already on trainer.device
 
         hardcoded_model.eval()
         with torch.no_grad():
-            out_probe = hardcoded_model(xs_probe)
-            loss_probe = ((out_probe.squeeze(-1) - ys_probe)**2).mean().item()
+            out = hardcoded_model(xs)
+            loss_probe = ((out.squeeze(-1) - ys)**2).mean().item()
         print(f"[CHECK] Probe MSE(model vs driver targets): {loss_probe}")
 
         if loss_probe < 1e-8:
-            tr_est = gauss_newton_trace_mse(hardcoded_model, xs_probe, params, n_samples=64, seed=0, scale=2.0)
+            tr_est = gauss_newton_trace_mse(hardcoded_model, xs, params, n_samples=64, seed=0, scale=2.0)
             print("Gauss–Newton trace estimate (perfect-fit):", tr_est)
         else:
-            tr_est = hutchinson_trace(hardcoded_model, xs_probe, ys_probe, params, n_samples=64, seed=0)
+            tr_est = hutchinson_trace(hardcoded_model, xs, ys, params, n_samples=64, seed=0)
             print("Hutchinson trace estimate:", tr_est)
 
         def loss_fn(out, tgt):
@@ -971,9 +946,7 @@ def main(rank, args, world_size, coefs, combs, main_dir, deg, width, i):
 
         hardcoded_model.eval()
         print("hardcoded model: " + str(hardcoded_model))
-        hardcoded_hessian = trainer.calc_hessian(
-            hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj
-        )
+        hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj)
         hardcoded_hessian_train = trainer.calc_hessian(
             hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj, use_train=True
         )
@@ -984,83 +957,79 @@ def main(rank, args, world_size, coefs, combs, main_dir, deg, width, i):
         print("frobenius weight norm: " + str(weight_norm))
         print("hardcoded hessian stats: " + str(hardcoded_hessian))
 
-        # Second probe for attention / scaling experiments
-        Bprobe = 256
-        xs = torch.randint(0, 2**args.N, (Bprobe,), device=device_obj)
+        # ... attention_diag_stats, scale_queries, scale_mlp_slopes, _hc_df, etc ...
+ 
+    # Second probe for attention / scaling experiments
+    Bprobe = 256
+    xs = torch.randint(0, 2**args.N, (Bprobe,), device=device_obj)
 
-        def targets_lsb(x_long):
-            dev = x_long.device
-            # MPS doesn't support right shift, do bit manipulation on CPU
-            x_long_cpu = x_long.cpu() if dev.type == 'mps' else x_long
-            shifts = torch.arange(args.N, device=x_long_cpu.device)
-            bits01 = ((x_long_cpu.unsqueeze(-1) >> shifts) & 1).float()
-            bin_pm = (bits01 - 0.5) * 2.0
-            bin_pm = bin_pm.to(dev)  # Move back to local device
-            idx = combs.long().to(dev)         # (width, D)
-            comps = bin_pm[:, idx].prod(dim=2)    # (B, width)
-            return comps @ coefs.to(dev)
+    def targets_lsb(x_long):
+        dev = x_long.device
+        # MPS doesn't support right shift, do bit manipulation on CPU
+        x_long_cpu = x_long.cpu() if dev.type == 'mps' else x_long
+        shifts = torch.arange(args.N, device=x_long_cpu.device)
+        bits01 = ((x_long_cpu.unsqueeze(-1) >> shifts) & 1).float()
+        bin_pm = (bits01 - 0.5) * 2.0
+        bin_pm = bin_pm.to(dev)  # Move back to local device
+        idx = combs.long().to(dev)         # (width, D)
+        comps = bin_pm[:, idx].prod(dim=2)    # (B, width)
+        return comps @ coefs.to(dev)
 
-        ys = targets_lsb(xs)
-        
-        # 1) Quick attention stats
-        attention_diag_stats(hardcoded_model, xs)
-        
-        # 2) Blockwise traces + top eigenvalues
-        def _normalize_rows(rows):
-            # Accept float, list of floats, list of (label, val), or list of dicts
-            if isinstance(rows, (float, int)):
-                return [("total", float(rows))]
-            if isinstance(rows, list) and rows:
-                if isinstance(rows[0], (float, int)):
-                    # list of floats
-                    return [(f"part{i}", float(v)) for i, v in enumerate(rows)]
-                if isinstance(rows[0], dict):
-                    # list of dicts with a 'trace' field
-                    return [(d.get("name", f"part{i}"), float(d["trace"])) for i, d in enumerate(rows)]
-                if isinstance(rows[0], (list, tuple)) and len(rows[0]) == 2:
-                    # already (label, value)
-                    return [(str(a), float(b)) for a, b in rows]
-            # empty or unknown -> safe default
-            return []
+    ys = targets_lsb(xs)
+    
+    # 1) Quick attention stats
+    attention_diag_stats(hardcoded_model, xs)
+    
+    # 2) Blockwise traces + top eigenvalues
+    def _normalize_rows(rows):
+        # Accept float, list of floats, list of (label, val), or list of dicts
+        if isinstance(rows, (float, int)):
+            return [("total", float(rows))]
+        if isinstance(rows, list) and rows:
+            if isinstance(rows[0], (float, int)):
+                # list of floats
+                return [(f"part{i}", float(v)) for i, v in enumerate(rows)]
+            if isinstance(rows[0], dict):
+                # list of dicts with a 'trace' field
+                return [(d.get("name", f"part{i}"), float(d["trace"])) for i, d in enumerate(rows)]
+            if isinstance(rows[0], (list, tuple)) and len(rows[0]) == 2:
+                # already (label, value)
+                return [(str(a), float(b)) for a, b in rows]
+        # empty or unknown -> safe default
+        return []
 
-        rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=64, top_iters=60)
-        rows = _normalize_rows(rows)
+    rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=64, top_iters=60)
+    rows = _normalize_rows(rows)
 
-        # 3) Scaling experiments:
-        for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
-            with scale_queries(hardcoded_model, which=("attn1","attn2"), factor=s):
-                rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
-                rows = _normalize_rows(rows)
-                tot_trace = sum(val for _, val in rows)
-                print(f"[scale_queries factor={s}] total_trace ≈ {tot_trace:.1f}")
-        
-        for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
-            with scale_mlp_slopes(hardcoded_model, factor=s):
-                rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
-                rows = _normalize_rows(rows)
-                tot_trace = sum(val for _, val in rows)
-                print(f"[scale_mlp_slopes factor={s}] total_trace ≈ {tot_trace:.1f}")
+    # 3) Scaling experiments:
+    for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
+        with scale_queries(hardcoded_model, which=("attn1","attn2"), factor=s):
+            rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
+            rows = _normalize_rows(rows)
+            tot_trace = sum(val for _, val in rows)
+            print(f"[scale_queries factor={s}] total_trace ≈ {tot_trace:.1f}")
+    
+    for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
+        with scale_mlp_slopes(hardcoded_model, factor=s):
+            rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
+            rows = _normalize_rows(rows)
+            tot_trace = sum(val for _, val in rows)
+            print(f"[scale_mlp_slopes factor={s}] total_trace ≈ {tot_trace:.1f}")
 
-        _hc_df = pd.DataFrame([{
-            "deg": trainer.deg,
-            "width": trainer.width,
-            "func": trainer.func,
-            "top_eig": hardcoded_hessian[0],
-            "trace": hardcoded_hessian[1],
-            "top_eig_train": hardcoded_hessian_train[0],
-            "trace_train": hardcoded_hessian_train[1],
-            "frobenius_weight_norm": weight_norm,
-            "test_loss": hardcoded_loss
-        }])
-        _hc_df.to_csv(
-            f"{trainer.dir_name}/hardcoded_hessian.csv",
-            index=False,
-            mode='a',
-            header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv")
-        )
-        print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
+    _hc_df = pd.DataFrame([{
+        "deg": trainer.deg,
+        "width": trainer.width,
+        "func": trainer.func,
+        "top_eig": hardcoded_hessian[0],
+        "trace": hardcoded_hessian[1],
+        "top_eig_train": hardcoded_hessian_train[0],
+        "trace_train": hardcoded_hessian_train[1],
+        "frobenius_weight_norm": weight_norm,
+        "test_loss": hardcoded_loss
+    }])
+    _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False, mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
+    print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
 
-    # Training (all ranks)
     trainer.train(args.epochs)
 
     # Skip barrier and destroy_process_group for MPS
@@ -1083,7 +1052,7 @@ if __name__ == "__main__":
     for i in range(1, 5):
         for deg in [4, 3, 2, 1]:
             losses[deg] = []
-            for width in [20,14,7,1]:
+            for width in [1, 7, 14, 20]:
                 start_time = time.time()
                 print(f"Generating: func {i}, deg {deg}, width {width}")
                 seedNum = int(str(i) + str(deg) + str(width))
