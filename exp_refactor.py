@@ -1077,7 +1077,7 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"NEURIPS_CAMERA_NOSAM_FINAL"
+    main_dir = f"NEURIPS_CAMERA_NOSAM_FINAL3"
     os.makedirs(main_dir, exist_ok=True)
 
     for i in range(1, 5):

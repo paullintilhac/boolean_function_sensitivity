@@ -61,3 +61,27 @@
 	8556  -  MemoryUsage of job (MB)
 	8760852  -  ResidentSetSize of job (KB)
 ...
+021 (51975.000.000) 2025-11-26 00:41:22 Error from starter on slot1_1@tony-3.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (51975.000.000) 2025-11-26 00:41:22 Job was evicted.
+	(0) CPU times
+		Usr 3 20:40:34, Sys 0 00:58:33  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0          64        64 
+	   Disk (KB)            :    37          37      2048 
+	   GPUs                 :     0.83        8         8 "GPU-141edc3b,GPU-1b6afc04,GPU-2c81d871,GPU-46674791,GPU-77388151,GPU-79ae9915,GPU-b635bb5d,GPU-f9e3f28e"
+	   GpusMemory (MB)      :  1624                       
+	   Memory (MB)          :  8556      245760    245760 
+	   TimeExecute (s)      : 38261                       
+	   TimeSlotBusy (s)     : 86403                       
+...
+012 (51975.000.000) 2025-11-26 00:41:23 Job was held.
+	Error from slot1_1@tony-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
