@@ -496,6 +496,9 @@ class Trainer:
             h: int,
             dropout: float,
             wd: float,
+            sam: bool,
+            asam: bool,
+            sam_rho: float
     ) -> None:
         self.gpu_id = gpu_id
         self.device = get_device_from_rank(gpu_id)
@@ -514,6 +517,9 @@ class Trainer:
         self.dir_name = dir_name  
         self.save_checkpoints = save_checkpoints
         self.dropout = dropout
+        self.sam = sam
+        self.asam = asam
+        self.sam_rho = sam_rho
         self.summary = pd.DataFrame(columns=
                                 ["deg",
                                  "width",
@@ -540,7 +546,10 @@ class Trainer:
                                  "f",
                                  "h",
                                  "dropout",
-                                 "wd"])
+                                 "wd",
+                                 "sam",
+                                 "asam",
+                                 "sam_rho"])
         self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
@@ -676,6 +685,51 @@ class Trainer:
 
                 model_for_eval = self.model.module if hasattr(self.model, 'module') else self.model
                 val_loss = self.validate(1000, model_for_eval) 
+<<<<<<< HEAD
+=======
+                loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+                start_time_hessian = time.time()
+                top_eig, trace = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device)
+                top_eig_train, trace_train = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device, use_train=True)
+                #weight_norm = 0
+                weight_norm = get_weight_norm(model_for_eval)
+                #weight_norm = torch.linalg.norm(self.model.weight)
+                #top_eig=0
+                #trace = 0
+                end_time_hessian = time.time()
+                elapsed_time_hessian = round((end_time_hessian - start_time_hessian)/60,3) 
+                print("elapsed time norm: " + str(elapsed_time_hessian))
+                self.summary.loc[0] = {"deg":self.deg,
+                                       "width":self.width,
+                                       "func":self.func,
+                                       "epoch":epoch,
+                                       "train_loss":epoch_loss.cpu(),
+                                       "val_loss":val_loss.cpu(),
+                                      "batch_size": self.batch_size,
+                                      "lr":self.lr,
+                                      "n_samples":self.n_samples,
+                                      "func_val_test":self.func_batch([2]).cpu(),
+                                      "time_elapsed":elapsed_time,
+                                      "backend":self.backend,
+                                      "top_eig":top_eig,
+                                      "trace":trace,
+                                       "top_eig_train": top_eig_train,
+                                       "trace_train": trace_train,
+                                      "stop_loss": self.stop_loss,
+                                      "ln_eps": self.ln_eps,
+                                      "ln": self.ln,
+                                      "weight_norm": weight_norm,
+                                       "d":self.d,
+                                       "f":self.f,
+                                       "h":self.h,
+                                       "dropout":self.dropout,
+                                       "wd":self.wd,
+                                       "sam":self.sam,
+                                       "asam":self.asam,
+                                       "sam_rho":self.sam_rho
+                                      }
+               
+>>>>>>> 4bdf99c (committing changes from discovery dartmouth)
 
                 def loss_fn(out, tgt):
                     out = out.squeeze(-1)
@@ -793,6 +847,7 @@ class Trainer:
                 inputs_cpu = torch.cat(collected, dim=0)
         else:
             inputs_cpu = torch.randint(0, 2**self.N, (num_samples,), device=cpu)
+
 
         # 3) Targets on CPU using the same Boolean driver
         targets_cpu = self.func_batch(inputs_cpu, device_override=cpu)
@@ -923,103 +978,90 @@ def main(rank, args, world_size, coefs, combs, main_dir, deg, width, i):
             sampler=DistributedSampler(train_set)
         )
          
-    trainer = Trainer(
-        coefs, combs, model,
-        train_loader,
-        optimizer,
-        gpu_id=rank,
-        save_every=args.save_every,
-        dir_name=main_dir,
-        width=width,
-        deg=deg,
-        func=i,
-        N=args.N,
-        n_samples=args.num_samples,
-        backend=args.backend,
-        stop_loss=args.stop_loss,
-        ln_eps=args.ln_eps,
-        ln=args.ln,
-        save_checkpoints=args.save_checkpoints,
-        d=args.dim,
-        f=args.f,
-        h=args.h,
-        dropout=args.dropout,
-        wd=args.wd
-    )
 
-    if rank == 0:
-        # Hutchinson / GN on hardcoded model
-        params = collect_hardcoded_params(hardcoded_model, include_bias=True)
+      trainer = Trainer(coefs,combs, model,
+                        train_loader,
+                        optimizer,
+                        gpu_id=rank,
+                        save_every=args.save_every,
+                        dir_name= main_dir,
+                        width=width,
+                        deg=deg,
+                        func=i,
+                        N=args.N,
+                        n_samples = args.num_samples,
+                        backend = args.backend,
+                        stop_loss = args.stop_loss,
+                        ln_eps = args.ln_eps,
+                        ln = args.ln,
+                        save_checkpoints=args.save_checkpoints,
+                        d=args.dim,
+                        f=args.f,
+                        h=args.h,
+                        dropout=args.dropout,
+                        wd=args.wd,
+                        sam=args.sam,
+                        asam=args.asam,
+                        sam_rho=args.sam_rho
+                        )
 
-        # Build a small probe batch
-        xs_probe = torch.randint(0, 2**args.N, (512,), device=device_obj)
-        with torch.no_grad():
-            ys_probe = trainer.func_batch(xs_probe)  # already on trainer.device
-
-        hardcoded_model.eval()
-        with torch.no_grad():
-            out_probe = hardcoded_model(xs_probe)
-            loss_probe = ((out_probe.squeeze(-1) - ys_probe)**2).mean().item()
-        print(f"[CHECK] Probe MSE(model vs driver targets): {loss_probe}")
-
-        if loss_probe < 1e-8:
-            tr_est = gauss_newton_trace_mse(hardcoded_model, xs_probe, params, n_samples=64, seed=0, scale=2.0)
-            print("Gauss–Newton trace estimate (perfect-fit):", tr_est)
-        else:
-            tr_est = hutchinson_trace(hardcoded_model, xs_probe, ys_probe, params, n_samples=64, seed=0)
-            print("Hutchinson trace estimate:", tr_est)
-
-        def loss_fn(out, tgt):
-            out = out.squeeze(-1)
-            # Make sure targets live on the same device as outputs
-            tgt = tgt.to(out.device)
-            return (out - tgt).pow(2).mean()
-
-        hardcoded_model.eval()
-        print("hardcoded model: " + str(hardcoded_model))
-        hardcoded_hessian = trainer.calc_hessian(
-            hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj
-        )
-        hardcoded_hessian_train = trainer.calc_hessian(
-            hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj, use_train=True
-        )
-
-        weight_norm = get_weight_norm(hardcoded_model)
-        hardcoded_loss = trainer.validate(1000, hardcoded_model)
-        print("hardcoded loss: " + str(hardcoded_loss))
-        print("frobenius weight norm: " + str(weight_norm))
-        print("hardcoded hessian stats: " + str(hardcoded_hessian))
-
-
-        _hc_df = pd.DataFrame([{
-            "deg": trainer.deg,
-            "width": trainer.width,
-            "func": trainer.func,
-            "top_eig": hardcoded_hessian[0],
-            "trace": hardcoded_hessian[1],
-            "top_eig_train": hardcoded_hessian_train[0],
-            "trace_train": hardcoded_hessian_train[1],
-            "frobenius_weight_norm": weight_norm,
-            "test_loss": hardcoded_loss
-        }])
-        _hc_df.to_csv(
-            f"{trainer.dir_name}/hardcoded_hessian.csv",
-            index=False,
-            mode='a',
-            header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv")
-        )
-        print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-
-    # Training (all ranks)
-    trainer.train(args.epochs)
-
-    # Skip barrier and destroy_process_group for MPS
-    if not mps_avail:
-        barrier()
-        print("finished training, cleaning up process group...")
-        destroy_process_group()
-        print("finished cleaning up process group")
-    return
+    
+      params = collect_hardcoded_params(hardcoded_model, include_bias=True)
+    
+      # (2) Build a small probe batch (same as you already do)
+      xs = torch.randint(0, 2**args.N, (512,), device=device)
+      with torch.no_grad():
+        ys = trainer.func_batch(xs).to(device)
+    
+      # (3) If loss is near zero, use Gauss–Newton trace:
+      hardcoded_model.eval()
+      with torch.no_grad():
+        out = hardcoded_model(xs)
+        loss_probe = ((out.squeeze(-1) - ys)**2).mean().item()
+      print(f"[CHECK] Probe MSE(model vs driver targets): {loss_probe}")
+    
+      if loss_probe < 1e-8:
+        tr_est = gauss_newton_trace_mse(hardcoded_model, xs, params, n_samples=64, seed=0, scale=2.0)
+        print("Gauss–Newton trace estimate (perfect-fit):", tr_est)
+      else:
+        tr_est = hutchinson_trace(hardcoded_model, xs, ys, params, n_samples=64, seed=0)
+        print("Hutchinson trace estimate:", tr_est)
+       
+      # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
+      loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
+      hardcoded_model.eval()
+      print("hardcoded model: " + str(hardcoded_model))
+      #addGaussianNoise(hardcoded_model, .1)
+      device_obj = get_device_from_rank(rank)
+      hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj)
+      hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj, use_train=True)
+      weight_norm = get_weight_norm(hardcoded_model)
+      hardcoded_loss = trainer.validate(1000,hardcoded_model)
+      print("hardcoded loss: " + str(hardcoded_loss))
+      print("frobenius weight norm: " + str(weight_norm)) 
+      print("hardcoded hessian stats: " + str(hardcoded_hessian))
+      
+      _hc_df = pd.DataFrame([{
+          "deg": trainer.deg,
+          "width": trainer.width,
+          "func": trainer.func,
+          "top_eig": hardcoded_hessian[0],
+          "trace": hardcoded_hessian[1],
+          "top_eig_train": hardcoded_hessian_train[0],
+          "trace_train": hardcoded_hessian_train[1],
+          "frobenius_weight_norm": weight_norm,
+          "test_loss": hardcoded_loss
+      }])
+      _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
+      print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
+      trainer.train(args.epochs)
+      # Skip barrier and destroy_process_group for MPS
+      if not mps_avail:
+          barrier()
+          print("finished training, cleaning up process group...")
+          destroy_process_group()
+          print("finished cleaning up process group")
+      return
 
 if __name__ == "__main__":
     arguments = parse_args()
@@ -1030,7 +1072,8 @@ if __name__ == "__main__":
     main_dir = f"NEURIPS_CAMERA_NOSAM_FINAL11"
     os.makedirs(main_dir, exist_ok=True)
 
-    for i in [20]:
+
+    for i in [21]:
         for deg in [5,4,3,2,1]:
             losses[deg] = []
             for width in [20,14,7,1]:
