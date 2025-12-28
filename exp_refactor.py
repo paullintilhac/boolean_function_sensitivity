@@ -444,14 +444,19 @@ def ddp_setup(rank, world_size, backend):
         # MPS doesn't support distributed training
         print(f"[MPS] Skipping DDP setup - MPS doesn't support distributed training")
         return
-    os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "23456"
+    os.environ.setdefault("MASTER_ADDR", "127.0.0.1")
+    os.environ.setdefault("MASTER_PORT", "23456")
+    
+    master_addr = os.environ["MASTER_ADDR"]
+    master_port = os.environ["MASTER_PORT"]
+    init_method = f"tcp://{master_addr}:{master_port}"
+
     if cuda_avail:
         torch.cuda.set_device(rank) 
     if backend == "gloo":
         init_process_group(
             backend="gloo",
-            init_method='tcp://127.0.0.1:23456',
+            init_method=init_method,
             rank=rank,
             world_size=world_size,
             timeout=datetime.timedelta(seconds=5400)
@@ -459,6 +464,7 @@ def ddp_setup(rank, world_size, backend):
     else:
         init_process_group(
             backend="nccl",
+            init_method=init_method,
             rank=rank,
             world_size=world_size,
             timeout=datetime.timedelta(seconds=5400)
@@ -984,62 +990,6 @@ def main(rank, args, world_size, coefs, combs, main_dir, deg, width, i):
         print("frobenius weight norm: " + str(weight_norm))
         print("hardcoded hessian stats: " + str(hardcoded_hessian))
 
-        # Second probe for attention / scaling experiments
-        Bprobe = 256
-        xs = torch.randint(0, 2**args.N, (Bprobe,), device=device_obj)
-
-        def targets_lsb(x_long):
-            dev = x_long.device
-            # MPS doesn't support right shift, do bit manipulation on CPU
-            x_long_cpu = x_long.cpu() if dev.type == 'mps' else x_long
-            shifts = torch.arange(args.N, device=x_long_cpu.device)
-            bits01 = ((x_long_cpu.unsqueeze(-1) >> shifts) & 1).float()
-            bin_pm = (bits01 - 0.5) * 2.0
-            bin_pm = bin_pm.to(dev)  # Move back to local device
-            idx = combs.long().to(dev)         # (width, D)
-            comps = bin_pm[:, idx].prod(dim=2)    # (B, width)
-            return comps @ coefs.to(dev)
-
-        ys = targets_lsb(xs)
-        
-        # 1) Quick attention stats
-        attention_diag_stats(hardcoded_model, xs)
-        
-        # 2) Blockwise traces + top eigenvalues
-        def _normalize_rows(rows):
-            # Accept float, list of floats, list of (label, val), or list of dicts
-            if isinstance(rows, (float, int)):
-                return [("total", float(rows))]
-            if isinstance(rows, list) and rows:
-                if isinstance(rows[0], (float, int)):
-                    # list of floats
-                    return [(f"part{i}", float(v)) for i, v in enumerate(rows)]
-                if isinstance(rows[0], dict):
-                    # list of dicts with a 'trace' field
-                    return [(d.get("name", f"part{i}"), float(d["trace"])) for i, d in enumerate(rows)]
-                if isinstance(rows[0], (list, tuple)) and len(rows[0]) == 2:
-                    # already (label, value)
-                    return [(str(a), float(b)) for a, b in rows]
-            # empty or unknown -> safe default
-            return []
-
-        rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=64, top_iters=60)
-        rows = _normalize_rows(rows)
-
-        # 3) Scaling experiments:
-        for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
-            with scale_queries(hardcoded_model, which=("attn1","attn2"), factor=s):
-                rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
-                rows = _normalize_rows(rows)
-                tot_trace = sum(val for _, val in rows)
-                print(f"[scale_queries factor={s}] total_trace ≈ {tot_trace:.1f}")
-        
-        for s in [0.25, 0.5, 1.0, 2.0, 4.0]:
-            with scale_mlp_slopes(hardcoded_model, factor=s):
-                rows = analyze_hessian_blocks(hardcoded_model, xs, ys, n_hutch=32, top_iters=40)
-                rows = _normalize_rows(rows)
-                tot_trace = sum(val for _, val in rows)
-                print(f"[scale_mlp_slopes factor={s}] total_trace ≈ {tot_trace:.1f}")
 
         _hc_df = pd.DataFrame([{
             "deg": trainer.deg,
@@ -1077,11 +1027,11 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"NEURIPS_CAMERA_NOSAM_FINAL3"
+    main_dir = f"NEURIPS_CAMERA_NOSAM_FINAL11"
     os.makedirs(main_dir, exist_ok=True)
 
-    for i in range(1, 5):
-        for deg in [4, 3, 2, 1]:
+    for i in [20]:
+        for deg in [5,4,3,2,1]:
             losses[deg] = []
             for width in [20,14,7,1]:
                 start_time = time.time()

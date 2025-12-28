@@ -1,0 +1,718 @@
+000 (56640.000.000) 2025-12-23 18:14:43 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_1911001_5071>
+...
+001 (56640.000.000) 2025-12-23 18:14:59 Job executing on host: <134.96.105.147:9618?addrs=134.96.105.147-9618&alias=hopper-1.coli.uni-saarland.de&noUDP&sock=startd_3741_97e3>
+	SlotName: slot1_3@hopper-1.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_5a8ccc15 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_1036155"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_5a8ccc15 = [ Id = "GPU-5a8ccc15"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "5a8ccc15-f631-aa26-5955-7576c68f6987"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:A1:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+006 (56640.000.000) 2025-12-23 18:15:08 Image size of job updated: 25716
+	26  -  MemoryUsage of job (MB)
+	25716  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 18:20:09 Image size of job updated: 2154172
+	1875  -  MemoryUsage of job (MB)
+	1919108  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 18:25:10 Image size of job updated: 2154172
+	1975  -  MemoryUsage of job (MB)
+	2021892  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 18:30:10 Image size of job updated: 2154172
+	2035  -  MemoryUsage of job (MB)
+	2083288  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 18:55:14 Image size of job updated: 2192784
+	2035  -  MemoryUsage of job (MB)
+	2083288  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 19:00:14 Image size of job updated: 2199480
+	2035  -  MemoryUsage of job (MB)
+	2083288  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 19:15:16 Image size of job updated: 2199480
+	2071  -  MemoryUsage of job (MB)
+	2120240  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 20:00:22 Image size of job updated: 2199480
+	2094  -  MemoryUsage of job (MB)
+	2143840  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 20:20:25 Image size of job updated: 2206788
+	2094  -  MemoryUsage of job (MB)
+	2143840  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 20:30:26 Image size of job updated: 2206788
+	2121  -  MemoryUsage of job (MB)
+	2171740  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:05:31 Image size of job updated: 2206788
+	2129  -  MemoryUsage of job (MB)
+	2179916  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:15:32 Image size of job updated: 2246180
+	2129  -  MemoryUsage of job (MB)
+	2179916  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:20:33 Image size of job updated: 2263064
+	2129  -  MemoryUsage of job (MB)
+	2179916  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:25:34 Image size of job updated: 2263064
+	2136  -  MemoryUsage of job (MB)
+	2186272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:30:34 Image size of job updated: 2263064
+	2136  -  MemoryUsage of job (MB)
+	2187024  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:35:35 Image size of job updated: 2263064
+	2184  -  MemoryUsage of job (MB)
+	2236244  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:45:36 Image size of job updated: 2265048
+	2184  -  MemoryUsage of job (MB)
+	2236244  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 21:55:38 Image size of job updated: 2296372
+	2184  -  MemoryUsage of job (MB)
+	2236244  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 22:05:39 Image size of job updated: 2320044
+	2196  -  MemoryUsage of job (MB)
+	2248512  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 22:10:40 Image size of job updated: 2320044
+	2208  -  MemoryUsage of job (MB)
+	2260816  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 22:15:40 Image size of job updated: 2332144
+	2208  -  MemoryUsage of job (MB)
+	2260816  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 22:25:42 Image size of job updated: 2341164
+	2208  -  MemoryUsage of job (MB)
+	2260816  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 22:40:43 Image size of job updated: 2356764
+	2208  -  MemoryUsage of job (MB)
+	2260816  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 22:50:43 Image size of job updated: 2356764
+	2222  -  MemoryUsage of job (MB)
+	2274588  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 22:55:44 Image size of job updated: 2356764
+	2222  -  MemoryUsage of job (MB)
+	2274700  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 23:00:44 Image size of job updated: 2356764
+	2254  -  MemoryUsage of job (MB)
+	2307472  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 23:05:44 Image size of job updated: 2378480
+	2254  -  MemoryUsage of job (MB)
+	2307472  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-23 23:10:45 Image size of job updated: 2378832
+	2267  -  MemoryUsage of job (MB)
+	2321380  -  ResidentSetSize of job (KB)
+...
+001 (56640.000.000) 2025-12-24 05:38:01 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_6@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_8e8e60e4 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3034760"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+004 (56640.000.000) 2025-12-24 07:03:37 Job was evicted.
+	(0) CPU times
+		Usr 0 05:40:43, Sys 0 00:23:28  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0           8         8 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     0.09        1         1 "GPU-8e8e60e4"
+	   GpusMemory (MB)      :  1906                       
+	   Memory (MB)          :  2442       30720     30720 
+	   TimeExecute (s)      :  5135                       
+	   TimeSlotBusy (s)     :  5136                       
+...
+012 (56640.000.000) 2025-12-24 07:03:37 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (56640.000.000) 2025-12-24 07:05:45 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (56640.000.000) 2025-12-24 07:05:46 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+	SlotName: slot1_5@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_b893db5b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3214500"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+006 (56640.000.000) 2025-12-24 12:41:29 Image size of job updated: 2506788
+	2442  -  MemoryUsage of job (MB)
+	2500000  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 13:06:32 Image size of job updated: 2509240
+	2442  -  MemoryUsage of job (MB)
+	2500000  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 13:21:33 Image size of job updated: 2511424
+	2442  -  MemoryUsage of job (MB)
+	2500000  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 13:26:33 Image size of job updated: 2544340
+	2442  -  MemoryUsage of job (MB)
+	2500000  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 13:46:34 Image size of job updated: 2558588
+	2442  -  MemoryUsage of job (MB)
+	2500000  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 13:51:35 Image size of job updated: 2558588
+	2465  -  MemoryUsage of job (MB)
+	2523300  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 14:06:37 Image size of job updated: 2585072
+	2465  -  MemoryUsage of job (MB)
+	2523300  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 14:31:39 Image size of job updated: 2641808
+	2489  -  MemoryUsage of job (MB)
+	2548560  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 14:56:41 Image size of job updated: 2649172
+	2489  -  MemoryUsage of job (MB)
+	2548560  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 15:01:42 Image size of job updated: 2649172
+	2501  -  MemoryUsage of job (MB)
+	2560784  -  ResidentSetSize of job (KB)
+...
+022 (56640.000.000) 2025-12-24 15:28:59 Job disconnected, attempting to reconnect
+    Local schedd and job shadow died, schedd now running again
+    Trying to reconnect to slot1_5@hopper-2.coli.uni-saarland.de <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+...
+022 (56640.000.000) 2025-12-24 15:29:01 Job disconnected, attempting to reconnect
+    Local schedd and job shadow died, schedd now running again
+    Trying to reconnect to slot1_5@hopper-2.coli.uni-saarland.de <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+...
+023 (56640.000.000) 2025-12-24 15:29:02 Job reconnected to slot1_5@hopper-2.coli.uni-saarland.de
+    startd address: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+    starter address: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=slot1_5_4981_50a4_2443>
+...
+006 (56640.000.000) 2025-12-24 16:36:51 Image size of job updated: 2804556
+	2686  -  MemoryUsage of job (MB)
+	2750000  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 16:46:52 Image size of job updated: 2804556
+	2690  -  MemoryUsage of job (MB)
+	2754520  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 17:16:54 Image size of job updated: 2906140
+	2690  -  MemoryUsage of job (MB)
+	2754520  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 18:32:01 Image size of job updated: 2906140
+	2695  -  MemoryUsage of job (MB)
+	2759452  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 18:37:02 Image size of job updated: 2906140
+	2731  -  MemoryUsage of job (MB)
+	2796236  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 19:37:09 Image size of job updated: 2906140
+	2744  -  MemoryUsage of job (MB)
+	2808904  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 19:47:10 Image size of job updated: 2906140
+	2789  -  MemoryUsage of job (MB)
+	2855908  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 19:52:11 Image size of job updated: 2906140
+	2805  -  MemoryUsage of job (MB)
+	2871420  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 19:57:11 Image size of job updated: 2908336
+	2841  -  MemoryUsage of job (MB)
+	2908336  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 20:02:12 Image size of job updated: 2932192
+	2841  -  MemoryUsage of job (MB)
+	2908336  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 20:37:14 Image size of job updated: 2961628
+	2854  -  MemoryUsage of job (MB)
+	2921960  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 20:47:16 Image size of job updated: 2980220
+	2854  -  MemoryUsage of job (MB)
+	2921960  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 21:02:17 Image size of job updated: 2985380
+	2854  -  MemoryUsage of job (MB)
+	2921960  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 21:32:20 Image size of job updated: 3027240
+	2854  -  MemoryUsage of job (MB)
+	2921960  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 21:37:22 Image size of job updated: 3027240
+	2868  -  MemoryUsage of job (MB)
+	2936668  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 21:52:23 Image size of job updated: 3027240
+	2908  -  MemoryUsage of job (MB)
+	2976904  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 21:57:23 Image size of job updated: 3027240
+	2920  -  MemoryUsage of job (MB)
+	2989080  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:02:23 Image size of job updated: 3031636
+	2920  -  MemoryUsage of job (MB)
+	2989080  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:07:24 Image size of job updated: 3035216
+	2934  -  MemoryUsage of job (MB)
+	3003960  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:12:24 Image size of job updated: 3037424
+	2934  -  MemoryUsage of job (MB)
+	3004272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:22:26 Image size of job updated: 3051688
+	2934  -  MemoryUsage of job (MB)
+	3004272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:27:26 Image size of job updated: 3056552
+	2934  -  MemoryUsage of job (MB)
+	3004272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:32:27 Image size of job updated: 3074512
+	2934  -  MemoryUsage of job (MB)
+	3004272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:37:28 Image size of job updated: 3077080
+	2934  -  MemoryUsage of job (MB)
+	3004272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:42:28 Image size of job updated: 3093232
+	2934  -  MemoryUsage of job (MB)
+	3004272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:47:29 Image size of job updated: 3108120
+	2934  -  MemoryUsage of job (MB)
+	3004272  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 22:57:29 Image size of job updated: 3108120
+	3002  -  MemoryUsage of job (MB)
+	3073452  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 23:02:30 Image size of job updated: 3108120
+	3026  -  MemoryUsage of job (MB)
+	3098572  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 23:12:31 Image size of job updated: 3118140
+	3026  -  MemoryUsage of job (MB)
+	3098572  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-24 23:47:35 Image size of job updated: 3120108
+	3026  -  MemoryUsage of job (MB)
+	3098572  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 00:12:38 Image size of job updated: 3151172
+	3026  -  MemoryUsage of job (MB)
+	3098572  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 00:32:39 Image size of job updated: 3163332
+	3026  -  MemoryUsage of job (MB)
+	3098572  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 00:47:41 Image size of job updated: 3163332
+	3034  -  MemoryUsage of job (MB)
+	3106724  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 00:57:41 Image size of job updated: 3187668
+	3034  -  MemoryUsage of job (MB)
+	3106724  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 01:02:42 Image size of job updated: 3187668
+	3059  -  MemoryUsage of job (MB)
+	3132168  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 01:12:42 Image size of job updated: 3190512
+	3059  -  MemoryUsage of job (MB)
+	3132168  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 01:17:43 Image size of job updated: 3235636
+	3059  -  MemoryUsage of job (MB)
+	3132168  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 01:22:43 Image size of job updated: 3235636
+	3071  -  MemoryUsage of job (MB)
+	3144480  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 01:32:45 Image size of job updated: 3235636
+	3088  -  MemoryUsage of job (MB)
+	3161932  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 01:37:45 Image size of job updated: 3260752
+	3100  -  MemoryUsage of job (MB)
+	3174108  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:07:47 Image size of job updated: 3260752
+	3108  -  MemoryUsage of job (MB)
+	3182140  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:12:48 Image size of job updated: 3260752
+	3113  -  MemoryUsage of job (MB)
+	3186900  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:17:48 Image size of job updated: 3285340
+	3113  -  MemoryUsage of job (MB)
+	3186900  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:22:49 Image size of job updated: 3285340
+	3123  -  MemoryUsage of job (MB)
+	3197332  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:32:50 Image size of job updated: 3301044
+	3123  -  MemoryUsage of job (MB)
+	3197332  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:37:51 Image size of job updated: 3301044
+	3125  -  MemoryUsage of job (MB)
+	3199724  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:42:51 Image size of job updated: 3301044
+	3130  -  MemoryUsage of job (MB)
+	3204972  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:47:51 Image size of job updated: 3309260
+	3155  -  MemoryUsage of job (MB)
+	3230472  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 02:57:52 Image size of job updated: 3333136
+	3155  -  MemoryUsage of job (MB)
+	3230472  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 03:02:53 Image size of job updated: 3374116
+	3155  -  MemoryUsage of job (MB)
+	3230472  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 03:12:54 Image size of job updated: 3374116
+	3160  -  MemoryUsage of job (MB)
+	3235092  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 03:17:55 Image size of job updated: 3374116
+	3177  -  MemoryUsage of job (MB)
+	3252620  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 03:22:56 Image size of job updated: 3374116
+	3190  -  MemoryUsage of job (MB)
+	3265716  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 03:32:57 Image size of job updated: 3374116
+	3200  -  MemoryUsage of job (MB)
+	3275792  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 03:47:58 Image size of job updated: 3374116
+	3255  -  MemoryUsage of job (MB)
+	3332812  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 03:57:59 Image size of job updated: 3374116
+	3257  -  MemoryUsage of job (MB)
+	3334616  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 04:18:02 Image size of job updated: 3383484
+	3257  -  MemoryUsage of job (MB)
+	3334616  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 04:28:03 Image size of job updated: 3385376
+	3257  -  MemoryUsage of job (MB)
+	3334616  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 04:33:03 Image size of job updated: 3430676
+	3257  -  MemoryUsage of job (MB)
+	3334616  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 04:53:04 Image size of job updated: 3430676
+	3310  -  MemoryUsage of job (MB)
+	3388452  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 05:03:05 Image size of job updated: 3440196
+	3310  -  MemoryUsage of job (MB)
+	3388452  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 05:13:07 Image size of job updated: 3440196
+	3314  -  MemoryUsage of job (MB)
+	3392516  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 05:18:07 Image size of job updated: 3454552
+	3314  -  MemoryUsage of job (MB)
+	3392516  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 05:23:08 Image size of job updated: 3457120
+	3314  -  MemoryUsage of job (MB)
+	3392516  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 05:33:08 Image size of job updated: 3457120
+	3328  -  MemoryUsage of job (MB)
+	3407332  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 05:38:09 Image size of job updated: 3466608
+	3328  -  MemoryUsage of job (MB)
+	3407332  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 05:43:09 Image size of job updated: 3497412
+	3328  -  MemoryUsage of job (MB)
+	3407332  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:03:12 Image size of job updated: 3497412
+	3331  -  MemoryUsage of job (MB)
+	3410892  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:08:12 Image size of job updated: 3497412
+	3377  -  MemoryUsage of job (MB)
+	3457992  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:18:13 Image size of job updated: 3512768
+	3377  -  MemoryUsage of job (MB)
+	3457992  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:28:14 Image size of job updated: 3516100
+	3377  -  MemoryUsage of job (MB)
+	3457992  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:33:15 Image size of job updated: 3560444
+	3423  -  MemoryUsage of job (MB)
+	3504824  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:38:15 Image size of job updated: 3560444
+	3426  -  MemoryUsage of job (MB)
+	3508016  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:48:17 Image size of job updated: 3560444
+	3428  -  MemoryUsage of job (MB)
+	3509556  -  ResidentSetSize of job (KB)
+...
+006 (56640.000.000) 2025-12-25 06:58:18 Image size of job updated: 3573948
+	3428  -  MemoryUsage of job (MB)
+	3509556  -  ResidentSetSize of job (KB)
+...
+021 (56640.000.000) 2025-12-25 07:05:46 Error from starter on slot1_5@hopper-2.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (56640.000.000) 2025-12-25 07:05:46 Job was evicted.
+	(0) CPU times
+		Usr 2 14:59:12, Sys 0 04:06:12  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_5@hopper-2.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :         Usage  Request Allocated 
+	   Cpus                 :          3.70        8         8 
+	   Disk (KB)            :          3           3      2048 
+	   Memory (MB)          :       3428       30720     30720 
+	   TimeExecute (s)      :       5135                       
+	   TimeSlotBusy (s)     : 1189572620                       
+...
+012 (56640.000.000) 2025-12-25 07:05:46 Job was held.
+	Error from slot1_5@hopper-2.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+013 (56640.000.000) 2025-12-26 15:21:58 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (56640.000.000) 2025-12-26 15:22:58 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_523989"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+004 (56640.000.000) 2025-12-26 15:59:19 Job was evicted.
+	(0) CPU times
+		Usr 0 02:18:19, Sys 0 00:08:27  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     2.99        8         8 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     0.04        1         1 "GPU-d083280b"
+	   GpusMemory (MB)      :  1906                       
+	   Memory (MB)          :  3663       30720     30720 
+	   TimeExecute (s)      :  2180                       
+	   TimeSlotBusy (s)     :  2181                       
+...
+012 (56640.000.000) 2025-12-26 15:59:19 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (56640.000.000) 2025-12-26 16:00:30 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (56640.000.000) 2025-12-26 16:01:30 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_546941"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+004 (56640.000.000) 2025-12-26 16:05:15 Job was evicted.
+	(0) CPU times
+		Usr 0 00:10:18, Sys 0 00:00:37  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        8         8 
+	   Disk (KB)            :        3        3      2048 
+	   GPUs                 :        0        1         1 "GPU-d083280b"
+	   GpusMemory (MB)      :      473                    
+	   Memory (MB)          :     3663    30720     30720 
+	   TimeExecute (s)      :      224                    
+	   TimeSlotBusy (s)     :      225                    
+...
+012 (56640.000.000) 2025-12-26 16:05:15 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (56640.000.000) 2025-12-26 16:05:24 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (56640.000.000) 2025-12-26 16:05:25 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_549487"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+004 (56640.000.000) 2025-12-26 16:11:54 Job was evicted.
+	(0) CPU times
+		Usr 0 00:17:16, Sys 0 00:00:54  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     6.87        8         8 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     0           1         1 "GPU-d083280b"
+	   GpusMemory (MB)      :  1906                       
+	   Memory (MB)          :  3663       30720     30720 
+	   TimeExecute (s)      :   388                       
+	   TimeSlotBusy (s)     :   389                       
+...
+012 (56640.000.000) 2025-12-26 16:11:54 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (56640.000.000) 2025-12-26 16:13:26 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (56640.000.000) 2025-12-26 16:14:40 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_555439"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+021 (56640.000.000) 2025-12-27 16:14:43 Error from starter on slot1_2@hopper-3.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (56640.000.000) 2025-12-27 16:14:43 Job was evicted.
+	(0) CPU times
+		Usr 4 02:48:22, Sys 0 07:14:18  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_2@hopper-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     4.22        8         8 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     0.10        1         1 "GPU-d083280b"
+	   GpusMemory (MB)      :  1906                       
+	   Memory (MB)          :  3663       30720     30720 
+	   TimeExecute (s)      :   388                       
+	   TimeSlotBusy (s)     : 86403                       
+...
+012 (56640.000.000) 2025-12-27 16:14:43 Job was held.
+	Error from slot1_2@hopper-3.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+013 (56640.000.000) 2025-12-28 08:10:55 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (56640.000.000) 2025-12-28 08:10:56 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_1702875"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+004 (56640.000.000) 2025-12-28 08:11:11 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        8         8 
+	   Disk (KB)            :        3        3      2048 
+	   GPUs                 :        0        1         1 "GPU-d083280b"
+	   GpusMemory (MB)      :      473                    
+	   Memory (MB)          :     3663    30720     30720 
+	   TimeExecute (s)      :       14                    
+	   TimeSlotBusy (s)     :       15                    
+...
+012 (56640.000.000) 2025-12-28 08:11:11 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (56640.000.000) 2025-12-28 08:12:32 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (56640.000.000) 2025-12-28 08:12:32 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_1703746"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...

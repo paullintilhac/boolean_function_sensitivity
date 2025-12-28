@@ -27,16 +27,15 @@ getenv                      = True
 
 # Optional: if you stage other inputs (configs, checkpoints), list them here:
 # transfer_input_files      = job_wrapper.sh, configs.yaml, data.tar.gz
-
+#
 # --- Resources ---
-request_cpus                = 64
-request_memory              = 240G
-request_gpus                = 8
-
+request_cpus                = 8
+request_memory              = 30G
+request_gpus                = 1
 # --- Matching (adjust attribute names to your pool!) ---
 # Many pools publish CUDACapability / CUDAGlobalMemoryMb; yours used GPUs_*.
 # If your original attrs are correct for your site, keep them:
-requirements                = (GPUs_Capability >= 7) && (GPUs_GlobalMemoryMb >= 50000)
+requirements                = (GPUs_Capability >= 1) && (GPUs_GlobalMemoryMb >= 50000)
 
 # If jobs don’t match, inspect with: condor_status -l | egrep -i 'CUDA|GPU|Capability|Memory'
 # and switch to:

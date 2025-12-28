@@ -41,20 +41,22 @@ else
     git fetch
     git checkout hardcoded
 fi
+export MASTER_ADDR=127.0.0.1
+export MASTER_PORT=$((20000 + (RANDOM % 20000)))   # random high port
 python3 exp_refactor.py  --N 20 \
- --dim 2 \
+ --dim 30 \
  --h 1 \
  --f 128 \
- --bs 4096 \
- --epochs 1000000 \
+ --bs 64 \
+ --epochs 100000 \
  --num_samples 16384 \
  --repeat 1 \
- --lr "4e-3"\
+ --lr "1e-4"\
  --dropout 0.1 \
  --wd .0001 \
- --world_size 8 \
+ --world_size 1 \
  --backend nccl \
- --stop_loss .02 \
- --save_every 10
- #--sam
+ --stop_loss .01 \
+ --save_every 10 \
+ --sam
 

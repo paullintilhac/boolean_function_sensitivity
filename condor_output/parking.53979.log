@@ -1,0 +1,128 @@
+000 (53979.000.000) 2025-12-12 09:02:18 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_933_89f3>
+...
+001 (53979.000.000) 2025-12-12 09:02:19 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_272693"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+021 (53979.000.000) 2025-12-12 09:02:19 Error from starter on slot1_2@hopper-3.coli.uni-saarland.de:
+	Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Code 6 Subcode 13
+...
+004 (53979.000.000) 2025-12-12 09:02:19 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_2@hopper-3.coli.uni-saarland.de: Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                 8         8 
+	   Disk (KB)            :        3        3      2048 
+	   GPUs                 :                 1         1 "GPU-d083280b"
+	   Memory (MB)          :             30720     30720 
+	   TimeSlotBusy (s)     :        0                    
+...
+012 (53979.000.000) 2025-12-12 09:02:19 Job was held.
+	Error from slot1_2@hopper-3.coli.uni-saarland.de: Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Code 6 Subcode 13
+...
+013 (53979.000.000) 2025-12-12 09:10:32 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (53979.000.000) 2025-12-12 09:10:48 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_276420"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+006 (53979.000.000) 2025-12-12 09:11:02 Image size of job updated: 18884
+	19  -  MemoryUsage of job (MB)
+	18884  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 09:16:03 Image size of job updated: 1978700
+	1902  -  MemoryUsage of job (MB)
+	1946936  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 09:21:04 Image size of job updated: 1991072
+	1902  -  MemoryUsage of job (MB)
+	1946936  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 09:26:04 Image size of job updated: 2042560
+	1924  -  MemoryUsage of job (MB)
+	1969548  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 09:36:06 Image size of job updated: 2042560
+	1940  -  MemoryUsage of job (MB)
+	1985868  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 10:11:10 Image size of job updated: 2042560
+	1960  -  MemoryUsage of job (MB)
+	2006280  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 10:16:11 Image size of job updated: 2049512
+	1960  -  MemoryUsage of job (MB)
+	2006280  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 10:21:12 Image size of job updated: 2049512
+	1960  -  MemoryUsage of job (MB)
+	2006636  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 10:26:12 Image size of job updated: 2049512
+	1965  -  MemoryUsage of job (MB)
+	2011364  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 10:36:14 Image size of job updated: 2090884
+	1978  -  MemoryUsage of job (MB)
+	2024976  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 10:46:15 Image size of job updated: 2090884
+	1982  -  MemoryUsage of job (MB)
+	2028848  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 11:06:18 Image size of job updated: 2090884
+	1998  -  MemoryUsage of job (MB)
+	2045576  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 11:11:18 Image size of job updated: 2090884
+	2008  -  MemoryUsage of job (MB)
+	2055692  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 12:31:26 Image size of job updated: 2090884
+	2017  -  MemoryUsage of job (MB)
+	2064928  -  ResidentSetSize of job (KB)
+...
+006 (53979.000.000) 2025-12-12 12:36:26 Image size of job updated: 2102936
+	2017  -  MemoryUsage of job (MB)
+	2064928  -  ResidentSetSize of job (KB)
+...
+005 (53979.000.000) 2025-12-12 13:19:36 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 16:03:15, Sys 0 00:44:03  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 16:03:15, Sys 0 00:44:03  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0.65        8         8 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     0.08        1         1 "GPU-d083280b"
+	   GpusMemory (MB)      :  1878                       
+	   Memory (MB)          :  2017       30720     30720 
+	   TimeExecute (s)      : 14928                       
+	   TimeSlotBusy (s)     : 14928                       
+
+	Job terminated of its own accord at 2025-12-12T12:19:36Z with exit-code 0.
+...

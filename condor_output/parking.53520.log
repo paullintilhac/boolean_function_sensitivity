@@ -1,0 +1,147 @@
+000 (53520.000.000) 2025-12-06 02:04:07 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_933_89f3>
+...
+001 (53520.000.000) 2025-12-06 02:04:08 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+	SlotName: slot1_2@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_8d445daa }
+	CondorScratchDir = "/var/lib/condor/execute/dir_647192"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_8d445daa = [ Id = "GPU-8d445daa"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8d445daa-1c87-046e-adb5-fc2436f74abe"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BD:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+006 (53520.000.000) 2025-12-06 02:04:16 Image size of job updated: 112
+	1  -  MemoryUsage of job (MB)
+	112  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:09:16 Image size of job updated: 621792
+	608  -  MemoryUsage of job (MB)
+	621792  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:14:17 Image size of job updated: 1990776
+	1804  -  MemoryUsage of job (MB)
+	1846748  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:19:17 Image size of job updated: 2011792
+	1808  -  MemoryUsage of job (MB)
+	1850460  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:24:18 Image size of job updated: 2011792
+	1811  -  MemoryUsage of job (MB)
+	1854224  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:29:18 Image size of job updated: 2017572
+	1864  -  MemoryUsage of job (MB)
+	1907840  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:34:18 Image size of job updated: 2019000
+	1920  -  MemoryUsage of job (MB)
+	1965220  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:44:19 Image size of job updated: 2019076
+	1920  -  MemoryUsage of job (MB)
+	1965220  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:49:20 Image size of job updated: 2022412
+	1920  -  MemoryUsage of job (MB)
+	1965220  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 02:59:20 Image size of job updated: 2049772
+	1920  -  MemoryUsage of job (MB)
+	1965220  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 03:09:21 Image size of job updated: 2075848
+	1920  -  MemoryUsage of job (MB)
+	1965220  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 03:19:22 Image size of job updated: 2081940
+	1937  -  MemoryUsage of job (MB)
+	1983388  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 03:24:22 Image size of job updated: 2081940
+	1949  -  MemoryUsage of job (MB)
+	1995568  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 04:04:26 Image size of job updated: 2084864
+	1949  -  MemoryUsage of job (MB)
+	1995568  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 07:19:44 Image size of job updated: 2084864
+	1978  -  MemoryUsage of job (MB)
+	2025052  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 07:29:45 Image size of job updated: 2084864
+	1995  -  MemoryUsage of job (MB)
+	2041916  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 07:34:45 Image size of job updated: 2084864
+	2008  -  MemoryUsage of job (MB)
+	2056084  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 07:54:47 Image size of job updated: 2092772
+	2008  -  MemoryUsage of job (MB)
+	2056084  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 08:14:49 Image size of job updated: 2092772
+	2040  -  MemoryUsage of job (MB)
+	2088192  -  ResidentSetSize of job (KB)
+...
+006 (53520.000.000) 2025-12-06 08:24:50 Image size of job updated: 2105480
+	2040  -  MemoryUsage of job (MB)
+	2088192  -  ResidentSetSize of job (KB)
+...
+021 (53520.000.000) 2025-12-07 02:04:11 Error from starter on slot1_2@hopper-2.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (53520.000.000) 2025-12-07 02:04:11 Job was evicted.
+	(0) CPU times
+		Usr 1 02:07:41, Sys 0 01:34:37  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_2@hopper-2.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0           8         8 
+	   Disk (KB)            :    37          37      2048 
+	   GPUs                 :     0.02        1         1 "GPU-8d445daa"
+	   GpusMemory (MB)      :  1892                       
+	   Memory (MB)          :  2040       30720     30720 
+	   TimeExecute (s)      : 32235                       
+	   TimeSlotBusy (s)     : 86404                       
+...
+012 (53520.000.000) 2025-12-07 02:04:11 Job was held.
+	Error from slot1_2@hopper-2.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+013 (53520.000.000) 2025-12-12 08:51:31 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (53520.000.000) 2025-12-12 08:51:38 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_268035"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+004 (53520.000.000) 2025-12-12 08:58:07 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        8         8 
+	   Disk (KB)            :       37       37      2048 
+	   GPUs                 :        0        1         1 "GPU-d083280b"
+	   GpusMemory (MB)      :      473                    
+	   Memory (MB)          :        1    30720     30720 
+	   TimeExecute (s)      :      389                    
+	   TimeSlotBusy (s)     :      389                    
+...
+009 (53520.000.000) 2025-12-12 08:58:07 Job was aborted.
+	via condor_rm (by user plintilhac)
+...

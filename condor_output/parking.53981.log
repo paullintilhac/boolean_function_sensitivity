@@ -1,0 +1,37 @@
+000 (53981.000.000) 2025-12-12 09:02:24 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_933_89f3>
+...
+001 (53981.000.000) 2025-12-12 09:02:38 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_5@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_613453b3 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_272837"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_613453b3 = [ Id = "GPU-613453b3"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "613453b3-127b-5f97-2788-05cb235e376e"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+021 (53981.000.000) 2025-12-12 09:02:38 Error from starter on slot1_5@hopper-3.coli.uni-saarland.de:
+	Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Code 6 Subcode 13
+...
+004 (53981.000.000) 2025-12-12 09:02:38 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_5@hopper-3.coli.uni-saarland.de: Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                 8         8 
+	   Disk (KB)            :        3        3      2048 
+	   GPUs                 :                 1         1 "GPU-613453b3"
+	   Memory (MB)          :             30720     30720 
+	   TimeSlotBusy (s)     :        0                    
+...
+012 (53981.000.000) 2025-12-12 09:02:38 Job was held.
+	Error from slot1_5@hopper-3.coli.uni-saarland.de: Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Code 6 Subcode 13
+...
+009 (53981.000.000) 2025-12-12 09:02:52 Job was aborted.
+	via condor_rm (by user plintilhac)
+...

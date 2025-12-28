@@ -1,0 +1,72 @@
+000 (53984.000.000) 2025-12-12 09:03:36 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_933_89f3>
+...
+001 (53984.000.000) 2025-12-12 09:03:36 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_2@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_d083280b }
+	CondorScratchDir = "/var/lib/condor/execute/dir_273243"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+021 (53984.000.000) 2025-12-12 09:03:36 Error from starter on slot1_2@hopper-3.coli.uni-saarland.de:
+	Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Code 6 Subcode 13
+...
+004 (53984.000.000) 2025-12-12 09:03:36 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_2@hopper-3.coli.uni-saarland.de: Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                 8         8 
+	   Disk (KB)            :        3        3      2048 
+	   GPUs                 :                 1         1 "GPU-d083280b"
+	   Memory (MB)          :             30720     30720 
+	   TimeSlotBusy (s)     :        0                    
+...
+012 (53984.000.000) 2025-12-12 09:03:36 Job was held.
+	Error from slot1_2@hopper-3.coli.uni-saarland.de: Failed to execute '/nethome/plintilhac/boolean_function_sensitivity/job_wrapper.sh': (errno=13: 'Permission denied')
+	Code 6 Subcode 13
+...
+013 (53984.000.000) 2025-12-12 09:10:48 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (53984.000.000) 2025-12-12 09:10:48 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_5@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_613453b3 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_276421"
+	Cpus = 8
+	Disk = 2048
+	GPUs = 1
+	GPUs_GPU_613453b3 = [ Id = "GPU-613453b3"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "613453b3-127b-5f97-2788-05cb235e376e"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 30720
+...
+006 (53984.000.000) 2025-12-12 09:11:02 Image size of job updated: 18880
+	19  -  MemoryUsage of job (MB)
+	18880  -  ResidentSetSize of job (KB)
+...
+006 (53984.000.000) 2025-12-12 09:11:43 Image size of job updated: 217976
+	19  -  MemoryUsage of job (MB)
+	18880  -  ResidentSetSize of job (KB)
+...
+004 (53984.000.000) 2025-12-12 09:11:43 Job was evicted.
+	(0) CPU times
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :        0        8         8 
+	   Disk (KB)            :        3        3      2048 
+	   GPUs                 :                 1         1 "GPU-613453b3"
+	   Memory (MB)          :       19    30720     30720 
+	   TimeExecute (s)      :       54                    
+	   TimeSlotBusy (s)     :       55                    
+...
+009 (53984.000.000) 2025-12-12 09:11:43 Job was aborted.
+	via condor_rm (by user plintilhac)
+...

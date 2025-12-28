@@ -1,0 +1,49 @@
+# job_gpu_keepalive.sub
+
+# --- Core ---
+universe                    = vanilla
+#executable                  = /bin/sleep
+executable                  = job_wrapper.sh
+# If your wrapper needs args, set them here:
+#arguments                 = "1000000"
+
+# Make the job ssh-able via condor_ssh_to_job
+#+WantIOProxy                = TRUE
+
+# Inherit your submit-side env (PATH, proxies, etc.). Remove if you prefer a clean env.
+getenv                      = True
+
+# --- File transfer ---
+#should_transfer_files       = YES
+#when_to_transfer_output     = ON_EXIT_OR_EVICT
+
+# Keep YOUR original output selection exactly as requested:
+# (Use quotes so the wildcard is not expanded on the submit host.)
+#transfer_output_files       = "/scratch/plintilhac/HESSIAN_CALCS22/"
+
+# If job_wrapper.sh is not in the same directory as this .sub, keep this;
+# otherwise it's redundant because 'executable' is transferred automatically.
+#transfer_input_files        = job_wrapper.sh
+
+# Optional: if you stage other inputs (configs, checkpoints), list them here:
+# transfer_input_files      = job_wrapper.sh, configs.yaml, data.tar.gz
+
+# --- Resources ---
+request_cpus                = 8
+request_memory              = 30G
+request_gpus                = 1
+
+# --- Matching (adjust attribute names to your pool!) ---
+# Many pools publish CUDACapability / CUDAGlobalMemoryMb; yours used GPUs_*.
+# If your original attrs are correct for your site, keep them:
+requirements                = (GPUs_Capability >= 1) && (GPUs_GlobalMemoryMb >= 50000)
+
+# If jobs don’t match, inspect with: condor_status -l | egrep -i 'CUDA|GPU|Capability|Memory'
+# and switch to:
+# requirements              = (CUDACapability >= 7.0) && (CUDAGlobalMemoryMb >= 50000)
+
+# --- Logs ---
+output = condor_output/parking.$(Cluster).$(ProcId).out
+error  = condor_output/parking.$(Cluster).$(ProcId).err
+log    = condor_output/parking.$(Cluster).log
+queue 1

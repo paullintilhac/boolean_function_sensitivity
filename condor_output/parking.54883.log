@@ -1,0 +1,253 @@
+000 (54883.000.000) 2025-12-20 03:10:11 Job submitted from host: <134.96.104.7:9618?addrs=134.96.104.7-9618&alias=submit.coli.uni-saarland.de&noUDP&sock=schedd_1035572_d5d5>
+...
+001 (54883.000.000) 2025-12-20 03:10:11 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+	SlotName: slot1_1@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_45de52f4,GPUs_GPU_8d445daa,GPUs_GPU_99888385,GPUs_GPU_add1c061,GPUs_GPU_b893db5b,GPUs_GPU_d599f77e,GPUs_GPU_f0308d46,GPUs_GPU_f0f5568f }
+	CondorScratchDir = "/var/lib/condor/execute/dir_3901876"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_45de52f4 = [ Id = "GPU-45de52f4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "45de52f4-d702-ecbf-6bda-1f1cce804ac1"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8d445daa = [ Id = "GPU-8d445daa"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8d445daa-1c87-046e-adb5-fc2436f74abe"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BD:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_99888385 = [ Id = "GPU-99888385"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "99888385-3556-aff2-7a22-55966edadc26"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BE:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_add1c061 = [ Id = "GPU-add1c061"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "add1c061-7949-e343-2dff-95a6e7a025f7"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9C:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d599f77e = [ Id = "GPU-d599f77e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d599f77e-38a2-e599-09c1-f660972516c2"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0308d46 = [ Id = "GPU-f0308d46"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0308d46-1907-1608-9088-35894cca51f8"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0f5568f = [ Id = "GPU-f0f5568f"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0f5568f-6e3e-de3c-d8f8-dd0d35ad4340"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+006 (54883.000.000) 2025-12-20 03:10:20 Image size of job updated: 205660
+	201  -  MemoryUsage of job (MB)
+	205660  -  ResidentSetSize of job (KB)
+...
+006 (54883.000.000) 2025-12-20 03:15:21 Image size of job updated: 10096420
+	9764  -  MemoryUsage of job (MB)
+	9997616  -  ResidentSetSize of job (KB)
+...
+006 (54883.000.000) 2025-12-20 03:20:21 Image size of job updated: 10096420
+	9802  -  MemoryUsage of job (MB)
+	10037180  -  ResidentSetSize of job (KB)
+...
+006 (54883.000.000) 2025-12-20 03:23:45 Image size of job updated: 10096420
+	9825  -  MemoryUsage of job (MB)
+	10059980  -  ResidentSetSize of job (KB)
+...
+004 (54883.000.000) 2025-12-20 03:23:45 Job was evicted.
+	(0) CPU times
+		Usr 0 10:18:45, Sys 0 00:36:17  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :    54.80       64        64 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     5.39        8         8 "GPU-45de52f4,GPU-8d445daa,GPU-99888385,GPU-add1c061,GPU-b893db5b,GPU-d599f77e,GPU-f0308d46,GPU-f0f5568f"
+	   GpusMemory (MB)      :  1696                       
+	   Memory (MB)          :  9825      245760    245760 
+	   TimeExecute (s)      :   814                       
+	   TimeSlotBusy (s)     :   814                       
+...
+012 (54883.000.000) 2025-12-20 03:23:45 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (54883.000.000) 2025-12-20 03:24:16 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (54883.000.000) 2025-12-20 03:24:33 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+	SlotName: slot1_1@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_45de52f4,GPUs_GPU_8d445daa,GPUs_GPU_99888385,GPUs_GPU_add1c061,GPUs_GPU_b893db5b,GPUs_GPU_d599f77e,GPUs_GPU_f0308d46,GPUs_GPU_f0f5568f }
+	CondorScratchDir = "/var/lib/condor/execute/dir_1100145"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_45de52f4 = [ Id = "GPU-45de52f4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "45de52f4-d702-ecbf-6bda-1f1cce804ac1"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8d445daa = [ Id = "GPU-8d445daa"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8d445daa-1c87-046e-adb5-fc2436f74abe"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BD:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_99888385 = [ Id = "GPU-99888385"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "99888385-3556-aff2-7a22-55966edadc26"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BE:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_add1c061 = [ Id = "GPU-add1c061"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "add1c061-7949-e343-2dff-95a6e7a025f7"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9C:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d599f77e = [ Id = "GPU-d599f77e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d599f77e-38a2-e599-09c1-f660972516c2"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0308d46 = [ Id = "GPU-f0308d46"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0308d46-1907-1608-9088-35894cca51f8"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0f5568f = [ Id = "GPU-f0f5568f"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0f5568f-6e3e-de3c-d8f8-dd0d35ad4340"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+004 (54883.000.000) 2025-12-20 07:31:26 Job was evicted.
+	(0) CPU times
+		Usr 7 11:08:02, Sys 0 10:43:03  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :    49.42       64        64 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     5.66        8         8 "GPU-45de52f4,GPU-8d445daa,GPU-99888385,GPU-add1c061,GPU-b893db5b,GPU-d599f77e,GPU-f0308d46,GPU-f0f5568f"
+	   GpusMemory (MB)      :  1654                       
+	   Memory (MB)          : 12208      245760    245760 
+	   TimeExecute (s)      : 14813                       
+	   TimeSlotBusy (s)     : 14814                       
+...
+012 (54883.000.000) 2025-12-20 07:31:26 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (54883.000.000) 2025-12-20 07:32:26 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (54883.000.000) 2025-12-20 07:32:28 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+	SlotName: slot1_1@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_45de52f4,GPUs_GPU_8d445daa,GPUs_GPU_99888385,GPUs_GPU_add1c061,GPUs_GPU_b893db5b,GPUs_GPU_d599f77e,GPUs_GPU_f0308d46,GPUs_GPU_f0f5568f }
+	CondorScratchDir = "/var/lib/condor/execute/dir_1980298"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_45de52f4 = [ Id = "GPU-45de52f4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "45de52f4-d702-ecbf-6bda-1f1cce804ac1"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8d445daa = [ Id = "GPU-8d445daa"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8d445daa-1c87-046e-adb5-fc2436f74abe"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BD:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_99888385 = [ Id = "GPU-99888385"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "99888385-3556-aff2-7a22-55966edadc26"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BE:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_add1c061 = [ Id = "GPU-add1c061"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "add1c061-7949-e343-2dff-95a6e7a025f7"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9C:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d599f77e = [ Id = "GPU-d599f77e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d599f77e-38a2-e599-09c1-f660972516c2"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0308d46 = [ Id = "GPU-f0308d46"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0308d46-1907-1608-9088-35894cca51f8"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0f5568f = [ Id = "GPU-f0f5568f"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0f5568f-6e3e-de3c-d8f8-dd0d35ad4340"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+004 (54883.000.000) 2025-12-20 18:58:34 Job was evicted.
+	(0) CPU times
+		Usr 12 10:37:09, Sys 0 19:02:14  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :    28.25       64        64 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     4.42        8         8 "GPU-45de52f4,GPU-8d445daa,GPU-99888385,GPU-add1c061,GPU-b893db5b,GPU-d599f77e,GPU-f0308d46,GPU-f0f5568f"
+	   GpusMemory (MB)      :  1630                       
+	   Memory (MB)          : 12208      245760    245760 
+	   TimeExecute (s)      : 41166                       
+	   TimeSlotBusy (s)     : 41167                       
+...
+012 (54883.000.000) 2025-12-20 18:58:34 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (54883.000.000) 2025-12-20 19:05:34 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (54883.000.000) 2025-12-20 19:05:39 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+	SlotName: slot1_1@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_45de52f4,GPUs_GPU_8d445daa,GPUs_GPU_99888385,GPUs_GPU_add1c061,GPUs_GPU_b893db5b,GPUs_GPU_d599f77e,GPUs_GPU_f0308d46,GPUs_GPU_f0f5568f }
+	CondorScratchDir = "/var/lib/condor/execute/dir_2069557"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_45de52f4 = [ Id = "GPU-45de52f4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "45de52f4-d702-ecbf-6bda-1f1cce804ac1"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8d445daa = [ Id = "GPU-8d445daa"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8d445daa-1c87-046e-adb5-fc2436f74abe"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BD:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_99888385 = [ Id = "GPU-99888385"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "99888385-3556-aff2-7a22-55966edadc26"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BE:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_add1c061 = [ Id = "GPU-add1c061"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "add1c061-7949-e343-2dff-95a6e7a025f7"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9C:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d599f77e = [ Id = "GPU-d599f77e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d599f77e-38a2-e599-09c1-f660972516c2"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0308d46 = [ Id = "GPU-f0308d46"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0308d46-1907-1608-9088-35894cca51f8"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0f5568f = [ Id = "GPU-f0f5568f"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0f5568f-6e3e-de3c-d8f8-dd0d35ad4340"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+004 (54883.000.000) 2025-12-21 17:16:50 Job was evicted.
+	(0) CPU times
+		Usr 47 22:46:21, Sys 2 05:11:40  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :    52.05       64        64 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     6.09        8         8 "GPU-45de52f4,GPU-8d445daa,GPU-99888385,GPU-add1c061,GPU-b893db5b,GPU-d599f77e,GPU-f0308d46,GPU-f0f5568f"
+	   GpusMemory (MB)      :  1658                       
+	   Memory (MB)          : 12208      245760    245760 
+	   TimeExecute (s)      : 79871                       
+	   TimeSlotBusy (s)     : 79872                       
+...
+012 (54883.000.000) 2025-12-21 17:16:50 Job was held.
+	via condor_hold (by user plintilhac)
+	Code 1 Subcode 0
+...
+013 (54883.000.000) 2025-12-21 17:17:33 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (54883.000.000) 2025-12-21 17:17:34 Job executing on host: <134.96.105.148:9618?addrs=134.96.105.148-9618&alias=hopper-2.coli.uni-saarland.de&noUDP&sock=startd_4451_9821>
+	SlotName: slot1_1@hopper-2.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_45de52f4,GPUs_GPU_8d445daa,GPUs_GPU_99888385,GPUs_GPU_add1c061,GPUs_GPU_b893db5b,GPUs_GPU_d599f77e,GPUs_GPU_f0308d46,GPUs_GPU_f0f5568f }
+	CondorScratchDir = "/var/lib/condor/execute/dir_1464910"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_45de52f4 = [ Id = "GPU-45de52f4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "45de52f4-d702-ecbf-6bda-1f1cce804ac1"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8d445daa = [ Id = "GPU-8d445daa"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8d445daa-1c87-046e-adb5-fc2436f74abe"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BD:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_99888385 = [ Id = "GPU-99888385"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "99888385-3556-aff2-7a22-55966edadc26"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:BE:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_add1c061 = [ Id = "GPU-add1c061"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "add1c061-7949-e343-2dff-95a6e7a025f7"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9C:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_b893db5b = [ Id = "GPU-b893db5b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "b893db5b-83cf-6974-2b92-aaaa4ec4e2a3"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d599f77e = [ Id = "GPU-d599f77e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d599f77e-38a2-e599-09c1-f660972516c2"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:9D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0308d46 = [ Id = "GPU-f0308d46"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0308d46-1907-1608-9088-35894cca51f8"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:3B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_f0f5568f = [ Id = "GPU-f0f5568f"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "f0f5568f-6e3e-de3c-d8f8-dd0d35ad4340"; ECCEnabled = true; ComputeUnits = 114; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+021 (54883.000.000) 2025-12-22 17:17:38 Error from starter on slot1_1@hopper-2.coli.uni-saarland.de:
+	Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+004 (54883.000.000) 2025-12-22 17:17:38 Job was evicted.
+	(0) CPU times
+		Usr 32 04:34:54, Sys 2 13:05:57  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Error from slot1_1@hopper-2.coli.uni-saarland.de: Interactive job ran longer than requested
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :    35.54       64        64 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     4.74        8         8 "GPU-45de52f4,GPU-8d445daa,GPU-99888385,GPU-add1c061,GPU-b893db5b,GPU-d599f77e,GPU-f0308d46,GPU-f0f5568f"
+	   GpusMemory (MB)      :  1658                       
+	   Memory (MB)          : 12208      245760    245760 
+	   TimeExecute (s)      : 79871                       
+	   TimeSlotBusy (s)     : 86405                       
+...
+012 (54883.000.000) 2025-12-22 17:17:39 Job was held.
+	Error from slot1_1@hopper-2.coli.uni-saarland.de: Interactive job ran longer than requested
+	Code 21 Subcode 0
+...
+013 (54883.000.000) 2025-12-23 15:54:07 Job was released.
+	via condor_release (by user plintilhac)
+...
+001 (54883.000.000) 2025-12-23 16:51:35 Job executing on host: <134.96.105.149:9618?addrs=134.96.105.149-9618&alias=hopper-3.coli.uni-saarland.de&noUDP&sock=startd_3249692_fe20>
+	SlotName: slot1_1@hopper-3.coli.uni-saarland.de
+	AvailableGPUs = { GPUs_GPU_84c47e6e,GPUs_GPU_d083280b,GPUs_GPU_d872b7aa,GPUs_GPU_a6c159c4,GPUs_GPU_613453b3,GPUs_GPU_8e8e60e4,GPUs_GPU_a247d854,GPUs_GPU_a5ca2598 }
+	CondorScratchDir = "/var/lib/condor/execute/dir_274401"
+	Cpus = 64
+	Disk = 2048
+	GPUs = 8
+	GPUs_GPU_613453b3 = [ Id = "GPU-613453b3"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "613453b3-127b-5f97-2788-05cb235e376e"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1A:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_84c47e6e = [ Id = "GPU-84c47e6e"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "84c47e6e-6cbb-620b-b38c-2c359e1308fa"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:18:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_8e8e60e4 = [ Id = "GPU-8e8e60e4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "8e8e60e4-09ed-a455-088a-ed97d39f9c31"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:1B:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a247d854 = [ Id = "GPU-a247d854"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a247d854-874a-0c48-f283-5511b6f5f286"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:6F:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a5ca2598 = [ Id = "GPU-a5ca2598"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a5ca2598-b6d7-7879-70a4-b47d82732148"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0001:70:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_a6c159c4 = [ Id = "GPU-a6c159c4"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "a6c159c4-3890-8eb4-3903-88e12eabb692"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:6D:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d083280b = [ Id = "GPU-d083280b"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d083280b-5fe7-70f5-f18f-adc2b16793fc"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:19:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	GPUs_GPU_d872b7aa = [ Id = "GPU-d872b7aa"; ClockMhz = 1755.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 PCIe"; DeviceUuid = "d872b7aa-ecc9-77d4-4c05-7b302ac5bea4"; ECCEnabled = true; ComputeUnits = 114; NvidiaDriver = "570.124.06"; DriverVersion = 12.8; DevicePciBusId = "0000:6C:00.0"; GlobalMemoryMb = 81090; MaxSupportedVersion = 12080 ]
+	Memory = 245760
+...
+004 (54883.000.000) 2025-12-23 18:11:43 Job was evicted.
+	(0) CPU times
+		Usr 1 18:02:57, Sys 0 02:45:13  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :    33.66       64        64 
+	   Disk (KB)            :     3           3      2048 
+	   GPUs                 :     4.72        8         8 "GPU-84c47e6e,GPU-d083280b,GPU-d872b7aa,GPU-a6c159c4,GPU-613453b3,GPU-8e8e60e4,GPU-a247d854,GPU-a5ca2598"
+	   GpusMemory (MB)      :  1620                       
+	   Memory (MB)          : 12208      245760    245760 
+	   TimeExecute (s)      :  4807                       
+	   TimeSlotBusy (s)     :  4808                       
+...
+009 (54883.000.000) 2025-12-23 18:11:43 Job was aborted.
+	via condor_rm (by user plintilhac)
+...
