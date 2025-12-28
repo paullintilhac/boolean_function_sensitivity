@@ -685,8 +685,7 @@ class Trainer:
 
                 model_for_eval = self.model.module if hasattr(self.model, 'module') else self.model
                 val_loss = self.validate(1000, model_for_eval) 
-<<<<<<< HEAD
-=======
+
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device)
@@ -729,7 +728,6 @@ class Trainer:
                                        "sam_rho":self.sam_rho
                                       }
                
->>>>>>> 4bdf99c (committing changes from discovery dartmouth)
 
                 def loss_fn(out, tgt):
                     out = out.squeeze(-1)
@@ -846,29 +844,8 @@ class Trainer:
                         break
                 inputs_cpu = torch.cat(collected, dim=0)
         else:
-<<<<<<< HEAD
             inputs_cpu = torch.randint(0, 2**self.N, (num_samples,), device=cpu)
-=======
-            inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(device_id)
-        targets = self.func_batch(inputs).to(device_id)
-        data = (inputs, targets)
-        
-        # Monkey-patch .cuda(), .to(), and torch factory functions to work with MPS if needed
-        if device_id.type == 'cuda':
-            hess_mod = hessian(model, loss_fn, data, cuda=True)
-            for param in model.parameters(): param.grad = None
-            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-            top_eig = top_eigs[0]
-            trace = hess_mod.trace()
-            return top_eig, np.mean(trace)
-        else:
-            hess_mod = hessian(model, loss_fn, data, cuda=False)
-            for param in model.parameters(): param.grad = None
-            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
-            top_eig = top_eigs[0]
-            trace = hess_mod.trace()
-            return top_eig, np.mean(trace)
->>>>>>> 4bdf99c (committing changes from discovery dartmouth)
+
 
         # 3) Targets on CPU using the same Boolean driver
         targets_cpu = self.func_batch(inputs_cpu, device_override=cpu)
