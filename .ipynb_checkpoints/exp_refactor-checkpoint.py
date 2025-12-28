@@ -685,7 +685,8 @@ class Trainer:
 
                 model_for_eval = self.model.module if hasattr(self.model, 'module') else self.model
                 val_loss = self.validate(1000, model_for_eval) 
-
+<<<<<<< HEAD
+=======
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device)
@@ -728,6 +729,7 @@ class Trainer:
                                        "sam_rho":self.sam_rho
                                       }
                
+>>>>>>> 4bdf99c (committing changes from discovery dartmouth)
 
                 def loss_fn(out, tgt):
                     out = out.squeeze(-1)
@@ -844,8 +846,29 @@ class Trainer:
                         break
                 inputs_cpu = torch.cat(collected, dim=0)
         else:
+<<<<<<< HEAD
             inputs_cpu = torch.randint(0, 2**self.N, (num_samples,), device=cpu)
-
+=======
+            inputs = torch.tensor([random.randint(0, 2**self.N-1) for _ in range(num_samples)]).to(device_id)
+        targets = self.func_batch(inputs).to(device_id)
+        data = (inputs, targets)
+        
+        # Monkey-patch .cuda(), .to(), and torch factory functions to work with MPS if needed
+        if device_id.type == 'cuda':
+            hess_mod = hessian(model, loss_fn, data, cuda=True)
+            for param in model.parameters(): param.grad = None
+            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
+            top_eig = top_eigs[0]
+            trace = hess_mod.trace()
+            return top_eig, np.mean(trace)
+        else:
+            hess_mod = hessian(model, loss_fn, data, cuda=False)
+            for param in model.parameters(): param.grad = None
+            top_eigs, top_eigVs = hess_mod.eigenvalues(maxIter = 200)
+            top_eig = top_eigs[0]
+            trace = hess_mod.trace()
+            return top_eig, np.mean(trace)
+>>>>>>> 4bdf99c (committing changes from discovery dartmouth)
 
         # 3) Targets on CPU using the same Boolean driver
         targets_cpu = self.func_batch(inputs_cpu, device_override=cpu)
@@ -976,90 +999,107 @@ def main(rank, args, world_size, coefs, combs, main_dir, deg, width, i):
             sampler=DistributedSampler(train_set)
         )
          
+    trainer = Trainer(coefs,combs, model,
+        train_loader,
+        optimizer,
+        gpu_id=rank,
+        save_every=args.save_every,
+        dir_name= main_dir,
+        width=width,
+        deg=deg,
+        func=i,
+        N=args.N,
+        n_samples = args.num_samples,
+        backend = args.backend,
+        stop_loss = args.stop_loss,
+        ln_eps = args.ln_eps,
+        ln = args.ln,
+        save_checkpoints=args.save_checkpoints,
+        d=args.dim,
+        f=args.f,
+        h=args.h,
+        dropout=args.dropout,
+        wd=args.wd,
+        sam=args.sam,
+        asam=args.asam,
+        sam_rho=args.sam_rho
+        )
 
-      trainer = Trainer(coefs,combs, model,
-                        train_loader,
-                        optimizer,
-                        gpu_id=rank,
-                        save_every=args.save_every,
-                        dir_name= main_dir,
-                        width=width,
-                        deg=deg,
-                        func=i,
-                        N=args.N,
-                        n_samples = args.num_samples,
-                        backend = args.backend,
-                        stop_loss = args.stop_loss,
-                        ln_eps = args.ln_eps,
-                        ln = args.ln,
-                        save_checkpoints=args.save_checkpoints,
-                        d=args.dim,
-                        f=args.f,
-                        h=args.h,
-                        dropout=args.dropout,
-                        wd=args.wd,
-                        sam=args.sam,
-                        asam=args.asam,
-                        sam_rho=args.sam_rho
-                        )
 
-    
-      params = collect_hardcoded_params(hardcoded_model, include_bias=True)
-    
-      # (2) Build a small probe batch (same as you already do)
-      xs = torch.randint(0, 2**args.N, (512,), device=device)
-      with torch.no_grad():
-        ys = trainer.func_batch(xs).to(device)
-    
-      # (3) If loss is near zero, use Gauss–Newton trace:
-      hardcoded_model.eval()
-      with torch.no_grad():
-        out = hardcoded_model(xs)
-        loss_probe = ((out.squeeze(-1) - ys)**2).mean().item()
-      print(f"[CHECK] Probe MSE(model vs driver targets): {loss_probe}")
-    
-      if loss_probe < 1e-8:
-        tr_est = gauss_newton_trace_mse(hardcoded_model, xs, params, n_samples=64, seed=0, scale=2.0)
-        print("Gauss–Newton trace estimate (perfect-fit):", tr_est)
-      else:
-        tr_est = hutchinson_trace(hardcoded_model, xs, ys, params, n_samples=64, seed=0)
-        print("Hutchinson trace estimate:", tr_est)
-       
-      # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-      loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
-      hardcoded_model.eval()
-      print("hardcoded model: " + str(hardcoded_model))
-      #addGaussianNoise(hardcoded_model, .1)
-      device_obj = get_device_from_rank(rank)
-      hardcoded_hessian = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj)
-      hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=device_obj, use_train=True)
-      weight_norm = get_weight_norm(hardcoded_model)
-      hardcoded_loss = trainer.validate(1000,hardcoded_model)
-      print("hardcoded loss: " + str(hardcoded_loss))
-      print("frobenius weight norm: " + str(weight_norm)) 
-      print("hardcoded hessian stats: " + str(hardcoded_hessian))
-      
-      _hc_df = pd.DataFrame([{
-          "deg": trainer.deg,
-          "width": trainer.width,
-          "func": trainer.func,
-          "top_eig": hardcoded_hessian[0],
-          "trace": hardcoded_hessian[1],
-          "top_eig_train": hardcoded_hessian_train[0],
-          "trace_train": hardcoded_hessian_train[1],
-          "frobenius_weight_norm": weight_norm,
-          "test_loss": hardcoded_loss
-      }])
-      _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
-      print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-      trainer.train(args.epochs)
-      # Skip barrier and destroy_process_group for MPS
-      if not mps_avail:
-          barrier()
-          print("finished training, cleaning up process group...")
-          destroy_process_group()
-          print("finished cleaning up process group")
-      return
+    if rank == 0:
+        # Hutchinson / GN on hardcoded model
+        params = collect_hardcoded_params(hardcoded_model, include_bias=True)
+
+        # Build a small probe batch
+        xs_probe = torch.randint(0, 2**args.N, (512,), device=device_obj)
+        with torch.no_grad():
+            ys_probe = trainer.func_batch(xs_probe)  # already on trainer.device
+
+        hardcoded_model.eval()
+        with torch.no_grad():
+            out_probe = hardcoded_model(xs_probe)
+            loss_probe = ((out_probe.squeeze(-1) - ys_probe)**2).mean().item()
+        print(f"[CHECK] Probe MSE(model vs driver targets): {loss_probe}")
+
+        if loss_probe < 1e-8:
+            tr_est = gauss_newton_trace_mse(hardcoded_model, xs_probe, params, n_samples=64, seed=0, scale=2.0)
+            print("Gauss–Newton trace estimate (perfect-fit):", tr_est)
+        else:
+            tr_est = hutchinson_trace(hardcoded_model, xs_probe, ys_probe, params, n_samples=64, seed=0)
+            print("Hutchinson trace estimate:", tr_est)
+
+        def loss_fn(out, tgt):
+            out = out.squeeze(-1)
+            # Make sure targets live on the same device as outputs
+            tgt = tgt.to(out.device)
+            return (out - tgt).pow(2).mean()
+
+        hardcoded_model.eval()
+        print("hardcoded model: " + str(hardcoded_model))
+        hardcoded_hessian = trainer.calc_hessian(
+            hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj
+        )
+        hardcoded_hessian_train = trainer.calc_hessian(
+            hardcoded_model, loss_fn, num_samples=1000, device_id=device_obj, use_train=True
+        )
+
+        weight_norm = get_weight_norm(hardcoded_model)
+        hardcoded_loss = trainer.validate(1000, hardcoded_model)
+        print("hardcoded loss: " + str(hardcoded_loss))
+        print("frobenius weight norm: " + str(weight_norm))
+        print("hardcoded hessian stats: " + str(hardcoded_hessian))
+
+
+        _hc_df = pd.DataFrame([{
+            "deg": trainer.deg,
+            "width": trainer.width,
+            "func": trainer.func,
+            "top_eig": hardcoded_hessian[0],
+            "trace": hardcoded_hessian[1],
+            "top_eig_train": hardcoded_hessian_train[0],
+            "trace_train": hardcoded_hessian_train[1],
+            "frobenius_weight_norm": weight_norm,
+            "test_loss": hardcoded_loss
+        }])
+        _hc_df.to_csv(
+            f"{trainer.dir_name}/hardcoded_hessian.csv",
+            index=False,
+            mode='a',
+            header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv")
+        )
+        print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
+
+    # Training (all ranks)
+    trainer.train(args.epochs)
+
+    # Skip barrier and destroy_process_group for MPS
+    if not mps_avail:
+        barrier()
+        print("finished training, cleaning up process group...")
+        destroy_process_group()
+        print("finished cleaning up process group")
+    return
+
 
 if __name__ == "__main__":
     arguments = parse_args()

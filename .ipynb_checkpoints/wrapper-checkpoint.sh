@@ -39,8 +39,8 @@ python exp_refactor.py  --N 20 \
  --dim 30 \
      --h 1 \
        --f 128 \
-        --bs 128  \
-         --epochs 1000000 \
+        --bs 64  \
+         --epochs 100000 \
            --num_samples 16384  \
              --repeat 1 \
              --lr "1e-4" \
