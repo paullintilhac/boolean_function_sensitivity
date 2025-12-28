@@ -5,3 +5,4 @@ log_*
 *.txt
 *.csv
 .DS_Store*
+condor_output/
