@@ -685,8 +685,7 @@ class Trainer:
 
                 model_for_eval = self.model.module if hasattr(self.model, 'module') else self.model
                 val_loss = self.validate(1000, model_for_eval) 
-<<<<<<< HEAD
-=======
+
                 loss_fn = lambda result, targets: (result-targets).pow(2).mean()
                 start_time_hessian = time.time()
                 top_eig, trace = self.calc_hessian(copy.deepcopy(model_for_eval), loss_fn=loss_fn, num_samples= 1000,device_id = self.device)
@@ -729,7 +728,6 @@ class Trainer:
                                        "sam_rho":self.sam_rho
                                       }
                
->>>>>>> 4bdf99c (committing changes from discovery dartmouth)
 
                 def loss_fn(out, tgt):
                     out = out.squeeze(-1)
