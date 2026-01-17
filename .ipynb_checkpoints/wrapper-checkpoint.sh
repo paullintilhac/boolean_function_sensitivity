@@ -34,15 +34,15 @@
 #               --save_every 50 \
 #               --save_checkpoints
 
-python exp_refactor.py  --N 20 \
- --dim 2 \
+python exp_refactor.py  --N 40 \
+ --dim 30 \
      --h 1 \
        --f 128 \
         --bs 256  \
          --epochs 100000 \
-           --num_samples 8192  \
+           --num_samples 32768  \
              --repeat 1 \
-             --lr "4e-3" \
+             --lr "5e-4" \
              --dropout 0.1 \
              --wd .0001 \
              --world_size 1 \

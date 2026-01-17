@@ -562,14 +562,15 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       #addGaussianNoise(hardcoded_model, .1)
       for i,mode in enumerate(["original", "mlp_soft", "balanced"]):
           hardcoded_model = hardcoded_models[i]
-          hardcoded_hessian_stats=trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank)
           hardcoded_hessian_train = trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank, use_train=True)
+          addGaussianNoise(hardcoded_model, .0001)
+          hardcoded_hessian_pert=trainer.calc_hessian(hardcoded_model, loss_fn, num_samples=1000,device_id=rank, use_train=True)
 
           weight_norm = get_weight_norm(hardcoded_model)
           hardcoded_loss = trainer.validate(1000,hardcoded_model)
           print("hardcoded loss: " + str(hardcoded_loss))
           print("frobenius weight norm: " + str(weight_norm)) 
-          print("hardcoded hessian stats: " + str(hardcoded_hessian_stats))
+          print("hardcoded hessian stats: " + str(hardcoded_hessian_pert))
       
           
           _hc_df = pd.DataFrame([{
@@ -577,8 +578,8 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
               "width": trainer.width,
               "func": trainer.func,
               "const_mode": mode,
-              "top_eig": round(hardcoded_hessian_stats[0],2),
-              "trace": round(hardcoded_hessian_stats[1],2),
+              "top_eig_pert": round(hardcoded_hessian_pert[0],2),
+              "trace_pert": round(hardcoded_hessian_pert[1],2),
               "top_eig_train": round(hardcoded_hessian_train[0],2),
               "trace_train": round(hardcoded_hessian_train[1],2),
               "frobenius_weight_norm": round(weight_norm,2),
@@ -586,7 +587,7 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
           }])
           _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-      #trainer.train(args.epochs)
+      trainer.train(args.epochs)
       barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
@@ -599,16 +600,16 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS19"
+    main_dir = f"HESSIAN_CALCS_101"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
     for i in range(10):
-        for deg in range(1,6):
+        for deg in [5]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [1,7,14,20]:
+            for width in [20,14,7,1]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 
