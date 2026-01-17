@@ -158,6 +158,9 @@ class Trainer:
             h: int,
             dropout: float,
             wd: float,
+            sam: bool = False,
+            sam_rho: float = 0.05,
+            asam: bool = False,
     ) -> None:
         self.gpu_id = gpu_id
         self.model = DDP(model,device_ids=[self.gpu_id])
@@ -197,7 +200,11 @@ class Trainer:
                                  "f",
                                  "h",
                                  "dropout",
-                                 "wd"])
+                                 "wd",
+                                 "N",
+                                 "sam",
+                                 "sam_rho",
+                                 "asam"])
         self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
@@ -210,6 +217,9 @@ class Trainer:
         self.d = d
         self.f = f
         self.h = h
+        self.sam = sam
+        self.sam_rho = sam_rho
+        self.asam = asam
         for batch in train_data:
             self.batch_size = len(batch)
             break
@@ -359,7 +369,11 @@ class Trainer:
                                        "f":self.f,
                                        "h":self.h,
                                        "dropout":self.dropout,
-                                       "wd":self.wd
+                                       "wd":self.wd,
+                                       "N":self.N,
+                                       "sam":self.sam,
+                                       "sam_rho":self.sam_rho,
+                                       "asam":self.asam
                                       }
                
 
@@ -551,7 +565,10 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
                         f=args.f,
                         h=args.h,
                         dropout=args.dropout,
-                        wd=args.wd
+                        wd=args.wd,
+                        sam=args.sam,
+                        sam_rho=args.sam_rho,
+                        asam=args.asam
                         )
 
       # loss_fn = lambda result, targets: (result-targets).pow(2).mean()

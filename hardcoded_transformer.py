@@ -105,84 +105,122 @@ def _mha_forward_no_wo(query, key, value, num_heads, embed_dim_to_check,
 
 
 # =============================================================
-# Integer-Count Parity MLP (exact at integer counts)
+# MLP matching exact mathematical construction
+# Interpolates m(x) = 1/2(1 + sin(π(D_f*x + 1/2))) on domain {0, 1/D_f, ..., 1}
 # =============================================================
 
 class IntCountParityMLP(nn.Module):
     """
-    COUNT channel holds integer k in [0..D].
-    fc1 builds ramps r_t(x) = ReLU(x - t) for t in {-1,0,1,...,D,D+1}.
-    fc2 computes y = sum_k v_k * (r_{k-1} - 2 r_k + r_{k+1}), with v_k = (-1)^(D-k).
-    fc_out writes y into PARITY channel; residual is added in the caller.
+    Exact construction from mathematical specification:
+    - Hidden dimension: 4(D_f+1) units
+    - M_{i,t} = 0 for all t, i ∈ [T+1]
+    - M_{i,t} = 1 for all t, i = T+2 (COUNT channel)
+    - Γ_{4i-3} = -h_i - 2/(4D_f)
+    - Γ_{4i-2} = -h_i - 1/(4D_f)
+    - Γ_{4i-1} = -h_i + 1/(4D_f)
+    - Γ_{4i} = -h_i + 2/(4D_f)
+    - F_{4i-3,T+2} = 4m(h_i)D_f
+    - F_{4i-2,T+2} = -4m(h_i)D_f
+    - F_{4i-1,T+2} = -4m(h_i)D_f
+    - F_{4i,T+2} = 4m(h_i)D_f
+    where h_i ∈ {0, 1/D_f, ..., (D_f-1)/D_f, 1} and m(h_i) = 1/2(1 + sin(π(D_f*h_i + 1/2)))
     """
     def __init__(self, embed_dim, D, count_idx, parity_idx):
         super().__init__()
         self.E, self.D = embed_dim, int(D)
         self.count_idx, self.parity_idx = count_idx, parity_idx
 
-        vals = torch.tensor(
-            [1.0 if ((self.D - k) % 2 == 0) else -1.0 for k in range(self.D + 1)],
-            dtype=torch.float32,
-        )
-        self.register_buffer("grid_vals", vals)
+        # Hidden dimension: 4(D_f + 1) units as per construction
+        H = 4 * (self.D + 1)
 
-        # t in {-1, 0, 1, ..., D, D+1}
-        self.t_list = list(range(-1, self.D + 2))
-        H = len(self.t_list)
-
-        self.fc1 = nn.Linear(self.E, H, bias=True)
-        self.fc2 = nn.Linear(H, 1, bias=True)
+        self.fc1 = nn.Linear(self.E, H, bias=True)  # M^T and Γ
+        self.fc2 = nn.Linear(H, 1, bias=False)      # F^T (no bias in F)
         self.fc_out = nn.Linear(1, self.E, bias=False)
         self._init_weights()
 
     def _init_weights(self):
         with torch.no_grad():
-            # ramps along COUNT
+            # Initialize M: M_{i,t} = 0 for all t, i ∈ [T+1]; M_{i,t} = 1 for all t, i = T+2
+            # In PyTorch Linear: output = input @ weight^T + bias
+            # So fc1: H = X @ M^T + Γ, where M^T is fc1.weight and Γ is fc1.bias
+            # M^T has shape (H, E), where H = 4(D+1)
+            # M_{i,t} = 1 means M^T[unit_i, count_idx] = 1
             self.fc1.weight.zero_()
             self.fc1.bias.zero_()
-            for h, t in enumerate(self.t_list):
-                self.fc1.weight[h, self.count_idx] = 1.0
-                self.fc1.bias[h] = -float(t)
-
-            # second difference with v_k
+            
+            # For each h_i value (i ∈ [0, D]), create 4 units
+            for i in range(self.D + 1):
+                h_i = i / float(self.D)  # h_i ∈ {0, 1/D, 2/D, ..., 1}
+                
+                # Compute m(h_i) = 1/2(1 + sin(π(D_f*h_i + 1/2)))
+                m_h_i = 0.5 * (1.0 + math.sin(math.pi * (self.D * h_i + 0.5)))
+                
+                # Create 4 units for this h_i value
+                base_idx = 4 * i
+                
+                # M^T: all 4 units read from COUNT channel (count_idx)
+                self.fc1.weight[base_idx + 0, self.count_idx] = 1.0  # M^T for unit 4i-3
+                self.fc1.weight[base_idx + 1, self.count_idx] = 1.0  # M^T for unit 4i-2
+                self.fc1.weight[base_idx + 2, self.count_idx] = 1.0  # M^T for unit 4i-1
+                self.fc1.weight[base_idx + 3, self.count_idx] = 1.0  # M^T for unit 4i
+                
+                # Γ biases
+                self.fc1.bias[base_idx + 0] = -h_i - 2.0 / (4.0 * self.D)  # Γ_{4i-3}
+                self.fc1.bias[base_idx + 1] = -h_i - 1.0 / (4.0 * self.D)  # Γ_{4i-2}
+                self.fc1.bias[base_idx + 2] = -h_i + 1.0 / (4.0 * self.D)  # Γ_{4i-1}
+                self.fc1.bias[base_idx + 3] = -h_i + 2.0 / (4.0 * self.D)  # Γ_{4i}
+            
+            # Initialize F: F_{i,t} = 0 for all i, t ∈ [T+1]
+            # F_{4i-3,T+2} = 4m(h_i)D_f, etc.
+            # fc2: output = H @ F^T, where F^T is fc2.weight (shape: 1, H)
             self.fc2.weight.zero_()
-            self.fc2.bias.zero_()
-            index = {t: i for i, t in enumerate(self.t_list)}
-            for k in range(self.D + 1):
-                v_k = float(self.grid_vals[k])
-                i_m1 = index[k - 1]
-                i_0  = index[k]
-                i_p1 = index[k + 1]
-                self.fc2.weight[0, i_m1] += +1.0 * v_k
-                self.fc2.weight[0, i_0]  += -2.0 * v_k
-                self.fc2.weight[0, i_p1] += +1.0 * v_k
-
-            # write only to PARITY channel
+            
+            for i in range(self.D + 1):
+                h_i = i / float(self.D)
+                m_h_i = 0.5 * (1.0 + math.sin(math.pi * (self.D * h_i + 0.5)))
+                
+                base_idx = 4 * i
+                # F^T weights (F writes to PARITY channel, but we'll handle that in fc_out)
+                self.fc2.weight[0, base_idx + 0] = 4.0 * m_h_i * self.D  # F_{4i-3,T+2}
+                self.fc2.weight[0, base_idx + 1] = -4.0 * m_h_i * self.D  # F_{4i-2,T+2}
+                self.fc2.weight[0, base_idx + 2] = -4.0 * m_h_i * self.D  # F_{4i-1,T+2}
+                self.fc2.weight[0, base_idx + 3] = 4.0 * m_h_i * self.D  # F_{4i,T+2}
+            
+            # fc_out: write to PARITY channel only
             self.fc_out.weight.zero_()
             self.fc_out.weight[self.parity_idx, 0] = 1.0
 
     def forward(self, X):
-        H = F.relu(self.fc1(X))
-        s = self.fc2(H)
-        Y = self.fc_out(s)
+        # Forward pass: g_t = F^T (M^T b_t + Γ)_+
+        # b_t is the input X (after attention, COUNT channel contains k_t/D)
+        H = F.relu(self.fc1(X))  # (M^T b_t + Γ)_+
+        s = self.fc2(H)          # F^T (M^T b_t + Γ)_+
+        Y = self.fc_out(s)       # Write to PARITY channel
         return X + Y
 
-    # ---- exact slope softening that preserves outputs at integers ----
     @torch.no_grad()
     def soften_slopes(self, s: float):
         """
         Multiply the COUNT slope inside fc1 by 's' (<1 softens, >1 sharpens),
         while dividing fc2.weight by 's' so the *integer* outputs remain exact.
-        Hinges stay at the same integer locations.
+        This keeps hinge locations fixed and preserves function values at grid points.
         """
-        # scale count column of fc1, keep hinges at integers via bias
-        self.fc1.weight[:, :] *= 1.0
+        # Scale M^T entries (COUNT column)
         self.fc1.weight[:, self.count_idx] *= s
-        self.fc1.bias[:] *= 0.0
-        for h, t in enumerate(self.t_list):
-            self.fc1.bias[h] = -float(t) * s
-
-        # scale fc2 weights inversely
+        # Scale biases to keep hinge locations at h_i values
+        # The biases are -h_i ± offset, so we need to scale the -h_i part
+        for i in range(self.D + 1):
+            h_i = i / float(self.D)
+            base_idx = 4 * i
+            offset_0 = 2.0 / (4.0 * self.D)
+            offset_1 = 1.0 / (4.0 * self.D)
+            # Keep offsets the same, scale h_i part
+            self.fc1.bias[base_idx + 0] = -h_i * s - offset_0
+            self.fc1.bias[base_idx + 1] = -h_i * s - offset_1
+            self.fc1.bias[base_idx + 2] = -h_i * s + offset_1
+            self.fc1.bias[base_idx + 3] = -h_i * s + offset_0
+        
+        # Scale fc2 weights inversely to preserve outputs at grid points
         self.fc2.weight[:] /= s
 
 
