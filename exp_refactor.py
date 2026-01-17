@@ -180,7 +180,10 @@ class Trainer:
             h: int,
             dropout: float,
             wd: float,
-            run_id: float
+            run_id: float,
+            sam: bool = False,
+            sam_rho: float = 0.05,
+            asam: bool = False
     ) -> None:
         self.gpu_id = gpu_id
         torch.cuda.set_device(self.gpu_id)                # <- pin the process
@@ -221,7 +224,11 @@ class Trainer:
                                  "f",
                                  "h",
                                  "dropout",
-                                 "wd"])
+                                 "wd",
+                                 "N",
+                                 "sam",
+                                 "sam_rho",
+                                 "asam"])
         self.stop_loss = stop_loss
         self.epoch_loss = 0
         self.N = N
@@ -245,6 +252,9 @@ class Trainer:
         self.backend = backend
         #self.func.to(gpu_id)
         self.run_id=run_id
+        self.sam = sam
+        self.sam_rho = sam_rho
+        self.asam = asam
 
     def func_batch(self, x):
         # x: 1D tensor of integers (can be on any device)
@@ -384,7 +394,11 @@ class Trainer:
                                        "f":self.f,
                                        "h":self.h,
                                        "dropout":self.dropout,
-                                       "wd":self.wd
+                                       "wd":self.wd,
+                                       "N":self.N,
+                                       "sam":self.sam,
+                                       "sam_rho":self.sam_rho,
+                                       "asam":self.asam
                                       }
                
 
@@ -588,7 +602,10 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i,run_id):
                         h=args.h,
                         dropout=args.dropout,
                         wd=args.wd,
-                        run_id=run_id
+                        run_id=run_id,
+                        sam=args.sam,
+                        sam_rho=args.sam_rho,
+                        asam=args.asam
                         )
 
       # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
