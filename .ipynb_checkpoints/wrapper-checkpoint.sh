@@ -34,7 +34,7 @@
 #               --save_every 50 \
 #               --save_checkpoints
 
-python exp_refactor.py  --N 40 \
+python exp_refactor.py  --N 20 \
  --dim 30 \
      --h 1 \
        --f 128 \
