@@ -47,6 +47,6 @@ python exp_refactor.py  --N 20 \
              --wd .0001 \
              --world_size 1 \
               --backend nccl \
-              --stop_loss .02 \
+              --stop_loss .01 \
               --save_every 10 \
-              # --sam \
+              # --sam 
