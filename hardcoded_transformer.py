@@ -408,8 +408,15 @@ class HardCodedTransformer(nn.Module):
     @staticmethod
     def _ints_to_bits(x: torch.Tensor, N: int) -> torch.Tensor:
         device = x.device
-        shifts = torch.arange(N, device=device, dtype=torch.long)  # LSB-first
-        return ((x.unsqueeze(-1) >> shifts) & 1).long()
+        # MPS doesn't support right shift operator, so move to CPU for bit manipulation
+        if device.type == 'mps':
+            x_cpu = x.cpu()
+            shifts = torch.arange(N, dtype=torch.long)  # LSB-first
+            bits = ((x_cpu.unsqueeze(-1) >> shifts) & 1).long()
+            return bits.to(device)
+        else:
+            shifts = torch.arange(N, device=device, dtype=torch.long)  # LSB-first
+            return ((x.unsqueeze(-1) >> shifts) & 1).long()
 
     def forward(self, x_ints: torch.Tensor) -> torch.Tensor:
         dev = next(self.parameters()).device
@@ -468,12 +475,22 @@ def rboolf(N, width, deg, seed=None):
         torch.manual_seed(seed)
     coeffs = torch.randn(width).abs()
     coeffs = coeffs / coeffs.pow(2).sum().sqrt()
-    combs = torch.tensor(list(itertools.combinations(torch.arange(N), deg)))
-    combs = combs[torch.randperm(len(combs))][:width]
+    # For large N, avoid computing all combinations - generate random ones directly
+    # Use range(N) instead of torch.arange(N) for itertools.combinations
+    all_combs = list(itertools.combinations(range(N), deg))
+    if len(all_combs) <= width:
+        # If we have fewer combinations than needed, just use all of them
+        combs = torch.tensor(all_combs, dtype=torch.long)
+    else:
+        # Randomly sample width combinations
+        selected_indices = torch.randperm(len(all_combs))[:width]
+        combs = torch.tensor([all_combs[i] for i in selected_indices], dtype=torch.long)
     return coeffs, combs
 
 def func_batch(x, coeffs, combs, N):
     x = torch.as_tensor(x, dtype=torch.long)
+    coeffs = torch.as_tensor(coeffs, dtype=torch.float32)
+    combs = torch.as_tensor(combs, dtype=torch.long)
     shifts = torch.arange(N, dtype=torch.long)      # LSB-first
     bits01 = ((x.unsqueeze(-1) >> shifts) & 1).float()
     bin_pm = (bits01 - 0.5) * 2.0
