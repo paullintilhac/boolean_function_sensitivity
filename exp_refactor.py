@@ -631,16 +631,16 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS_105_FIX"
+    main_dir = f"HESSIAN_CALCS_105_FIX2"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in range(10):
-        for deg in [4]:
+    for i in range(10,20):
+        for deg in [5,4,1,2,3]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [14]:
+            for width in [20,14,1,7]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 

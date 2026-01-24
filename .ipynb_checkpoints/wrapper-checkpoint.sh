@@ -40,9 +40,9 @@ python exp_refactor.py  --N 20 \
        --f 128 \
         --bs 256  \
          --epochs 100000 \
-           --num_samples 32768  \
+           --num_samples 20000  \
              --repeat 1 \
-             --lr "5e-4" \
+             --lr "2e-3" \
              --dropout 0.1 \
              --wd .0001 \
              --world_size 1 \
