@@ -77,16 +77,23 @@ class Transformer(torch.nn.Module):
         if hidden_dim == 2:
             self.embeddings.weight = nn.Parameter(torch.eye(hidden_dim).to(rank), requires_grad=False)
         
-        hidden_dim = N + hidden_dim
+        hidden_dim = (N + 1) + hidden_dim  # T+1 positional dims + data dims
 
-        # Positional Embedding
-        self.pos_embeddings = nn.Embedding(N+1, N).to(rank)
-        self.pos_embeddings.weight = nn.Parameter(torch.cat([torch.eye(self.N), torch.zeros((1,N))], dim=0).to(rank), requires_grad=False)
+        # Positional Embedding: (T+1) x (T+1) one-hot encoding
+        self.pos_embeddings = nn.Embedding(N+1, N+1).to(rank)
+        self.pos_embeddings.weight = nn.Parameter(torch.eye(N+1).to(rank), requires_grad=False)
 
-        self.attn1 = AttentionBlock(hidden_dim=hidden_dim,  ff_dim=ff_dim, 
+        # attn1: no residual after attention, but MLP has residual
+        attn1_block = AttentionBlock(hidden_dim=hidden_dim,  ff_dim=ff_dim, 
                                     num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln).to(rank)
-        self.attn2 = AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, 
-                                    num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln, add_linear=False).to(rank)  
+        attn1_block.skip = False  # No residual after attention
+        self.attn1 = attn1_block
+        
+        # attn2: no residual after attention, no MLP
+        attn2_block = AttentionBlock(hidden_dim=hidden_dim, ff_dim=ff_dim, 
+                                    num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln, add_linear=False).to(rank)
+        attn2_block.skip = False  # No residual after attention
+        self.attn2 = attn2_block  
      
         self.output_proj = nn.Linear(hidden_dim, 1).to(rank)
         

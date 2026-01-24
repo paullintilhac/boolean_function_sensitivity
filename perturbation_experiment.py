@@ -235,11 +235,11 @@ def run_perturbation_experiment():
     Run perturbation experiment over all parameter combinations.
     """
     # Experiment parameters
-    degrees = [1,2,3,4]
+    degrees = [1,2,3,4,5]
     widths = [1, 7, 14, 20]
-    T_values = [20, 40, 100, 200]
-    func_indices = list(range(10))  # 0-9
-    sigma_values = [1e-2]
+    T_values = [20, 40]
+    func_indices = list(range(5))  # 0-9
+    sigma_values = [1e-5,1e-8,1e-11]
     num_samples = 1000  # Training samples for Hessian calculation
     
     # Output file
@@ -284,15 +284,59 @@ def run_perturbation_experiment():
                         coefs = coefs.to(device)
                         combs = combs.to(device)
                         
+                        # Verify degree and width
+                        if isinstance(combs, torch.Tensor):
+                            combs_list = [list(map(int, row.tolist())) for row in combs]
+                        else:
+                            combs_list = [list(map(int, row)) for row in combs]
+                        
+                        # Check width
+                        actual_width = len(combs_list)
+                        if actual_width != width:
+                            raise ValueError(f"Width mismatch: expected {width}, got {actual_width}")
+                        
+                        # Check degree
+                        for i, comb in enumerate(combs_list):
+                            if len(comb) != deg:
+                                raise ValueError(f"Degree mismatch in combination {i}: expected {deg}, got {len(comb)}")
+                            # Check all indices are valid
+                            for idx in comb:
+                                if idx < 0 or idx >= T:
+                                    raise ValueError(f"Invalid index {idx} in combination {i} (T={T})")
+                        
                         # Create model
                         model = HardCodedTransformer(
                             N=T,
                             combs=combs,
                             coefs=coefs,
-                            aggregator_idx=T-1,
-                            mode="original",
-                            mlp_soft_factor=0.25
+                            aggregator_idx=T,
+                            mode="original"
                         ).to(device)
+                        
+                        # Verify transformer accuracy
+                        model.eval()
+                        test_inputs = torch.randint(0, 2**T, (min(100, 2**T),), device=device)
+                        with torch.no_grad():
+                            transformer_outputs = model(test_inputs).squeeze(-1)
+                        targets = func_batch(test_inputs.cpu().tolist(), coefs.cpu(), combs.cpu(), T).to(device)
+                        errors = (transformer_outputs - targets).abs()
+                        max_error = errors.max().item()
+                        mean_error = errors.mean().item()
+                        
+                        # For large T, the 2log(T) scaling makes non-rep attention weights negligible
+                        # All T in the experiment should be >= 20
+                        # Based on actual errors observed in runs:
+                        #   T=20: max_error ~0.045 (deg=1, width=1), ~0.032 (width=7), ~0.011 (width=14)
+                        #   T=40: max_error ~0.024 (deg=1, width=1), ~0.018 (width=7), ~0.012 (width=14)
+                        # We use a tolerance that accounts for the asymptotic nature of the softmax approximation
+                        tolerance = 0.05 if T < 30 else 0.025 if T < 50 else 0.01
+                        
+                        if max_error > tolerance:
+                            raise ValueError(
+                                f"Transformer accuracy check failed: max_error={max_error:.6f}, "
+                                f"mean_error={mean_error:.6f}, tolerance={tolerance:.6f} "
+                                f"(T={T}, deg={deg}, width={width})"
+                            )
                         
                         # Generate training data
                         # For large T, 2**T can overflow, so generate random bits instead
