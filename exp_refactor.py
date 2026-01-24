@@ -236,13 +236,12 @@ class Trainer:
         x = torch.as_tensor(x, dtype=torch.long, device=self.gpu_id)
         shifts = torch.arange(self.N, device=self.gpu_id)          # 0..N-1, LSB-first
         bits01 = ((x.unsqueeze(-1) >> shifts) & 1).float()         # (B, N) in {0,1}
-        bin_pm = (bits01 - 0.5) * 2.0                              # {-1,+1}
     
         # self.combs is shape (width, deg) on gpu_id already
         idx = self.combs.long()                                     # (W, D)
-        # Gather (B, W, D) and product over D -> (B, W)
-        comps = bin_pm[:, idx]                                      # advanced indexing
-        comps = comps.prod(dim=2)                                   # (B, width)
+        # Compute parity for each combination: 1 if even number of 1s, 0 if odd
+        sum_bits = bits01[:, idx].sum(dim=2)                        # (B, W) - sum of bits in each combination
+        comps = 1.0 - (sum_bits % 2.0)                              # (B, W) - parity in {0,1}
     
         return comps @ self.coeffs                                  # (B,)
 
@@ -436,12 +435,12 @@ class Trainer:
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
         hardcoded_models=[]
-        for mode in ["original", "mlp_soft", "balanced"]:
-            hardcoded_model=(HardCodedTransformer(N, combs, coefs, aggregator_idx=N-1, mode=mode, mlp_soft_factor=0.25))
-            hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
-            #print(model)
-            print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
-            hardcoded_models.append(hardcoded_model)
+        # Only "original" mode is supported (matches mathematical construction)
+        hardcoded_model = HardCodedTransformer(N, combs, coefs, aggregator_idx=N, mode="original")
+        hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
+        #print(model)
+        print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
+        hardcoded_models.append(hardcoded_model)
             
         model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
