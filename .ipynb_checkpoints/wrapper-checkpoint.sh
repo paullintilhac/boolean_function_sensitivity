@@ -39,14 +39,14 @@ python exp_refactor.py  --N 20 \
      --h 1 \
        --f 128 \
         --bs 256  \
-         --epochs 100000 \
+         --epochs 1000000 \
            --num_samples 32768  \
              --repeat 1 \
              --lr "5e-4" \
              --dropout 0.1 \
-             --wd .0001 \
+             --wd .00001 \
              --world_size 1 \
               --backend nccl \
-              --stop_loss .01 \
+              --stop_loss .02 \
               --save_every 10 \
               # --sam 
