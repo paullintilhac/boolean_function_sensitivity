@@ -281,19 +281,34 @@ class Trainer:
     def _run_epoch(self,epoch):
         
         b_sz = len(next(iter(self.train_data)))
-        epoch_loss = 0
-        total_records = 0
         start_time = time.time()
         
+        # Training phase: model in train mode (with dropout)
         for idx, inputs in enumerate(self.train_data):
           #inputs.to(self.gpu_id)    
           targets =self.func_batch(inputs).to(self.gpu_id)
           batch_loss = self._run_batch(inputs, targets)
-          epoch_loss+=batch_loss*float(len(inputs))
-          total_records+=len(inputs)
           iteration = epoch*len(self.train_data)+idx+1
-            
-        epoch_loss/=float(total_records)
+        
+        # Evaluation phase: calculate epoch loss with model in eval mode (no dropout)
+        # This makes epoch loss comparable to validation loss
+        self.model.eval()
+        epoch_loss = 0
+        total_records = 0
+        loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
+        
+        with torch.no_grad():
+            for idx, inputs in enumerate(self.train_data):
+                targets = self.func_batch(inputs).to(self.gpu_id)
+                out = self.model(inputs)
+                batch_loss = loss_fn(out, targets)
+                epoch_loss += batch_loss * float(len(inputs))
+                total_records += len(inputs)
+        
+        epoch_loss /= float(total_records)
+        
+        # Switch back to train mode for next epoch
+        self.model.train()
         
         end_time = time.time()
         
