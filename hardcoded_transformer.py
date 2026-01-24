@@ -261,7 +261,7 @@ class HardCodedTransformer(nn.Module):
         # Layers
         self.attn1 = CustomMHA(embed_dim=self.E, num_heads=1, batch_first=True)
         self.attn2 = CustomMHA(embed_dim=self.E, num_heads=1, batch_first=True)
-        self.mlp   = IntCountParityMLP(self.E, self.D, self.data_idx, self.data_idx)
+        self.mlp   = IntCountParityMLP(self.E, self.D, self.data_idx)
 
         # initialize attention kernels to match the construction
         self._init_attn1()
