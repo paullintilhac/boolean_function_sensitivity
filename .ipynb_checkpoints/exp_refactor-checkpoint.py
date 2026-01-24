@@ -236,13 +236,12 @@ class Trainer:
         x = torch.as_tensor(x, dtype=torch.long, device=self.gpu_id)
         shifts = torch.arange(self.N, device=self.gpu_id)          # 0..N-1, LSB-first
         bits01 = ((x.unsqueeze(-1) >> shifts) & 1).float()         # (B, N) in {0,1}
-        bin_pm = (bits01 - 0.5) * 2.0                              # {-1,+1}
     
         # self.combs is shape (width, deg) on gpu_id already
         idx = self.combs.long()                                     # (W, D)
-        # Gather (B, W, D) and product over D -> (B, W)
-        comps = bin_pm[:, idx]                                      # advanced indexing
-        comps = comps.prod(dim=2)                                   # (B, width)
+        # Compute parity for each combination: 1 if even number of 1s, 0 if odd
+        sum_bits = bits01[:, idx].sum(dim=2)                        # (B, W) - sum of bits in each combination
+        comps = 1.0 - (sum_bits % 2.0)                              # (B, W) - parity in {0,1}
     
         return comps @ self.coeffs                                  # (B,)
 
@@ -282,19 +281,34 @@ class Trainer:
     def _run_epoch(self,epoch):
         
         b_sz = len(next(iter(self.train_data)))
-        epoch_loss = 0
-        total_records = 0
         start_time = time.time()
         
+        # Training phase: model in train mode (with dropout)
         for idx, inputs in enumerate(self.train_data):
           #inputs.to(self.gpu_id)    
           targets =self.func_batch(inputs).to(self.gpu_id)
           batch_loss = self._run_batch(inputs, targets)
-          epoch_loss+=batch_loss*float(len(inputs))
-          total_records+=len(inputs)
           iteration = epoch*len(self.train_data)+idx+1
-            
-        epoch_loss/=float(total_records)
+        
+        # Evaluation phase: calculate epoch loss with model in eval mode (no dropout)
+        # This makes epoch loss comparable to validation loss
+        self.model.eval()
+        epoch_loss = 0
+        total_records = 0
+        loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
+        
+        with torch.no_grad():
+            for idx, inputs in enumerate(self.train_data):
+                targets = self.func_batch(inputs).to(self.gpu_id)
+                out = self.model(inputs)
+                batch_loss = loss_fn(out, targets)
+                epoch_loss += batch_loss * float(len(inputs))
+                total_records += len(inputs)
+        
+        epoch_loss /= float(total_records)
+        
+        # Switch back to train mode for next epoch
+        self.model.train()
         
         end_time = time.time()
         
@@ -436,12 +450,12 @@ class Trainer:
 def load_train_objs(wd,dropout,lr,num_samples, N, dim, h, f, rank, ln_eps, ln,coefs, combs, sam=False, sam_rho=0.05, asam=False):
         train_set = torch.tensor([random.randint(0, 2**N-1) for _ in range(int(num_samples))]).to(rank)
         hardcoded_models=[]
-        for mode in ["original", "mlp_soft", "balanced"]:
-            hardcoded_model=(HardCodedTransformer(N, combs, coefs, aggregator_idx=N-1, mode=mode, mlp_soft_factor=0.25))
-            hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
-            #print(model)
-            print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
-            hardcoded_models.append(hardcoded_model)
+        # Only "original" mode is supported (matches mathematical construction)
+        hardcoded_model = HardCodedTransformer(N, combs, coefs, aggregator_idx=N, mode="original")
+        hardcoded_total_params = sum(p.numel() for p in hardcoded_model.parameters())
+        #print(model)
+        print("Hardcoded Model Parameter Count: " + str(hardcoded_total_params))
+        hardcoded_models.append(hardcoded_model)
             
         model = Transformer(dropout,N, dim, h, f, ln_eps, rank, ln)
         total_params = sum(p.numel() for p in model.parameters())
@@ -617,16 +631,16 @@ if __name__ == "__main__":
     print(arguments)
     losses = {}
     func_per_deg = arguments.repeat
-    main_dir = f"HESSIAN_CALCS_102"
+    main_dir = f"HESSIAN_CALCS_105"
     os.makedirs(main_dir, exist_ok=True)
     # with open("logs_width.txt", "a") as f:
     #   f.write("------------------------------------------\n")
 
-    for i in range(21,30):
+    for i in range(10):
         for deg in [1,2,3,4,5]:
             losses[deg] = []
             #for width in range(1, arguments.N, 5):
-            for width in [20,14,7,1]:
+            for width in [1,7,14,20]:
                 start_time = time.time()
                 #world_size = torch.cuda.device_count()
                 #args["world_size"]=world_size 

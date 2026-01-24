@@ -44,7 +44,7 @@ python exp_refactor.py  --N 20 \
              --repeat 1 \
              --lr "5e-4" \
              --dropout 0.1 \
-             --wd .0001 \
+             --wd .00001 \
              --world_size 1 \
               --backend nccl \
               --stop_loss .02 \
