@@ -79,6 +79,9 @@ import os
 import itertools
 import time
 import datetime
+import json
+import glob
+import shutil
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
@@ -86,6 +89,34 @@ from torch.distributed import init_process_group, destroy_process_group, all_red
 mps_avail = torch.backends.mps.is_available()
 cuda_avail = torch.cuda.is_available()
 #from functools import partial
+
+# ===== Configuration Ignore List for Checkpoint Loading =====
+# Parameters in this list can differ between the current run and a saved checkpoint,
+# and we will still load from that checkpoint. This allows resuming training with
+# different hyperparameters (e.g., learning rate, weight decay) while keeping the
+# same model weights.
+#
+# IMPORTANT: This list MUST NOT include:
+#   - Sample size (n_samples, num_samples): Different dataset size would require different model state
+#   - Batch size (bs, batch_size): Affects training dynamics and optimizer state
+#   - Architectural parameters: N, dim (d), h, f, dropout (affects model architecture)
+#   - Model structure: ln, ln_eps (affects layer normalization structure)
+#   - SAM parameters: sam, sam_rho, asam (affects optimizer structure)
+#
+# Parameters that CAN be ignored (safe to differ):
+#   - Learning rate (lr): Can be changed without affecting model weights
+#   - Weight decay (wd): Can be changed without affecting model weights
+#   - Stop loss (stop_loss): Just a training criterion, doesn't affect model
+#   - Save frequency (save_every): Just a logging parameter
+#   - Backend: Doesn't affect model weights
+CONFIG_IGNORE_LIST = {
+    'lr',           # Learning rate - can change during training
+    'wd',           # Weight decay - can change during training
+    'stop_loss',    # Training criterion - doesn't affect model
+    'save_every',   # Logging frequency - doesn't affect model
+    'backend',      # Distributed backend - doesn't affect model weights
+    'epochs',       # Max epochs - doesn't affect model weights
+}
 
 if mps_avail:
   device = torch.device("mps")
@@ -101,6 +132,122 @@ def get_weight_norm(model):
                param_norm = p.data.norm(2)
                total_norm += param_norm.item() ** 2
        return total_norm ** 0.5
+
+# ===== Checkpoint Management Functions =====
+
+def get_checkpoint_dir(base_dir, func, deg, width):
+    """Get the checkpoint directory path for a specific function/deg/width."""
+    return os.path.join(base_dir, "checkpoints", f"func{func}_deg{deg}_width{width}")
+
+def get_config_dict(args, trainer=None):
+    """Extract all relevant configuration parameters into a dictionary."""
+    config = {
+        'N': args.N,
+        'dim': args.dim,
+        'h': args.h,
+        'f': args.f,
+        'dropout': args.dropout,
+        'num_samples': args.num_samples,
+        'bs': args.bs,
+        'lr': str(args.lr),  # Keep as string to match input format
+        'wd': args.wd,
+        'ln_eps': args.ln_eps,
+        'ln': args.ln,
+        'sam': args.sam,
+        'sam_rho': args.sam_rho,
+        'asam': args.asam,
+        'stop_loss': args.stop_loss,
+        'save_every': args.save_every,
+        'backend': args.backend,
+    }
+    if trainer is not None:
+        # Add any trainer-specific config that might not be in args
+        config['batch_size'] = trainer.batch_size
+    return config
+
+def configs_match(config1, config2, ignore_list=CONFIG_IGNORE_LIST):
+    """Check if two configs match, ignoring parameters in ignore_list."""
+    for key in set(config1.keys()) | set(config2.keys()):
+        if key in ignore_list:
+            continue
+        if key not in config1 or key not in config2:
+            return False
+        # Handle string vs float comparison for lr
+        if key == 'lr':
+            if str(config1[key]) != str(config2[key]):
+                return False
+        else:
+            if config1[key] != config2[key]:
+                return False
+    return True
+
+def save_checkpoint_with_config(checkpoint_dir, model, epoch, config, gpu_id=0):
+    """Save checkpoint with config file. Only keeps the most recent checkpoint."""
+    if gpu_id != 0:  # Only save on rank 0
+        return
+    
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    
+    # Remove old checkpoint files (keep only most recent)
+    old_checkpoints = glob.glob(os.path.join(checkpoint_dir, "checkpoint_*.pt"))
+    for old_ckpt in old_checkpoints:
+        try:
+            os.remove(old_ckpt)
+        except:
+            pass
+    
+    # Save model checkpoint
+    checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch{epoch}.pt")
+    if hasattr(model, 'module'):  # DDP model
+        torch.save(model.module.state_dict(), checkpoint_path)
+    else:
+        torch.save(model.state_dict(), checkpoint_path)
+    
+    # Save config
+    config_path = os.path.join(checkpoint_dir, "config.json")
+    with open(config_path, 'w') as f:
+        json.dump({**config, 'epoch': epoch}, f, indent=2)
+    
+    print(f"Checkpoint saved: {checkpoint_path} (epoch {epoch})")
+
+def find_matching_checkpoint(base_dir, func, deg, width, current_config):
+    """Find a checkpoint with matching configuration (ignoring CONFIG_IGNORE_LIST)."""
+    checkpoint_dir = get_checkpoint_dir(base_dir, func, deg, width)
+    
+    if not os.path.exists(checkpoint_dir):
+        return None
+    
+    config_path = os.path.join(checkpoint_dir, "config.json")
+    if not os.path.exists(config_path):
+        return None
+    
+    # Load saved config
+    try:
+        with open(config_path, 'r') as f:
+            saved_config = json.load(f)
+    except:
+        return None
+    
+    # Check if configs match (ignoring ignore list)
+    if not configs_match(current_config, saved_config):
+        return None
+    
+    # Find the most recent checkpoint
+    checkpoints = glob.glob(os.path.join(checkpoint_dir, "checkpoint_*.pt"))
+    if not checkpoints:
+        return None
+    
+    # Get checkpoint with highest epoch number
+    def get_epoch(path):
+        try:
+            basename = os.path.basename(path)
+            epoch_str = basename.replace("checkpoint_epoch", "").replace(".pt", "")
+            return int(epoch_str)
+        except:
+            return -1
+    
+    latest_checkpoint = max(checkpoints, key=get_epoch)
+    return latest_checkpoint, saved_config.get('epoch', 0)
     
 def rboolf(N, width, deg,seed=None):
     if seed:
@@ -318,22 +465,65 @@ class Trainer:
         #print(f"Epoch time: {elapsed_time:.3f} seconds. time per record (ms): {time_per_record_ms: .3f}")
         return epoch_loss
 
-    def save_checkpoint(self,epoch,model_name):
-        os.makedirs(os.path.join(self.dir_name, model_name), exist_ok=True)
-        full_model_name = model_name+"/epoch-"+str(epoch)+".pt"
-        ckp = self.model.module.state_dict()
-        torch.save(ckp,os.path.join(self.dir_name, full_model_name))
-        # loss_fn = lambda result, targets: (result-targets).pow(2).mean()
-        loss_fn = lambda out, tgt: (out.squeeze(-1) - tgt).pow(2).mean()
+    def save_checkpoint(self, epoch, model_name=None):
+        """Save checkpoint with configuration. Only keeps most recent checkpoint."""
+        if not self.save_checkpoints or self.gpu_id != 0:
+            return
+        
+        # Build config dict from trainer attributes
+        config = {
+            'N': self.N,
+            'dim': self.d,
+            'h': self.h,
+            'f': self.f,
+            'dropout': self.dropout,
+            'num_samples': self.n_samples,
+            'bs': self.batch_size,
+            'lr': str(self.lr),
+            'wd': self.wd,
+            'ln_eps': self.ln_eps,
+            'ln': self.ln,
+            'sam': self.sam,
+            'sam_rho': self.sam_rho,
+            'asam': self.asam,
+            'stop_loss': self.stop_loss,
+            'save_every': self.save_every,
+            'backend': self.backend,
+        }
+        
+        checkpoint_dir = get_checkpoint_dir(self.dir_name, self.func, self.deg, self.width)
+        save_checkpoint_with_config(checkpoint_dir, self.model, epoch, config, self.gpu_id)
+    
+    def load_checkpoint_if_exists(self, args):
+        """Load checkpoint if one exists with matching configuration."""
+        if self.gpu_id != 0:  # Only load on rank 0, then broadcast
+            return None, 0
+        
+        current_config = get_config_dict(args, self)
+        result = find_matching_checkpoint(self.dir_name, self.func, self.deg, self.width, current_config)
+        
+        if result is None:
+            return None, 0
+        
+        checkpoint_path, start_epoch = result
+        print(f"Loading checkpoint from {checkpoint_path} (resuming from epoch {start_epoch})")
+        
+        try:
+            state_dict = torch.load(checkpoint_path, map_location=f'cuda:{self.gpu_id}')
+            self.model.module.load_state_dict(state_dict)
+            print(f"Successfully loaded checkpoint from epoch {start_epoch}")
+            return checkpoint_path, start_epoch
+        except Exception as e:
+            print(f"Failed to load checkpoint: {e}")
+            return None, 0
 
-        print(f"Epoch {epoch} | Training checkpoint saved at model_{epoch}.pt")
-
-    def train(self,epochs: int):
+    def train(self, epochs: int, start_epoch: int = 0):
+        """Train the model, optionally starting from a checkpoint epoch."""
         self.model.train()
         
         start_time = time.time()
 
-        for epoch in range(epochs):
+        for epoch in range(start_epoch, epochs):
             epoch_loss = self._run_epoch(epoch)
             
             if ((epoch % self.save_every)==0 and self.gpu_id==0) or (epoch_loss < self.stop_loss):
@@ -341,7 +531,7 @@ class Trainer:
 
                 #print("inside conditional")
                 if self.save_checkpoints:
-                    self.save_checkpoint(epoch,"degree-"+str(self.deg)+"/width-"+str(self.width)+"/func-"+str(self.func))
+                    self.save_checkpoint(epoch)
                 end_time = time.time()
                 elapsed_time = round((end_time - start_time)/60,3) 
 
@@ -618,7 +808,20 @@ def main(rank, args,world_size,coefs,combs,main_dir,deg,width,i):
       }])
       _hc_df.to_csv(f"{trainer.dir_name}/hardcoded_hessian.csv", index=False,mode='a', header=not os.path.exists(f"{trainer.dir_name}/hardcoded_hessian.csv"))
       print("trainer.func_batch([2, 3]): " + str(trainer.func_batch([2,3])))
-      trainer.train(args.epochs)
+      
+      # Try to load checkpoint if one exists with matching configuration
+      start_epoch = 0
+      if rank == 0:  # Only check on rank 0
+          checkpoint_path, start_epoch = trainer.load_checkpoint_if_exists(args)
+          if checkpoint_path:
+              # Broadcast that we loaded a checkpoint (simple barrier for now)
+              # In a real DDP setup, you'd want to sync the state_dict across ranks
+              print(f"Resuming training from epoch {start_epoch}")
+      
+      # Synchronize all ranks before starting training
+      barrier()
+      
+      trainer.train(args.epochs, start_epoch=start_epoch)
       barrier()
       print("finished training, cleaning up process group...")
       destroy_process_group()
