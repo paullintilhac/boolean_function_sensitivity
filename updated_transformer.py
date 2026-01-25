@@ -16,7 +16,7 @@ else:
 
 class AttentionBlock(nn.Module):
     
-    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N, dropout, ln, add_linear=True):
+    def __init__(self, hidden_dim, ff_dim, num_heads, LNeps, N, dropout, ln, add_linear=True, linear_skip=True):
         """
         Inputs:
             embed_dim - Dimensionality of input and attention feature vectors
@@ -24,11 +24,13 @@ class AttentionBlock(nn.Module):
                          (usually 2-4x larger than embed_dim)
             num_heads - Number of heads to use in the Multi-Head Attention block
             dropout - Amount of dropout to apply in the feed-forward network
+            linear_skip - If False, no residual between attention and MLP (output = MLP(attn(x)) only).
         """
         super().__init__()
         self.attn = CustomMHA(hidden_dim, num_heads, bias=False, batch_first=True, N=N,dropout=dropout)
         self.skip = True
         self.add_linear = add_linear
+        self.linear_skip = linear_skip
         self.ln = ln
 
         if ln:
@@ -49,14 +51,14 @@ class AttentionBlock(nn.Module):
             else:
                 x = self.norm1(self.attn(x,x,x)[0])
             if self.add_linear:
-                x = self.norm2(x + self.linear(x))
+                x = self.norm2(x + self.linear(x)) if self.linear_skip else self.norm2(self.linear(x))
         else: 
             if self.skip: 
                 x = x + self.attn(x, x, x)[0]
             else:
                 x = self.attn(x,x,x)[0]
             if self.add_linear:
-                x = x + self.linear(x)
+                x = (x + self.linear(x)) if self.linear_skip else self.linear(x)
         return x
 
 class Transformer(torch.nn.Module):
@@ -83,9 +85,10 @@ class Transformer(torch.nn.Module):
         self.pos_embeddings = nn.Embedding(N+1, N+1).to(rank)
         self.pos_embeddings.weight = nn.Parameter(torch.eye(N+1).to(rank), requires_grad=False)
 
-        # attn1: no residual after attention, but MLP has residual
+        # attn1: no residual after attention, no residual between attn and MLP
         attn1_block = AttentionBlock(hidden_dim=hidden_dim,  ff_dim=ff_dim, 
-                                    num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln).to(rank)
+                                    num_heads=num_heads, LNeps=LNeps, N=N,dropout=dropout,ln=ln,
+                                    linear_skip=False).to(rank)
         attn1_block.skip = False  # No residual after attention
         self.attn1 = attn1_block
         

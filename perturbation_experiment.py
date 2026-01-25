@@ -239,7 +239,7 @@ def run_perturbation_experiment():
     widths = [1, 7, 14, 20]
     T_values = [20, 40]
     func_indices = list(range(5))  # 0-9
-    sigma_values = [1e-5,1e-8,1e-11]
+    sigma_values = [1e-4]
     num_samples = 1000  # Training samples for Hessian calculation
     
     # Output file
@@ -319,16 +319,29 @@ def run_perturbation_experiment():
                         with torch.no_grad():
                             transformer_outputs = model(test_inputs).squeeze(-1)
                         targets = func_batch(test_inputs.cpu().tolist(), coefs.cpu(), combs.cpu(), T).to(device)
+                        
+                        # DEBUG: Print sample outputs to diagnose
+                        print(f"\nDEBUG (T={T}, deg={deg}, width={width}, func={func_idx}):")
+                        print(f"  Sample transformer outputs: {transformer_outputs[:5].cpu().tolist()}")
+                        print(f"  Sample targets: {targets[:5].cpu().tolist()}")
+                        print(f"  Transformer output range: [{transformer_outputs.min().item():.3f}, {transformer_outputs.max().item():.3f}]")
+                        print(f"  Target range: [{targets.min().item():.3f}, {targets.max().item():.3f}]")
+                        print(f"  Coefs sum (Z): {coefs.sum().item():.3f}")
+                        print(f"  Coefs: {coefs.cpu().tolist()}")
+                        print(f"  Combs: {combs.cpu().tolist()}")
+                        
+                        # Check if outputs are approximately Z times too large
+                        ratio = transformer_outputs.mean().item() / targets.mean().item() if targets.mean().item() > 1e-6 else float('inf')
+                        print(f"  Mean output ratio (transformer/target): {ratio:.3f}")
+                        if abs(ratio - coefs.sum().item()) < 0.1:
+                            print(f"  WARNING: Outputs appear to be scaled by Z!")
+                        
                         errors = (transformer_outputs - targets).abs()
                         max_error = errors.max().item()
                         mean_error = errors.mean().item()
                         
-                        # For large T, the 2log(T) scaling makes non-rep attention weights negligible
-                        # All T in the experiment should be >= 20
-                        # Based on actual errors observed in runs:
-                        #   T=20: max_error ~0.045 (deg=1, width=1), ~0.032 (width=7), ~0.011 (width=14)
-                        #   T=40: max_error ~0.024 (deg=1, width=1), ~0.018 (width=7), ~0.012 (width=14)
-                        # We use a tolerance that accounts for the asymptotic nature of the softmax approximation
+                        # For large T, the 2log(T) scaling makes non-rep attention weights negligible.
+                        # Based on actual errors (deg=1): T=20 ~0.045/0.032/0.011, T=40 ~0.024/0.018/0.012.
                         tolerance = 0.05 if T < 30 else 0.025 if T < 50 else 0.01
                         
                         if max_error > tolerance:

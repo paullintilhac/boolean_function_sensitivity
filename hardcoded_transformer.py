@@ -196,7 +196,8 @@ class IntCountParityMLP(nn.Module):
         H = F.relu(self.fc1(X))  # (M^T b_t + Γ)_+
         s = self.fc2(H)          # F^T (M^T b_t + Γ)_+
         Y = self.fc_out(s)       # Write to data channel (transforms k/D to parity)
-        return X + Y  # Residual preserves bit and position dims for attn2
+        # No residual between attn1 and MLP: return only MLP output (data channel = parity).
+        return Y
 
 
 
@@ -347,6 +348,7 @@ class HardCodedTransformer(nn.Module):
         Wk[:L, :L] = torch.eye(L)
 
         # V: send data channel (parity) into CLS position's data channel, scaled by Z
+        # The attention weights will be approximately c_i/Z, so Z * (c_i/Z) * p_i = c_i * p_i
         Wv = torch.zeros(E, E)
         # Write to CLS position's data channel
         Wv[self.data_idx, self.data_idx] = self.Z
@@ -399,14 +401,14 @@ class HardCodedTransformer(nn.Module):
         zeros = torch.zeros(B, self.L, 1, device=dev)            # data channel
         X0 = torch.cat([pos_vecs, dat_bits, zeros], dim=-1)      # (B,N+1,E)
 
-        # attn1 (NO residual): data channel accumulates k/D at representatives
-        # Position dims get zeroed (no residual preserves them, but we're removing residual)
+        # attn1: residual X0 + Y1 preserves position and bit for attn2; data = k/D.
         Y1, _ = self.attn1(X0, X0, X0)
-        X1 = Y1  # No residual: position dims zeroed, data channel has k/D
+        X1 = X0 + Y1
 
-        # MLP (with residual): data channel transforms k/D -> parity
-        # Residual preserves bit and position dims for attn2
-        X2 = self.mlp(X1)
+        # MLP (no residual with attn1): overwrite data channel with parity only.
+        X2_mlp = self.mlp(X1)
+        X2 = X1.clone()
+        X2[..., self.data_idx] = X2_mlp[..., self.data_idx]
 
         # attn2 (no residual): aggregate parities at reps into CLS position's data channel
         Y2, _ = self.attn2(X2, X2, X2)
