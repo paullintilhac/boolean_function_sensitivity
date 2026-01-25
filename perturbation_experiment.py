@@ -239,7 +239,7 @@ def run_perturbation_experiment():
     widths = [1, 7, 14, 20]
     T_values = [20, 40]
     func_indices = list(range(5))  # 0-9
-    sigma_values = [1e-4]
+    sigma_values = [1e-4,1e-6,1e-8]
     num_samples = 1000  # Training samples for Hessian calculation
     
     # Output file
