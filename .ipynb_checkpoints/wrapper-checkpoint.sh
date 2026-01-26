@@ -42,7 +42,7 @@ python exp_refactor.py  --N 20 \
          --epochs 100000 \
            --num_samples 20000  \
              --repeat 1 \
-             --lr "2e-3" \
+             --lr "1e-3" \
              --dropout 0.1 \
              --wd .0001 \
              --world_size 1 \
