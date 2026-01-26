@@ -6,3 +6,4 @@ log_*
 *.csv
 .DS_Store*
 !perturbation_hessian_results.csv
+!HESSIAN_CALCS_105_FIX2/summary.csv
